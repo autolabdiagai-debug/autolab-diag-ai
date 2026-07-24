@@ -20,7 +20,10 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import pandas as pd
-# Pega a chave de forma segura direto do painel do Streamlit
+
+# ---------------------------------------------------------
+# 3. Chave da API Embutida e Inicialização
+# ---------------------------------------------------------
 API_KEY = st.secrets["GOOGLE_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
@@ -39,10 +42,19 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 2. Estilização CSS Personalizada (Verde Neon & Dark Glass)
+# 2. Estilização CSS Personalizada (Verde Neon & Dark Glass + Ocultar Header)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
+    /* Oculta o cabeçalho superior padrão do Streamlit (Fork/GitHub/Menu) permanentemente */
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+    
+    header {
+        visibility: hidden !important;
+    }
+
     .stApp {
         background-color: #03140C;
         color: #00FF88 !important;
@@ -106,11 +118,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------------------------------------
-# 3. Chave da API Embutida e Inicialização
-# ---------------------------------------------------------
-API_KEY = st.secrets["GOOGLE_API_KEY"]
-client = genai.Client(api_key=API_KEY)
 # ---------------------------------------------------------
 # 4. Banco de Dados SQLite (Usuários + Fichas + Validade + Histórico)
 # ---------------------------------------------------------
@@ -427,8 +434,7 @@ def tela_login():
                 ⚡ Imagine um Assistente à sua disposição 24 horas por dia fazendo Diagnósticos complexos em tempo recorde! ⚡
             </h3>
             <p style="color: #A7F3D0 !important; font-size: 0.95rem; line-height: 1.5; margin-bottom: 12px;">
-
-Agora sua oficina não precisa mais pagar treinamentos avançados para todos os mecânicos, com o AUTOLAB DIAG AI você faz diagnósticos Complexos em Tempo recorde, basta Alimentar o sistema com os Sintomas e Paramêtros dos Veículos através de textos, áudios, fotos e videos que o AUTOLAB DIAG AI faz o diagnóstico e entrega um passo a passo completo e detalhado com relatório técnico completo para que seus Mecânicos, Chaveiros E Eletricistas façam os testes conforme a instrução do Diagnóstico Inteligente gerado.
+                Agora sua oficina não precisa mais pagar treinamentos avançados para todos os mecânicos, com o AUTOLAB DIAG AI você faz diagnósticos Complexos em Tempo recorde, basta Alimentar o sistema com os Sintomas e Paramêtros dos Veículos através de textos, áudios, fotos e videos que o AUTOLAB DIAG AI faz o diagnóstico e entrega um passo a passo completo e detalhado com relatório técnico completo para que seus Mecânicos, Chaveiros E Eletricistas façam os testes conforme a instrução do Diagnóstico Inteligente gerado.
             </p>
             <p style="color: #FFD700 !important; font-size: 0.95rem; font-weight: 700; margin-bottom: 15px;">
                 🌐 Alimentado pelo maior banco de dados técnico existente do mundo através de Inteligência Artificial 💻.
@@ -1873,7 +1879,7 @@ with aba5:
             <hr style="border-color: #065F46; margin: 15px 0;">
             <p style="color: #00FF88 !important; font-size: 13.5px; text-align: left; margin: 6px 0;">🏆 <b>PACOTE COMPLETO MÁXIMO</b></p>
             <p style="color: #A7F3D0 !important; font-size: 12px; text-align: left; margin: 4px 0;">✔️ AutoLab Diag + Banco de Dados</p>
-            <p style="color: #A7F3D0 !important; font-size: 12px; text-align: left; margin: 4px 0;">✔️ Curso Completo (Programação de ECU)</p>
+            <p style="color: #A7F3D0 !important; font-size: 12.5px; text-align: left; margin: 4px 0;">✔️ Curso Completo (Programação de ECU)</p>
             <p style="color: #A7F3D0 !important; font-size: 12px; text-align: left; margin: 4px 0;">✔️ Suporte Técnico Prioritário</p>
             <p style="color: #FFD700 !important; font-size: 11.5px; text-align: left; margin-top: 6px;"><b>🕒 Seg / Qua / Sex: 08h às 18h</b></p>
         </div>
