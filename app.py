@@ -42,11 +42,11 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 2. Estilização CSS Personalizada (Verde Neon & Dark Glass + Ocultar Header)
+# 2. Estilização CSS Global (Mantém a barra lateral livre nas telas internas)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* Oculta o cabeçalho superior padrão do Streamlit (Fork/GitHub/Menu) permanentemente */
+    /* Oculta apenas o cabeçalho superior padrão do Streamlit (Fork/GitHub/Menu) */
     [data-testid="stHeader"] {
         display: none !important;
     }
@@ -366,8 +366,8 @@ def tela_login():
     st.markdown("""
     <style>
         .stApp { background: transparent !important; }
+        /* Oculta o cabeçalho e a barra lateral APENAS na tela de login */
         [data-testid="stHeader"], [data-testid="stSidebar"] { display: none !important; }
-        .main .block-container { background: transparent !important; padding-top: 1rem !important; max-width: 1300px; }
         
         .video-bg-container {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -413,15 +413,8 @@ def tela_login():
             margin-top: 10px;
         }
     </style>
-
-    <div class="video-bg-container">
-        <video autoplay loop muted playsinline>
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-data-41538-large.mp4" type="video/mp4">
-        </video>
-        <div class="video-mask"></div>
-    </div>
     """, unsafe_allow_html=True)
-
+    
     st.markdown("<h1 style='text-align: center; color: #00FF88; font-weight: 900; text-shadow: 0 0 20px rgba(0,255,136,0.8); font-size: 2.5rem; margin-bottom: 5px;'>🧠 AUTOLAB DIAG AI</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #FFD700; font-size: 1.15rem; font-weight: 700; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-bottom: 25px;'>O Assistente de Diagnóstico mais rápido do mundo à sua disposição</p>", unsafe_allow_html=True)
     
