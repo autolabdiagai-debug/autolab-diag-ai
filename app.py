@@ -27,7 +27,6 @@ import pandas as pd
 API_KEY = st.secrets["GOOGLE_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
-
 # ---------------------------------------------------------
 # CONSTANTES DO SISTEMA
 # ---------------------------------------------------------
@@ -43,11 +42,10 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 2. Estilização CSS Global (Mantém a barra lateral livre nas telas internas)
+# 2. Estilização CSS Global (Cores Neon & Sidebar Visível)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* Oculta apenas o cabeçalho superior padrão do Streamlit (Fork/GitHub/Menu) */
     [data-testid="stHeader"] {
         display: none !important;
     }
@@ -138,11 +136,13 @@ def init_db():
             fichas INTEGER DEFAULT 7,
             data_cadastro TEXT,
             data_expiracao_teste TEXT,
-            data_expiracao_assinatura TEXT
+            data_expiracao_assinatura TEXT,
+            scanners_cadastrados TEXT,
+            programadores_cadastrados TEXT
         )
     ''')
     
-    for col in ["senha", "data_expiracao_teste", "data_expiracao_assinatura"]:
+    for col in ["senha", "data_expiracao_teste", "data_expiracao_assinatura", "scanners_cadastrados", "programadores_cadastrados"]:
         try:
             c.execute(f"ALTER TABLE usuarios ADD COLUMN {col} TEXT")
         except Exception:
@@ -272,7 +272,7 @@ def verificar_status_usuario(email):
         try:
             dt_exp_ass = datetime.strptime(exp_assinatura, "%Y-%m-%d %H:%M:%S")
             if agora < dt_exp_ass:
-                return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": 999, "tipo": "assinante"}
+                return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": 999, "tipo": "assinante", "exp": exp_assinatura}
         except Exception:
             pass
 
@@ -280,11 +280,11 @@ def verificar_status_usuario(email):
         try:
             dt_exp_t = datetime.strptime(exp_teste, "%Y-%m-%d %H:%M:%S")
             if agora <= dt_exp_t and fichas > 0:
-                return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": fichas, "tipo": "teste"}
+                return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": fichas, "tipo": "teste", "exp": exp_teste}
         except Exception:
             pass
             
-    return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": 0, "tipo": "expirado"}
+    return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": 0, "tipo": "expirado", "exp": "Expirado"}
 
 def autenticar_usuario(email, senha):
     conn = sqlite3.connect('diagnosticos.db')
@@ -366,11 +366,8 @@ def tela_login():
 
     st.markdown("""
     <style>
-        /* Força fundo escuro na tela de login para evitar tela branca */
         .stApp { background-color: #03140C !important; }
-        
-        /* Oculta cabeçalho e barra lateral APENAS na tela de login */
-        [data-testid="stHeader"], [data-testid="stSidebar"] { display: none !important; }
+        [data-testid="stSidebar"] { display: none !important; }
         
         .main .block-container { background: transparent !important; padding-top: 1rem !important; max-width: 1300px; }
         
@@ -577,7 +574,7 @@ def tela_login():
         <div class="card-lux-3">
             <div style="font-size: 26px; margin-bottom: 5px;">👑</div>
             <h4 class="pulsing-title" style="margin-bottom: 2px; font-size: 1.1rem;">NÍVEL 3 - ESPECIALISTA</h4>
-            <h2 style="color: #FFD700 !important; font-size: 1.8rem; margin-top: 5px;">R$ 197<span style="font-size: 12px;">/mês</span></h2>
+            <h2 style="color: #FFD700 !important; font-size: 1.8rem; margin-top: 5px;">R$ 197<span style="font-size: 13px;">/mês</span></h2>
             <hr style="border-color: #065F46; margin: 12px 0;">
             <p style="color: #00FF88 !important; font-size: 13px; text-align: left; margin: 6px 0;">🏆 <b>PACOTE COMPLETO MÁXIMO</b></p>
             <p style="color: #A7F3D0 !important; font-size: 11.5px; text-align: left; margin: 4px 0;">✔️ AutoLab Diag + Banco de Dados</p>
@@ -593,7 +590,82 @@ if not st.session_state["logado"]:
     st.stop()
 
 # ---------------------------------------------------------
-# 8. Funções do Histórico e Relatórios PDF
+# 9. Barra Lateral (Sidebar)
+# ---------------------------------------------------------
+with st.sidebar:
+    st.markdown("""
+    <style>
+        @keyframes pulse-red-alert {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); background-color: rgba(239, 68, 68, 0.2); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); background-color: rgba(239, 68, 68, 0.4); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); background-color: rgba(239, 68, 68, 0.2); }
+        }
+        
+        .fichas-esgotadas-box {
+            border: 2px solid #EF4444;
+            color: #EF4444 !important;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.05rem;
+            animation: pulse-red-alert 1.8s infinite;
+            margin-bottom: 15px;
+        }
+
+        .fichas-ok-box {
+            border: 1px solid #10B981;
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #00FF88 !important;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+        
+    col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
+    with col_logo2:
+        caminho_foto = r"C:\Users\arian\OneDrive\Desktop\app.py\logo_autolab.jpeg"
+        if os.path.exists(caminho_foto):
+            try:
+                imagem_pil = Image.open(caminho_foto)
+                st.image(imagem_pil, width=120)
+            except Exception:
+                st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
+        else:
+            st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
+    
+    st.markdown("🕵️‍♂️ **Agente de Diagnóstico**")
+    st.markdown("---")
+
+    tipo_acesso_atual = st.session_state.get('user_tipo_acesso', 'teste')
+    fichas_atuais = st.session_state.get('user_fichas', 0)
+
+    if tipo_acesso_atual == "assinante":
+        st.markdown('<div class="fichas-ok-box">👑 Plano Anual Ativo (Ilimitado)</div>', unsafe_allow_html=True)
+    elif fichas_atuais <= 0:
+        st.markdown('<div class="fichas-esgotadas-box">🎟️ Teste Expirado (0 Fichas / 7 Dias)</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="fichas-ok-box">🎟️ Fichas de Teste: ({fichas_atuais}/7)</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.subheader("🏢 Dados da Oficina")
+    nome_oficina = st.text_input("Nome da Oficina", value="AUTOLAB DIAGNÓSTICOS")
+    cnpj_oficina = st.text_input("CNPJ", value="00.000.000/0001-00")
+    tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
+
+    st.markdown("---")
+    if st.button("🚪 Sair do Sistema", width="stretch"):
+        st.session_state["logado"] = False
+        st.session_state["user_email"] = ""
+        st.session_state["user_nome"] = ""
+        st.rerun()
+
+# ---------------------------------------------------------
+# 10. Funções de Apoio (Histórico, PDF e Arquivos Binários)
 # ---------------------------------------------------------
 def salvar_diagnostico(email, veiculo, dtc, sintomas, relatorio):
     conn = sqlite3.connect('diagnosticos.db')
@@ -613,6 +685,24 @@ def carregar_historico(email):
     registros = c.fetchall()
     conn.close()
     return registros
+
+def contar_diagnosticos(email):
+    conn = sqlite3.connect('diagnosticos.db')
+    c = conn.cursor()
+    c.execute('SELECT COUNT(*) FROM historico WHERE user_email = ?', (email,))
+    total = c.fetchone()[0]
+    conn.close()
+    return total
+
+def obter_detalhes_usuario_banco(email):
+    conn = sqlite3.connect('diagnosticos.db')
+    c = conn.cursor()
+    c.execute('SELECT data_cadastro, data_expiracao_teste, data_expiracao_assinatura FROM usuarios WHERE email = ?', (email.strip().lower(),))
+    res = c.fetchone()
+    conn.close()
+    if res:
+        return res[0], res[1], res[2]
+    return "N/A", "N/A", "N/A"
 
 def gerar_pdf_relatorio(nome_oficina, cnpj, telefone, veiculo, dtc, sintomas, relatorio_texto, titulo_pdf="AUTOLAB DIAG AI", imagem_placa_pil=None, imagens_ferramentas=None):
     buffer = io.BytesIO()
@@ -842,83 +932,7 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
         return imagem_pil, [], False
 
 # ---------------------------------------------------------
-# 9. Barra Lateral (Sidebar) - Garantida para todos os usuários logados
-# ---------------------------------------------------------
-with st.sidebar:
-    st.markdown("""
-    <style>
-        @keyframes pulse-red-alert {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); background-color: rgba(239, 68, 68, 0.2); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); background-color: rgba(239, 68, 68, 0.4); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); background-color: rgba(239, 68, 68, 0.2); }
-        }
-        
-        .fichas-esgotadas-box {
-            border: 2px solid #EF4444;
-            color: #EF4444 !important;
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 800;
-            font-size: 1.05rem;
-            animation: pulse-red-alert 1.8s infinite;
-            margin-bottom: 15px;
-        }
-
-        .fichas-ok-box {
-            border: 1px solid #10B981;
-            background-color: rgba(16, 185, 129, 0.15);
-            color: #00FF88 !important;
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-        
-    col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
-    with col_logo2:
-        caminho_foto = r"C:\Users\arian\OneDrive\Desktop\app.py\logo_autolab.jpeg"
-        if os.path.exists(caminho_foto):
-            try:
-                imagem_pil = Image.open(caminho_foto)
-                st.image(imagem_pil, width=120)
-            except Exception:
-                st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
-        else:
-            st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
-    
-    nome_agente = st.session_state.get('user_nome') or "Técnico AutoLab"
-    st.markdown(f"🕵️‍♂️ **Agente:** {nome_agente}")
-    st.markdown("---")
-
-    tipo_acesso_atual = st.session_state.get('user_tipo_acesso', 'teste')
-    fichas_atuais = st.session_state.get('user_fichas', 0)
-
-    if tipo_acesso_atual == "assinante":
-        st.markdown('<div class="fichas-ok-box">👑 Plano Anual Ativo (Ilimitado)</div>', unsafe_allow_html=True)
-    elif fichas_atuais <= 0:
-        st.markdown('<div class="fichas-esgotadas-box">🎟️ Teste Expirado (0 Fichas / 7 Dias)</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="fichas-ok-box">🎟️ Fichas de Teste: ({fichas_atuais}/7)</div>', unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.subheader("🏢 Dados da Oficina")
-    nome_oficina = st.text_input("Nome da Oficina", value="AUTOLAB DIAGNÓSTICOS")
-    cnpj_oficina = st.text_input("CNPJ", value="00.000.000/0001-00")
-    tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
-
-    st.markdown("---")
-    if st.button("🚪 Sair do Sistema", width="stretch"):
-        st.session_state["logado"] = False
-        st.session_state["user_email"] = ""
-        st.session_state["user_nome"] = ""
-        st.rerun()
-
-# ---------------------------------------------------------
-# 10. Interface Principal e Abas
+# 11. Interface Principal e Abas
 # ---------------------------------------------------------
 st.title("🔬 Sistema de Diagnóstico Avançado 🔬")
 st.write("Análise de sinais de osciloscópio, leituras de parâmetros de scanner, códigos de falha (DTC), textos, áudios e vídeos técnicos.")
@@ -926,9 +940,13 @@ st.write("Análise de sinais de osciloscópio, leituras de parâmetros de scanne
 is_adm = str(st.session_state.get('user_email', '')).strip().lower() == EMAIL_ADM.lower()
 
 if is_adm:
-    aba1, aba_uces, aba2, aba3, aba4, aba5, aba6 = st.tabs([
+    aba_empresa, aba1, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5, aba6 = st.tabs([
+        "🏢 Minha Empresa",
         "🔬 Diagnóstico", 
         "🔌 Suporte U.C.Es",
+        "📡 Suporte Scanners",
+        "💻 Suporte Programadores",
+        "⚙️ Suporte Programação",
         "📜 Histórico", 
         "🎓 Cursos & Redes Sociais", 
         "💬 Connect WhatsApp", 
@@ -936,9 +954,13 @@ if is_adm:
         "💎 Gestão de Clientes 💎"
     ])
 else:
-    aba1, aba_uces, aba2, aba3, aba4, aba5 = st.tabs([
+    aba_empresa, aba1, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5 = st.tabs([
+        "🏢 Minha Empresa",
         "🔬 Diagnóstico", 
         "🔌 Suporte U.C.Es",
+        "📡 Suporte Scanners",
+        "💻 Suporte Programadores",
+        "⚙️ Suporte Programação",
         "📜 Histórico", 
         "🎓 Cursos & Redes Sociais", 
         "💬 Connect WhatsApp", 
@@ -946,7 +968,153 @@ else:
     ])
 
 # =========================================================
-# ABA 1: DIAGNÓSTICO AVANÇADO (COMPLETO + BOTÃO DE PDF DIRETO)
+# ABA 🏢 MINHA EMPRESA (SELO DE QUALIDADE EM DIAGNÓSTICO)
+# =========================================================
+with aba_empresa:
+    st.markdown("""
+    <style>
+        .selo-container {
+            background: linear-gradient(135deg, rgba(3, 20, 12, 0.95) 0%, rgba(5, 46, 22, 0.9) 100%);
+            border: 2px solid #00FF88;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 35px rgba(0, 255, 136, 0.35);
+            margin-bottom: 25px;
+        }
+        .selo-header {
+            text-align: center;
+            border-bottom: 2px dashed #00FF88;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .selo-titulo {
+            color: #FFD700 !important;
+            font-size: 1.8rem;
+            font-weight: 900;
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .selo-subtitulo {
+            color: #00FF88 !important;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+        .info-label {
+            color: #00E5FF !important;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .info-value {
+            color: #FFFFFF !important;
+            font-weight: 800;
+            font-size: 1.15rem;
+            background: rgba(0, 229, 255, 0.08);
+            border-left: 4px solid #00E5FF;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .metric-card-neon {
+            background: rgba(5, 46, 22, 0.7);
+            border: 1px solid #FFD700;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    email_usuario = st.session_state.get('user_email', '')
+    nome_usuario_logado = st.session_state.get('user_nome', 'Agente de Diagnóstico')
+    tipo_acesso = st.session_state.get('user_tipo_acesso', 'teste')
+    fichas_restantes = st.session_state.get('user_fichas', 0)
+    total_diag_feitos = contar_diagnosticos(email_usuario)
+    
+    dt_cad, dt_teste, dt_ass = obter_detalhes_usuario_banco(email_usuario)
+    
+    if email_usuario == EMAIL_ADM or fichas_restantes >= 999 or tipo_acesso == "assinante":
+        nome_plano = "👑 Plano Anual Ilimitado (Nível Especialista)"
+        data_expira = dt_ass if dt_ass != "N/A" else "365 Dias"
+    else:
+        nome_plano = "🚀 Período de Teste Inicial (7 Dias)"
+        data_expira = dt_teste if dt_teste != "N/A" else "7 Dias"
+
+    st.markdown(f"""
+    <div class="selo-container">
+        <div class="selo-header">
+            <div style="font-size: 40px; margin-bottom: 5px;">🛡️</div>
+            <h2 class="selo-titulo">Selo de Qualidade em Diagnóstico Automotivo</h2>
+            <p class="selo-subtitulo">Certificado Oficial AutoLab LOA – Excelência em Engenharia de Diagnósticos</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    col_emp1, col_emp2 = st.columns(2, gap="large")
+
+    with col_emp1:
+        st.markdown(f"""
+        <div class="info-label">🏢 Nome da Oficina</div>
+        <div class="info-value">{nome_oficina}</div>
+
+        <div class="info-label">📄 CNPJ</div>
+        <div class="info-value">{cnpj_oficina}</div>
+
+        <div class="info-label">📞 Celular / WhatsApp</div>
+        <div class="info-value">{tel_oficina}</div>
+
+        <div class="info-label">🕵️‍♂️ Agente de Diagnóstico</div>
+        <div class="info-value">{nome_usuario_logado}</div>
+        """, unsafe_allow_html=True)
+
+    with col_emp2:
+        st.markdown(f"""
+        <div class="info-label">💎 Plano Escolhido</div>
+        <div class="info-value">{nome_plano}</div>
+
+        <div class="info-label">📥 Contratado em</div>
+        <div class="info-value">{dt_cad}</div>
+
+        <div class="info-label">⏳ Expira em</div>
+        <div class="info-value">{data_expira}</div>
+
+        <div class="info-label">🎟️ Fichas / Créditos Disponíveis</div>
+        <div class="info-value">{fichas_restantes if fichas_restantes < 999 else 'Ilimitado'} Fichas</div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    
+    col_painel1, col_painel2, col_painel3 = st.columns(3)
+    with col_painel1:
+        st.markdown(f"""
+        <div class="metric-card-neon">
+            <div style="color: #00E5FF; font-size: 14px; font-weight: 700;">📈 TOTAL DE DIAGNÓSTICOS</div>
+            <div style="color: #FFD700; font-size: 2rem; font-weight: 900; margin-top: 5px;">{total_diag_feitos}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_painel2:
+        st.markdown(f"""
+        <div class="metric-card-neon">
+            <div style="color: #00E5FF; font-size: 14px; font-weight: 700;">⚡ STATUS DA CONTA</div>
+            <div style="color: #00FF88; font-size: 1.5rem; font-weight: 900; margin-top: 8px;">ATIVO</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_painel3:
+        st.markdown(f"""
+        <div class="metric-card-neon">
+            <div style="color: #00E5FF; font-size: 14px; font-weight: 700;">🌟 PADRÃO TÉCNICO</div>
+            <div style="color: #FFD700; font-size: 1.5rem; font-weight: 900; margin-top: 8px;">Especialista</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# =========================================================
+# ABA 1: DIAGNÓSTICO AVANÇADO
 # =========================================================
 with aba1:
     st.subheader("🤖 Diagnóstico Automotivo Inteligente 🤖")
@@ -977,7 +1145,7 @@ with aba1:
 
     val_sintomas_wsp = st.session_state.get('sintomas_wsp', '')
     valores = st.text_area(
-        "📝 Relato dos Sintomas / Reclamações do Cliente / Medições elétricas",
+        "📝 Relato dos Sintomas / Reclamações du Cliente / Medições elétricas",
         value=val_sintomas_wsp,
         placeholder="Descreva o comportamento do veículo, falhas intermitentes, pressões de combustível, tensões medidas, etc.",
         height=100
@@ -1426,7 +1594,7 @@ with aba_uces:
             return None
 
     with st.expander("1. 🖥️ Analisar Placa Completa (Opções de Mapeamento Visual)", expanded=False):
-        img_placa_comp = st.file_uploader("Foto da Placa Inteira (PCB Frontal ou Traseira)", type=["png", "jpg", "jpeg"], key="u_placa_comp")
+        img_placa_comp = st.file_uploader("Foto da Placa Inteira (PCB Frontal or Traseira)", type=["png", "jpg", "jpeg"], key="u_placa_comp")
         duvida_placa = st.text_area("Dúvida sobre a placa completa:", placeholder="Ex: Qual setor é responsável pelos injetores?", key="d_placa")
         
         tipo_map_escolhido = st.radio(
@@ -1459,7 +1627,7 @@ with aba_uces:
                                 st.session_state['imagem_mapeada_num'] = img_n
                                 st.session_state['lista_componentes_num'] = lista_n
                                 
-                        st.success("Mapeamento(s) gerado(s) com sucesso!")
+                    st.success("Mapeamento(s) gerado(s) com sucesso!")
                 else:
                     st.warning("Preencha a Identificação do Módulo e anexe a foto da placa.")
 
@@ -1533,7 +1701,7 @@ with aba_uces:
             if ans: st.info(ans)
 
     with st.expander("9. 📉 Analisar Curva Característica (Tracker / Rastreador de Defeitos V/I)", expanded=False):
-        img_curva = st.file_uploader("Foto da Curva V/I do Componente", type=["png", "jpg", "jpeg"], key="u_curva")
+        img_curva = st.file_uploader("Foto da Curva V/I du Componente", type=["png", "jpg", "jpeg"], key="u_curva")
         duvida_curva = st.text_area("Dúvida sobre a forma de onda / curva característica:", key="d_curva")
         if st.button("🔍 Analisar Curva V/I", key="btn_ind_curva"):
             ans = analisar_ponto_individual("Curva V/I", f"Dúvida Curva V/I: {duvida_curva}", img_curva)
@@ -1741,6 +1909,319 @@ with aba_uces:
         )
 
 # =========================================================
+# ABA 📡 SUPORTE SCANNERS
+# =========================================================
+with aba_scanners:
+    st.subheader("📡 Suporte Avançado de Scanners & Compatibilidade")
+    st.write("Cadastre os scanners que você possui na oficina para a IA analisar a viabilidade de execução dos procedimentos ou tire dúvidas técnicas.")
+    st.markdown("---")
+
+    col_sc_cad, col_sc_duv = st.columns([1, 1], gap="large")
+
+    with col_sc_cad:
+        st.markdown("### 🛠️ Cadastro de Scanners da Oficina")
+        scanners_disponiveis = [
+            "Bosch KTS (540 / 560 / 590 / 350)",
+            "Launch X431 (Pro / Pad / Diagzone)",
+            "Autel MaxiSys (Elite / MS908 / Ultra)",
+            "Tecnomotor Rasther (III / TS / I)",
+            "Raven (III / II)",
+            "G-Scan (2 / 3 / Z)",
+            "Kess / K-Tag / DFOX (Bancada)",
+            "Outros Scanners / Interface J2534"
+        ]
+        scanners_selecionados = st.multiselect("Selecione seus Scanners:", scanners_disponiveis, default=["Bosch KTS (540 / 560 / 590 / 350)", "Launch X431 (Pro / Pad / Diagzone)"])
+        outro_scanner = st.text_input("Outro Scanner / Versão Específica:", placeholder="Ex: Scanner específico...")
+        
+        if st.button("💾 Salvar Inventário de Scanners", width="stretch"):
+            lista_final_scanners = ", ".join(scanners_selecionados)
+            if outro_scanner: lista_final_scanners += f", {outro_scanner}"
+            conn = sqlite3.connect('diagnosticos.db')
+            c = conn.cursor()
+            c.execute('UPDATE usuarios SET scanners_cadastrados = ? WHERE email = ?', (lista_final_scanners, email_usuario))
+            conn.commit()
+            conn.close()
+            st.success("✅ Scanners salvos com sucesso!")
+
+    with col_sc_duv:
+        st.markdown("### 💬 Dúvidas sobre Procedimentos com Scanners")
+        veiculo_scanner_duvida = st.text_input("Veículo / Sistema para o Procedimento:", placeholder="Ex: Hilux 2.8 D4D - Sangria de ABS ou Codificação de Bicos")
+        pergunta_scanner = st.text_area("Descreva a dúvida sobre o procedimento:")
+        col_m_sc1, col_m_sc2 = st.columns(2)
+        with col_m_sc1: foto_tela_scanner = st.file_uploader("📸 Foto da Tela", type=["png", "jpg", "jpeg"], key="foto_tela_sc")
+        with col_m_sc2: audio_video_scanner = st.file_uploader("🎥 Vídeo / Áudio / Imagem Extra", type=["mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg"], key="midia_extra_sc")
+        mic_sc = st.audio_input("🎙️ Gravar Dúvida por Áudio (Scanner)", key="mic_sc")
+
+    st.markdown("---")
+    if st.button("🚀 Analisar Procedimento com Scanners 🚀", width="stretch"):
+        if veic_sc := veiculo_scanner_duvida:
+            with st.spinner("📡 ANALISANDO SCANNERS..."):
+                scanners_do_usuario = ", ".join(scanners_selecionados) if 'scanners_selecionados' in locals() else "Nenhum cadastrado"
+                prompt_scanner_ia = f"""
+                ATUE COMO O ENGENHEIRO CHEFE EM DIAGNÓSTICO AUTOMOTIVO E ESPECIALISTA EM SCANNERS DA AUTOLAB.
+                - Veículo/Sistema: {veiculo_scanner_duvida}
+                - Dúvida: {pergunta_scanner}
+                - Scanners Disponíveis: {scanners_do_usuario}
+                Forneça análise de compatibilidade e passo a passo detalhado no menu do scanner.
+                """
+                contents_sc = [prompt_scanner_ia]
+                if mic_sc:
+                    mic_sc.seek(0)
+                    contents_sc.append(types.Part.from_bytes(data=mic_sc.read(), mime_type="audio/wav"))
+                if foto_tela_scanner:
+                    foto_tela_scanner.seek(0)
+                    img_s = Image.open(foto_tela_scanner)
+                    img_s.thumbnail((1280, 1280))
+                    buf_s = io.BytesIO()
+                    img_s.save(buf_s, format="JPEG", quality=85)
+                    contents_sc.append(types.Part.from_bytes(data=buf_s.getvalue(), mime_type="image/jpeg"))
+                
+                resp_sc = client.models.generate_content(model='gemini-3-flash-preview', contents=contents_sc)
+                st.markdown(resp_sc.text if hasattr(resp_sc, 'text') else "Sem resposta.")
+
+# =========================================================
+# ABA 💻 SUPORTE PROGRAMADORES
+# =========================================================
+with aba_programadores:
+    st.subheader("💻 Suporte de Programadores, Boots, Memórias & Processadores")
+    st.write("Tire dúvidas sobre conexões de Boot, BDM, JTAG, leitura de memórias SOIC/Flash e processadores MCU.")
+    st.markdown("---")
+
+    col_pg_cad, col_pg_duv = st.columns([1, 1], gap="large")
+    with col_pg_cad:
+        st.markdown("### 🛠️ Cadastro de Programadores")
+        prog_disp = ["K-Tag / Kess", "VVDI Prog / Key Tool Plus", "Orange 5", "UPA-USB", "Flex", "DFOX", "I/O Terminal"]
+        prog_sel = st.multiselect("Selecione seus Programadores:", prog_disp, default=["K-Tag / Kess", "VVDI Prog / Key Tool Plus"])
+        if st.button("💾 Salvar Programadores", width="stretch"):
+            conn = sqlite3.connect('diagnosticos.db')
+            c = conn.cursor()
+            c.execute('UPDATE usuarios SET programadores_cadastrados = ? WHERE email = ?', (", ".join(prog_sel), email_usuario))
+            conn.commit()
+            conn.close()
+            st.success("✅ Programadores salvos!")
+
+    with col_pg_duv:
+        st.markdown("### 💬 Dúvidas de Bancada (Boot / MCU / Memória)")
+        mod_pg = st.text_input("Módulo / MCU / Memória:", placeholder="Ex: EDC17C69 (Tricore TC1793)")
+        duv_pg = st.text_area("Descreva a dúvida de boot/conexão:")
+        foto_pg = st.file_uploader("📸 Foto da Placa / Conexão de Boot", type=["png", "jpg", "jpeg"], key="foto_pg")
+        mic_pg = st.audio_input("🎙️ Gravar Dúvida por Áudio (Programadores)", key="mic_pg")
+
+    st.markdown("---")
+    if st.button("🚀 Analisar Conexão de Bancada 🚀", width="stretch"):
+        if mod_pg:
+            with st.spinner("💻 ANALISANDO BANCADA..."):
+                prompt_pg_ia = f"Módulo/MCU: {mod_pg}. Dúvida: {duv_pg}. Ferramentas: {prog_sel}."
+                c_pg = [prompt_pg_ia]
+                if mic_pg:
+                    mic_pg.seek(0)
+                    c_pg.append(types.Part.from_bytes(data=mic_pg.read(), mime_type="audio/wav"))
+                if foto_pg:
+                    foto_pg.seek(0)
+                    img_pg_f = Image.open(foto_pg)
+                    img_pg_f.thumbnail((1280, 1280))
+                    buf_pg = io.BytesIO()
+                    img_pg_f.save(buf_pg, format="JPEG", quality=85)
+                    c_pg.append(types.Part.from_bytes(data=buf_pg.getvalue(), mime_type="image/jpeg"))
+                
+                resp_pg = client.models.generate_content(model='gemini-3-flash-preview', contents=c_pg)
+                st.markdown(resp_pg.text if hasattr(resp_pg, 'text') else "Sem resposta.")
+
+# =========================================================
+# ABA ⚙️ SUPORTE PROGRAMAÇÃO (CALCULADORA COMPUTADOR + BUFFER HEX 16xN + CKS + EDITOR)
+# =========================================================
+with aba_programacao:
+    st.subheader("⚙️ Suporte Avançado de Programação & Arquivos Binários")
+    st.write("Calculadora científica/programador estilo Windows, Editor HEX com visualizador Buffer 16 colunas, Leitor de CKS & ASCII Inteligente via IA, e Comparador de Arquivos.")
+    st.markdown("---")
+
+    tab_calc, tab_hex, tab_cks, tab_comp, tab_duv_prog = st.tabs([
+        "🧮 Calculadora Computador", 
+        "📝 Editor HEX & Buffer 16xN", 
+        "🔍 CKS & Extração ASCII (IA)", 
+        "📊 Comparador de Arquivos", 
+        "💬 Dúvidas sobre Arquivos"
+    ])
+
+    with tab_calc:
+        st.markdown("### 🧮 Calculadora Profissional (Estilo Windows)")
+        st.caption("Você pode clicar nos botões com o mouse ou digitar diretamente no visor com o teclado do computador:")
+
+        if 'calc_input' not in st.session_state:
+            st.session_state['calc_input'] = "0"
+
+        def click_btn(val):
+            curr = str(st.session_state['calc_input'])
+            if curr == "0" or curr == "Erro":
+                st.session_state['calc_input'] = str(val)
+            else:
+                st.session_state['calc_input'] += str(val)
+
+        def limpar_calc():
+            st.session_state['calc_input'] = "0"
+
+        def calcular_resultado():
+            try:
+                expr = str(st.session_state['calc_input']).replace('×', '*').replace('÷', '/')
+                res = eval(expr)
+                st.session_state['calc_input'] = str(res)
+            except Exception:
+                st.session_state['calc_input'] = "Erro"
+
+        visor_val = st.session_state['calc_input']
+        st.markdown(f"""
+        <div style="background-color: #011611; border: 2px solid #00FF88; padding: 15px; border-radius: 10px; text-align: right; font-size: 2rem; font-weight: 900; color: #00FF88; margin-bottom: 15px; box-shadow: 0 0 15px rgba(0,255,136,0.3);">
+            {visor_val}
+        </div>
+        """, unsafe_allow_html=True)
+
+        try:
+            num_base = int(float(visor_val))
+            st.markdown(f"""
+            <div style="background-color: rgba(0,229,255,0.08); border-left: 4px solid #00E5FF; padding: 10px; border-radius: 6px; margin-bottom: 20px; font-weight: 700; color: #00E5FF;">
+                HEX: <span style="color:#FFF;">0x{num_base:X}</span> | DEC: <span style="color:#FFF;">{num_base}</span> | OCT: <span style="color:#FFF;">{oct(num_base)}</span> | BIN: <span style="color:#FFF;">{bin(num_base)}</span>
+            </div>
+            """, unsafe_allow_html=True)
+        except Exception:
+            pass
+
+        c1, c2, c3, c4, c5 = st.columns(5)
+        with c1:
+            if st.button("C", key="btn_c", width="stretch"): limpar_calc()
+            if st.button("7", key="btn_7", width="stretch"): click_btn('7')
+            if st.button("4", key="btn_4", width="stretch"): click_btn('4')
+            if st.button("1", key="btn_1", width="stretch"): click_btn('1')
+            if st.button("0", key="btn_0", width="stretch"): click_btn('0')
+        with c2:
+            if st.button("(", key="btn_par_dir", width="stretch"): click_btn('(')
+            if st.button("8", key="btn_8", width="stretch"): click_btn('8')
+            if st.button("5", key="btn_5", width="stretch"): click_btn('5')
+            if st.button("2", key="btn_2", width="stretch"): click_btn('2')
+            if st.button("00", key="btn_00", width="stretch"): click_btn('00')
+        with c3:
+            if st.button(")", key="btn_par_esq", width="stretch"): click_btn(')')
+            if st.button("9", key="btn_9", width="stretch"): click_btn('9')
+            if st.button("6", key="btn_6", width="stretch"): click_btn('6')
+            if st.button("3", key="btn_3", width="stretch"): click_btn('3')
+            if st.button(".", key="btn_ponto", width="stretch"): click_btn('.')
+        with c4:
+            if st.button("÷", key="btn_div", width="stretch"): click_btn('÷')
+            if st.button("×", key="btn_mult", width="stretch"): click_btn('×')
+            if st.button("-", key="btn_menos", width="stretch"): click_btn('-')
+            if st.button("+", key="btn_mais", width="stretch"): click_btn('+')
+            if st.button("=", key="btn_igual", width="stretch"): calcular_resultado()
+        with c5:
+            if st.button("A", key="btn_a", width="stretch"): click_btn('A')
+            if st.button("B", key="btn_b", width="stretch"): click_btn('B')
+            if st.button("C", key="btn_c_hex", width="stretch"): click_btn('C')
+            if st.button("D", key="btn_d", width="stretch"): click_btn('D')
+            col_e, col_f = st.columns(2)
+            with col_e: 
+                if st.button("E", key="btn_e", width="stretch"): click_btn('E')
+            with col_f: 
+                if st.button("F", key="btn_f", width="stretch"): click_btn('F')
+
+    with tab_hex:
+        st.markdown("### 📝 Editor HEX & Buffer (16 Colunas x Linhas Ilimitadas)")
+        arquivo_hex_vis = st.file_uploader("Carregar arquivo binário para visualização em Buffer HEX", type=["bin", "hex", "ori", "mod"], key="up_hex_vis")
+        
+        if arquivo_hex_vis:
+            dados_bin = arquivo_hex_vis.read()
+            tamanho_total = len(dados_bin)
+            st.info(f"📁 Arquivo carregado com sucesso! Tamanho total: **{tamanho_total} bytes**")
+            
+            linhas_buffer = []
+            chunk_size = 16
+            for i in range(0, min(tamanho_total, 4096), chunk_size):
+                chunk = dados_bin[i:i+chunk_size]
+                offset_str = f"{i:08X}"
+                hex_parte = " ".join(f"{b:02X}" for b in chunk)
+                ascii_parte = "".join(chr(b) if 32 <= b <= 126 else "." for b in chunk)
+                linhas_buffer.append(f"{offset_str}  {hex_parte.ljust(47)}  |{ascii_parte}|")
+            
+            buffer_formatado = "\n".join(linhas_buffer)
+            st.code(buffer_formatado, language="text")
+            if tamanho_total > 4096:
+                st.caption(f"ℹ️ Exibindo os primeiros 4096 bytes de {tamanho_total} bytes totais no buffer para visualização fluida.")
+
+    with tab_cks:
+        st.markdown("### 🔍 Cálculo de CKS & Leitura ASCII Inteligente (IA)")
+        arquivo_cks = st.file_uploader("Carregar arquivo para análise de CKS e ASCII", type=["bin", "hex", "ori", "mod"], key="up_cks")
+        
+        if arquivo_cks:
+            bytes_cks = arquivo_cks.read()
+            tamanho_arq = len(bytes_cks)
+            ascii_bruto = "".join([chr(b) if 32 <= b <= 126 else "." for b in bytes_cks])
+            padrao_vin = re.findall(r'[A-HJ-NPR-Z0-9]{17}', ascii_bruto)
+            
+            col_cks_info, col_cks_ia = st.columns([1, 1], gap="large")
+            with col_cks_info:
+                st.markdown(f"**Tamanho do Arquivo:** `{tamanho_arq} bytes`")
+                st.markdown(f"**Hash SHA256:** `{hashlib.sha256(bytes_cks).hexdigest()}`")
+                if padrao_vin:
+                    st.success(f"🔍 **VIN Encontrado:** {', '.join(set(padrao_vin))}")
+                else:
+                    st.info("Nenhum VIN de 17 dígitos detectado na varredura simples.")
+            
+            with col_cks_ia:
+                if st.button("🤖 Pedir Análise Completa de ASCII e CKS à IA", width="stretch", key="btn_ia_cks"):
+                    with st.spinner("Analisando estrutura binária..."):
+                        amostra_ascii = ascii_bruto[:2000]
+                        prompt_ia_bin = f"""
+                        Analise estes dados extraídos em ASCII de um arquivo binário automotivo:
+                        {amostra_ascii}
+                        Identifique e liste:
+                        1. Número da Peça / Software / Hardware
+                        2. Informações de Imobilizador / VIN
+                        3. Status provável do Checksum (CKS).
+                        """
+                        res_bin_ia = client.models.generate_content(model='gemini-3-flash-preview', contents=[prompt_ia_bin])
+                        st.markdown(res_bin_ia.text if hasattr(res_bin_ia, 'text') else "Sem dados.")
+
+    with tab_comp:
+        st.markdown("### 📊 Comparador de Arquivos (File Comparer)")
+        col_cp1, col_cp2 = st.columns(2)
+        with col_cp1: arq_original = st.file_uploader("Arquivo Original (.ori)", type=["bin", "hex", "ori"], key="ori_file")
+        with col_cp2: arq_modificado = st.file_uploader("Arquivo Modificado (.mod)", type=["bin", "hex", "mod"], key="mod_file")
+            
+        if arq_original and arq_modificado:
+            b_ori = arq_original.read()
+            b_mod = arq_modificado.read()
+            if len(b_ori) == len(b_mod):
+                diferencas = sum(1 for o, m in zip(b_ori, b_mod) if o != m)
+                st.success(f"✅ Arquivos com o mesmo tamanho ({len(b_ori)} bytes).")
+                st.warning(f"🔄 **Bytes diferentes encontrados:** {diferencas} bytes alterados.")
+            else:
+                st.error(f"⚠️ Tamanhos diferentes! Original: {len(b_ori)} bytes | Modificado: {len(b_mod)} bytes.")
+
+    with tab_duv_prog:
+        st.markdown("### 💬 Dúvidas sobre Arquivos, CKS ou Modificações")
+        duv_arq_texto = st.text_area("Descreva sua dúvida:", placeholder="Ex: Preciso de ajuda para corrigir o CKS...", key="duv_arq_txt")
+        arq_duvida_sup = st.file_uploader("Anexar arquivo para suporte", type=["bin", "hex", "ori", "mod"], key="arq_duv_up")
+        foto_arq_sup = st.file_uploader("📸 Foto da central ou erro", type=["png", "jpg", "jpeg"], key="foto_duv_up")
+        mic_prog_sup = st.audio_input("🎙️ Gravar Dúvida por Áudio", key="mic_prog_sup")
+
+        if st.button("🚀 Enviar Dúvida para a IA 🚀", width="stretch", key="btn_enviar_duv_prog"):
+            if duv_arq_texto:
+                with st.spinner("Analisando solicitação..."):
+                    c_prog_sup = [f"Dúvida sobre arquivos/programação: {duv_arq_texto}"]
+                    if mic_prog_sup:
+                        mic_prog_sup.seek(0)
+                        c_prog_sup.append(types.Part.from_bytes(data=mic_prog_sup.read(), mime_type="audio/wav"))
+                    if foto_arq_sup:
+                        foto_arq_sup.seek(0)
+                        img_ds = Image.open(foto_arq_sup)
+                        img_ds.thumbnail((1280, 1280))
+                        buf_ds = io.BytesIO()
+                        img_ds.save(buf_ds, format="JPEG", quality=85)
+                        c_prog_sup.append(types.Part.from_bytes(data=buf_ds.getvalue(), mime_type="image/jpeg"))
+                    
+                    r_prog_sup = client.models.generate_content(model='gemini-3-flash-preview', contents=c_prog_sup)
+                    st.markdown(r_prog_sup.text if hasattr(r_prog_sup, 'text') else "Sem resposta.")
+            else:
+                st.warning("Escreva a sua dúvida antes de enviar.")
+
+# =========================================================
 # ABA 3: HISTÓRICO DOS DIAGNÓSTICOS
 # =========================================================
 with aba2:
@@ -1812,12 +2293,12 @@ with aba4:
     with col_wsp2:
         st.markdown("""
         <div style="background-color: #052E16; border: 1px solid #065F46; padding: 20px; border-radius: 12px; text-align: center;">
-            <h4 style="color: #00FF88 !important; margin-bottom: 10px;">📋 Copiar Mensagem, Áudio ou Vídeo do Cliente</h4>
+            <h4 style="color: #00FF88 !important; margin-bottom: 10px;">📋 Copiar Mensagem, Áudio ou Vídeo du Cliente</h4>
             <p style="color: #A7F3D0 !important; font-size: 0.9rem;">Anexe os arquivos recebidos no WhatsApp para enviar direto à aba de Diagnóstico.</p>
         </div>
         """, unsafe_allow_html=True)
         
-        texto_wsp = st.text_area("Texto/Transcrição do WhatsApp:", placeholder="Ex: Cliente relatou que o carro falha...", height=100)
+        texto_wsp = st.text_area("Texto/Transcrição du WhatsApp:", placeholder="Ex: Cliente relatou que o carro falha...", height=100)
         audio_file_wsp = st.file_uploader("🎙️ Anexar Áudio do WhatsApp (.ogg, .mp3, .wav, .m4a)", type=["ogg", "mp3", "wav", "m4a"], key="upload_audio_wsp")
         video_file_wsp = st.file_uploader("🎥 Anexar Vídeo do WhatsApp (.mp4, .mov, .avi, .mkv)", type=["mp4", "mov", "avi", "mkv"], key="upload_video_wsp")
         
