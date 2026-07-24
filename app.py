@@ -832,42 +832,8 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
 # ---------------------------------------------------------
 # 9. Barra Lateral (Sidebar)
 # ---------------------------------------------------------
-with st.sidebar:
-    st.markdown("""
-    <style>
-        @keyframes pulse-red-alert {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); background-color: rgba(239, 68, 68, 0.2); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); background-color: rgba(239, 68, 68, 0.4); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); background-color: rgba(239, 68, 68, 0.2); }
-        }
-        
-        .fichas-esgotadas-box {
-            border: 2px solid #EF4444;
-            color: #EF4444 !important;
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 800;
-            font-size: 1.05rem;
-            animation: pulse-red-alert 1.8s infinite;
-            margin-bottom: 15px;
-        }
-
-        .fichas-ok-box {
-            border: 1px solid #10B981;
-            background-color: rgba(16, 185, 129, 0.15);
-            color: #00FF88 !important;
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: 700;
-            margin-bottom: 15px;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-        
-    # Só exibe a barra lateral se o usuário estiver logado
-    if st.session_state.get("logado", False):
+if st.session_state.get("logado", False):
+    with st.sidebar:
         col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
         with col_logo2:
             caminho_foto = r"C:\Users\arian\OneDrive\Desktop\app.py\logo_autolab.jpeg"
@@ -888,11 +854,11 @@ with st.sidebar:
         fichas_atuais = st.session_state.get('user_fichas', 0)
 
         if tipo_acesso_atual == "assinante":
-            st.markdown('<div class="fichas-ok-box">👑 Plano Anual Ativo (Ilimitado)</div>', unsafe_allow_html=True)
+            st.markdown("👑 **Plano Anual Ativo (Ilimitado)**")
         elif fichas_atuais <= 0:
-            st.markdown('<div class="fichas-esgotadas-box">🎟️ Teste Expirado (0 Fichas / 7 Dias)</div>', unsafe_allow_html=True)
+            st.markdown("🎟️ **Teste Expirado (0 Fichas)**")
         else:
-            st.markdown(f'<div class="fichas-ok-box">🎟️ Fichas de Teste: ({fichas_atuais}/7)</div>', unsafe_allow_html=True)
+            st.markdown(f"🎟️ **Fichas de Teste:** ({fichas_atuais}/7)")
 
         st.markdown("---")
         st.subheader("🏢 Dados da Oficina")
@@ -901,14 +867,11 @@ with st.sidebar:
         tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
 
         st.markdown("---")
-        # Botão de Sair visível para TODOS os usuários na barra lateral
-        if st.button("🚪 Sair do Sistema", width="stretch"):
+        if st.button("🚪 Sair do Sistema"):
             st.session_state["logado"] = False
             st.session_state["user_email"] = ""
             st.session_state["user_nome"] = ""
             st.rerun()
-    else:
-        st.markdown("Faça login para acessar os recursos.")
 
 # ---------------------------------------------------------
 # 10. Interface Principal e Abas
