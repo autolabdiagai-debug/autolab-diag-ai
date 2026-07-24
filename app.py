@@ -873,42 +873,49 @@ with st.sidebar:
     </style>
     """, unsafe_allow_html=True)
         
-    col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
-    with col_logo2:
-        caminho_foto = r"C:\Users\arian\OneDrive\Desktop\app.py\logo_autolab.jpeg"
-        if os.path.exists(caminho_foto):
-            try:
-                imagem_pil = Image.open(caminho_foto)
-                st.image(imagem_pil, width=120)
-            except Exception:
+    # Só exibe a barra lateral se o usuário estiver logado
+    if st.session_state.get("logado", False):
+        col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
+        with col_logo2:
+            caminho_foto = r"C:\Users\arian\OneDrive\Desktop\app.py\logo_autolab.jpeg"
+            if os.path.exists(caminho_foto):
+                try:
+                    imagem_pil = Image.open(caminho_foto)
+                    st.image(imagem_pil, width=120)
+                except Exception:
+                    st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
+            else:
                 st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
+        
+        nome_agente = st.session_state.get('user_nome') or "Técnico AutoLab"
+        st.markdown(f"🕵️‍♂️ **Agente:** {nome_agente}")
+        st.markdown("---")
+
+        tipo_acesso_atual = st.session_state.get('user_tipo_acesso', 'teste')
+        fichas_atuais = st.session_state.get('user_fichas', 0)
+
+        if tipo_acesso_atual == "assinante":
+            st.markdown('<div class="fichas-ok-box">👑 Plano Anual Ativo (Ilimitado)</div>', unsafe_allow_html=True)
+        elif fichas_atuais <= 0:
+            st.markdown('<div class="fichas-esgotadas-box">🎟️ Teste Expirado (0 Fichas / 7 Dias)</div>', unsafe_allow_html=True)
         else:
-            st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
-    
-    nome_agente = st.session_state.get('user_nome') or "Técnico AutoLab"
-    st.markdown(f"🕵️‍♂️ **Agente:** {nome_agente}")
-    st.markdown("---")
+            st.markdown(f'<div class="fichas-ok-box">🎟️ Fichas de Teste: ({fichas_atuais}/7)</div>', unsafe_allow_html=True)
 
-    tipo_acesso_atual = st.session_state.get('user_tipo_acesso', 'teste')
-    fichas_atuais = st.session_state.get('user_fichas', 0)
+        st.markdown("---")
+        st.subheader("🏢 Dados da Oficina")
+        nome_oficina = st.text_input("Nome da Oficina", value="AUTOLAB DIAGNÓSTICOS")
+        cnpj_oficina = st.text_input("CNPJ", value="00.000.000/0001-00")
+        tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
 
-    if tipo_acesso_atual == "assinante":
-        st.markdown('<div class="fichas-ok-box">👑 Plano Anual Ativo (Ilimitado)</div>', unsafe_allow_html=True)
-    elif fichas_atuais <= 0:
-        st.markdown('<div class="fichas-esgotadas-box">🎟️ Teste Expirado (0 Fichas / 7 Dias)</div>', unsafe_allow_html=True)
+        st.markdown("---")
+        # Botão de Sair visível para TODOS os usuários na barra lateral
+        if st.button("🚪 Sair do Sistema", width="stretch"):
+            st.session_state["logado"] = False
+            st.session_state["user_email"] = ""
+            st.session_state["user_nome"] = ""
+            st.rerun()
     else:
-        st.markdown(f'<div class="fichas-ok-box">🎟️ Fichas de Teste: ({fichas_atuais}/7)</div>', unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.subheader("🏢 Dados da Oficina")
-    nome_oficina = st.text_input("Nome da Oficina", value="AUTOLAB DIAGNÓSTICOS")
-    cnpj_oficina = st.text_input("CNPJ", value="00.000.000/0001-00")
-    tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
-
-    st.markdown("---")
-    if st.button("🚪 Sair do Sistema", width="stretch"):
-        st.session_state["logado"] = False
-        st.rerun()
+        st.markdown("Faça login para acessar os recursos.")
 
 # ---------------------------------------------------------
 # 10. Interface Principal e Abas
