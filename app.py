@@ -27,6 +27,7 @@ import pandas as pd
 API_KEY = st.secrets["GOOGLE_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
+
 # ---------------------------------------------------------
 # CONSTANTES DO SISTEMA
 # ---------------------------------------------------------
@@ -365,9 +366,13 @@ def tela_login():
 
     st.markdown("""
     <style>
-        .stApp { background: transparent !important; }
-        /* Oculta o cabeçalho e a barra lateral APENAS na tela de login */
+        /* Força fundo escuro na tela de login para evitar tela branca */
+        .stApp { background-color: #03140C !important; }
+        
+        /* Oculta cabeçalho e barra lateral APENAS na tela de login */
         [data-testid="stHeader"], [data-testid="stSidebar"] { display: none !important; }
+        
+        .main .block-container { background: transparent !important; padding-top: 1rem !important; max-width: 1300px; }
         
         .video-bg-container {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -413,8 +418,15 @@ def tela_login():
             margin-top: 10px;
         }
     </style>
+
+    <div class="video-bg-container">
+        <video autoplay loop muted playsinline>
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-screens-and-data-41538-large.mp4" type="video/mp4">
+        </video>
+        <div class="video-mask"></div>
+    </div>
     """, unsafe_allow_html=True)
-    
+
     st.markdown("<h1 style='text-align: center; color: #00FF88; font-weight: 900; text-shadow: 0 0 20px rgba(0,255,136,0.8); font-size: 2.5rem; margin-bottom: 5px;'>🧠 AUTOLAB DIAG AI</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #FFD700; font-size: 1.15rem; font-weight: 700; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-bottom: 25px;'>O Assistente de Diagnóstico mais rápido do mundo à sua disposição</p>", unsafe_allow_html=True)
     
@@ -830,48 +842,80 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
         return imagem_pil, [], False
 
 # ---------------------------------------------------------
-# 9. Barra Lateral (Sidebar)
+# 9. Barra Lateral (Sidebar) - Garantida para todos os usuários logados
 # ---------------------------------------------------------
-if st.session_state.get("logado", False):
-    with st.sidebar:
-        col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
-        with col_logo2:
-            caminho_foto = r"C:\Users\arian\OneDrive\Desktop\app.py\logo_autolab.jpeg"
-            if os.path.exists(caminho_foto):
-                try:
-                    imagem_pil = Image.open(caminho_foto)
-                    st.image(imagem_pil, width=120)
-                except Exception:
-                    st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
-            else:
-                st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
+with st.sidebar:
+    st.markdown("""
+    <style>
+        @keyframes pulse-red-alert {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); background-color: rgba(239, 68, 68, 0.2); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); background-color: rgba(239, 68, 68, 0.4); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); background-color: rgba(239, 68, 68, 0.2); }
+        }
         
-        nome_agente = st.session_state.get('user_nome') or "Técnico AutoLab"
-        st.markdown(f"🕵️‍♂️ **Agente:** {nome_agente}")
-        st.markdown("---")
+        .fichas-esgotadas-box {
+            border: 2px solid #EF4444;
+            color: #EF4444 !important;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 1.05rem;
+            animation: pulse-red-alert 1.8s infinite;
+            margin-bottom: 15px;
+        }
 
-        tipo_acesso_atual = st.session_state.get('user_tipo_acesso', 'teste')
-        fichas_atuais = st.session_state.get('user_fichas', 0)
-
-        if tipo_acesso_atual == "assinante":
-            st.markdown("👑 **Plano Anual Ativo (Ilimitado)**")
-        elif fichas_atuais <= 0:
-            st.markdown("🎟️ **Teste Expirado (0 Fichas)**")
+        .fichas-ok-box {
+            border: 1px solid #10B981;
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #00FF88 !important;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+        
+    col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
+    with col_logo2:
+        caminho_foto = r"C:\Users\arian\OneDrive\Desktop\app.py\logo_autolab.jpeg"
+        if os.path.exists(caminho_foto):
+            try:
+                imagem_pil = Image.open(caminho_foto)
+                st.image(imagem_pil, width=120)
+            except Exception:
+                st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
         else:
-            st.markdown(f"🎟️ **Fichas de Teste:** ({fichas_atuais}/7)")
+            st.markdown("🚗 **AutoLab**", unsafe_allow_html=True)
+    
+    nome_agente = st.session_state.get('user_nome') or "Técnico AutoLab"
+    st.markdown(f"🕵️‍♂️ **Agente:** {nome_agente}")
+    st.markdown("---")
 
-        st.markdown("---")
-        st.subheader("🏢 Dados da Oficina")
-        nome_oficina = st.text_input("Nome da Oficina", value="AUTOLAB DIAGNÓSTICOS")
-        cnpj_oficina = st.text_input("CNPJ", value="00.000.000/0001-00")
-        tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
+    tipo_acesso_atual = st.session_state.get('user_tipo_acesso', 'teste')
+    fichas_atuais = st.session_state.get('user_fichas', 0)
 
-        st.markdown("---")
-        if st.button("🚪 Sair do Sistema"):
-            st.session_state["logado"] = False
-            st.session_state["user_email"] = ""
-            st.session_state["user_nome"] = ""
-            st.rerun()
+    if tipo_acesso_atual == "assinante":
+        st.markdown('<div class="fichas-ok-box">👑 Plano Anual Ativo (Ilimitado)</div>', unsafe_allow_html=True)
+    elif fichas_atuais <= 0:
+        st.markdown('<div class="fichas-esgotadas-box">🎟️ Teste Expirado (0 Fichas / 7 Dias)</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="fichas-ok-box">🎟️ Fichas de Teste: ({fichas_atuais}/7)</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.subheader("🏢 Dados da Oficina")
+    nome_oficina = st.text_input("Nome da Oficina", value="AUTOLAB DIAGNÓSTICOS")
+    cnpj_oficina = st.text_input("CNPJ", value="00.000.000/0001-00")
+    tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
+
+    st.markdown("---")
+    if st.button("🚪 Sair do Sistema", width="stretch"):
+        st.session_state["logado"] = False
+        st.session_state["user_email"] = ""
+        st.session_state["user_nome"] = ""
+        st.rerun()
 
 # ---------------------------------------------------------
 # 10. Interface Principal e Abas
@@ -1296,7 +1340,7 @@ INSTRUÇÕES DE ANÁLISE:
         )
 
 # =========================================================
-# ABA 2: SUPORTE U.C.Es (COM CAMPOS PARA ATÉ 2 FOTOS, ÁUDIO E VÍDEO)
+# ABA 2: SUPORTE U.C.Es
 # =========================================================
 with aba_uces:
     st.subheader("🔌 Suporte Especializado em Módulos Eletrônicos (U.C.Es)")
