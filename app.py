@@ -46,13 +46,10 @@ st.set_page_config(
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    [data-testid="stHeader"] {
-        display: none !important;
-    }
-    
-    header {
-        visibility: hidden !important;
-    }
+    /* Oculta apenas os menus extras do Streamlit, mantendo o controle da barra lateral */
+    #MainMenu {visibility: hidden !important;}
+    .stDeployButton {display: none !important;}
+    footer {visibility: hidden !important;}
 
     .stApp {
         background-color: #03140C;
@@ -116,7 +113,6 @@ st.markdown("""
     .btn-wsp { background-color: #25D366; color: white !important; }
 </style>
 """, unsafe_allow_html=True)
-
 # ---------------------------------------------------------
 # 4. Banco de Dados SQLite (Usuários + Fichas + Validade + Histórico)
 # ---------------------------------------------------------
@@ -600,11 +596,11 @@ def tela_login():
             <h4 class="pulsing-title" style="margin-bottom: 2px; font-size: 1.1rem;">NÍVEL 3 - ESPECIALISTA</h4>
             <h2 style="color: #FFD700 !important; font-size: 1.8rem; margin-top: 5px;">R$ 197<span style="font-size: 12px;">/mês</span></h2>
             <hr style="border-color: #065F46; margin: 12px 0;">
-            <p style="color: #00FF88 !important; font-size: 13px; text-align: left; margin: 6px 0;">🏆 <b>PACOTE COMPLETO MÁXIMO</b></p>
-            <p style="color: #A7F3D0 !important; font-size: 11.5px; text-align: left; margin: 4px 0;">✔️ AutoLab Diag + Banco de Dados</p>
-            <p style="color: #A7F3D0 !important; font-size: 11.5px; text-align: left; margin: 4px 0;">✔️ Curso Completo (ECU)</p>
-            <p style="color: #A7F3D0 !important; font-size: 11.5px; text-align: left; margin: 4px 0;">✔️ Suporte Prioritário</p>
-            <p style="color: #FFD700 !important; font-size: 11px; text-align: left; margin-top: 6px;"><b>🕒 Seg / Qua / Sex: 08h às 18h</b></p>
+            <p style="color: #00FF88 !important; font-size: 13.5px; text-align: left; margin: 6px 0;">🏆 <b>PACOTE COMPLETO MÁXIMO</b></p>
+            <p style="color: #A7F3D0 !important; font-size: 12px; text-align: left; margin: 4px 0;">✔️ AutoLab Diag + Banco de Dados</p>
+            <p style="color: #A7F3D0 !important; font-size: 12.5px; text-align: left; margin: 4px 0;">✔️ Curso Completo (Programação de ECU)</p>
+            <p style="color: #A7F3D0 !important; font-size: 12px; text-align: left; margin: 4px 0;">✔️ Suporte Técnico Prioritário</p>
+            <p style="color: #FFD700 !important; font-size: 11.5px; text-align: left; margin-top: 6px;"><b>🕒 Seg / Qua / Sex: 08h às 18h</b></p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown('<a href="https://pag.ae/81-F5BAYN" target="_blank" class="btn-pulsing-link">ASSINAR NÍVEL 3</a>', unsafe_allow_html=True)
@@ -650,15 +646,6 @@ with st.sidebar:
     </style>
     """, unsafe_allow_html=True)
         
-    # BOTÃO DE SAIR COM ÍCONE DE PORTA NO TOPO DA BARRA LATERAL
-    if st.button("🚪 Sair do Sistema", key="btn_sair_sistema_topo", type="primary", use_container_width=True):
-        st.session_state["logado"] = False
-        st.session_state["user_email"] = ""
-        st.session_state["user_nome"] = ""
-        st.rerun()
-
-    st.markdown("---")
-
     col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
     with col_logo2:
         caminho_foto = r"C:\Users\arian\OneDrive\Desktop\app.py\logo_autolab.jpeg"
@@ -691,8 +678,8 @@ with st.sidebar:
     tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
 
     st.markdown("---")
-    # SEGUNDO BOTÃO DE SAIR NA BASE DA BARRA LATERAL (GARANTIA TOTAL)
-    if st.button("🚪 Sair da Conta", key="btn_sair_sistema_base", use_container_width=True):
+    # BOTÃO DE SAIR COM ÍCONE DE PORTA NA BARRA LATERAL
+    if st.button("🚪 Sair do Sistema", key="btn_sair_sistema_sidebar", type="primary", use_container_width=True):
         st.session_state["logado"] = False
         st.session_state["user_email"] = ""
         st.session_state["user_nome"] = ""
