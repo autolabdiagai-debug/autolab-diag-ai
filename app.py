@@ -42,13 +42,16 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# 2. Estilização CSS Global (Cores Neon & Botão de Sair Customizado)
+# 2. Estilização CSS Global (Cores Neon & Sidebar Visível)
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* Mantém o cabeçalho limpo mas garante que a barra lateral possa ser aberta/fechada */
     [data-testid="stHeader"] {
-        background-color: transparent !important;
+        display: none !important;
+    }
+    
+    header {
+        visibility: hidden !important;
     }
 
     .stApp {
@@ -527,32 +530,8 @@ def tela_login():
                 else:
                     st.warning("Preencha todos os campos para se cadastrar.")
 
-    # ---------------------------------------------------------
-    # BOTÃO DO WHATSAPP COM ÍCONE NA PÁGINA INICIAL
-    # ---------------------------------------------------------
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; margin-top: 25px; margin-bottom: 30px;">
-        <a href="https://wa.me/message/H6EI475WHRPFF1" target="_blank" style="
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-            color: white !important;
-            padding: 16px 32px;
-            border-radius: 40px;
-            font-weight: 900;
-            text-decoration: none;
-            font-size: 1.15rem;
-            box-shadow: 0 0 30px rgba(37, 211, 102, 0.6);
-            transition: transform 0.2s;
-        ">
-            <span style="font-size: 1.4rem; margin-right: 12px;">💬</span> DÚVIDAS? FALE COM SUPORTE AUTOLAB LOA
-        </a>
-    </div>
-    """, unsafe_allow_html=True)
-
     # Exibição dos Planos na Tela Inicial
+    st.markdown("---")
     renderizar_css_planos()
     st.markdown("<h3 style='text-align: center; color: #00FF88;'>💎 Conheça Nossos Planos Anuais (Acesso Ilimitado por 1 Ano) 💎 </h3>", unsafe_allow_html=True)
     st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha o nível ideal para a sua oficina e tenha o AUTOLAB DIAG AI à sua disposição.</p>", unsafe_allow_html=True)
@@ -595,13 +574,13 @@ def tela_login():
         <div class="card-lux-3">
             <div style="font-size: 26px; margin-bottom: 5px;">👑</div>
             <h4 class="pulsing-title" style="margin-bottom: 2px; font-size: 1.1rem;">NÍVEL 3 - ESPECIALISTA</h4>
-            <h2 style="color: #FFD700 !important; font-size: 1.8rem; margin-top: 5px;">R$ 197<span style="font-size: 12px;">/mês</span></h2>
+            <h2 style="color: #FFD700 !important; font-size: 1.8rem; margin-top: 5px;">R$ 197<span style="font-size: 13px;">/mês</span></h2>
             <hr style="border-color: #065F46; margin: 12px 0;">
-            <p style="color: #00FF88 !important; font-size: 13.5px; text-align: left; margin: 6px 0;">🏆 <b>PACOTE COMPLETO MÁXIMO</b></p>
-            <p style="color: #A7F3D0 !important; font-size: 12px; text-align: left; margin: 4px 0;">✔️ AutoLab Diag + Banco de Dados</p>
-            <p style="color: #A7F3D0 !important; font-size: 12.5px; text-align: left; margin: 4px 0;">✔️ Curso Completo (Programação de ECU)</p>
-            <p style="color: #A7F3D0 !important; font-size: 12px; text-align: left; margin: 4px 0;">✔️ Suporte Técnico Prioritário</p>
-            <p style="color: #FFD700 !important; font-size: 11.5px; text-align: left; margin-top: 6px;"><b>🕒 Seg / Qua / Sex: 08h às 18h</b></p>
+            <p style="color: #00FF88 !important; font-size: 13px; text-align: left; margin: 6px 0;">🏆 <b>PACOTE COMPLETO MÁXIMO</b></p>
+            <p style="color: #A7F3D0 !important; font-size: 11.5px; text-align: left; margin: 4px 0;">✔️ AutoLab Diag + Banco de Dados</p>
+            <p style="color: #A7F3D0 !important; font-size: 11.5px; text-align: left; margin: 4px 0;">✔️ Curso Completo (ECU)</p>
+            <p style="color: #A7F3D0 !important; font-size: 11.5px; text-align: left; margin: 4px 0;">✔️ Suporte Prioritário</p>
+            <p style="color: #FFD700 !important; font-size: 11px; text-align: left; margin-top: 6px;"><b>🕒 Seg / Qua / Sex: 08h às 18h</b></p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown('<a href="https://pag.ae/81-F5BAYN" target="_blank" class="btn-pulsing-link">ASSINAR NÍVEL 3</a>', unsafe_allow_html=True)
@@ -611,7 +590,7 @@ if not st.session_state["logado"]:
     st.stop()
 
 # ---------------------------------------------------------
-# 9. Barra Lateral (Sidebar) com Botão de Sair (Ícone de Porta)
+# 9. Barra Lateral (Sidebar)
 # ---------------------------------------------------------
 with st.sidebar:
     st.markdown("""
@@ -679,8 +658,7 @@ with st.sidebar:
     tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
 
     st.markdown("---")
-    # BOTÃO DE SAIR COM ÍCONE DE PORTA NA BARRA LATERAL
-    if st.button("🚪 Sair do Sistema", key="btn_sair_sistema_sidebar", type="primary", use_container_width=True):
+    if st.button("🚪 Sair do Sistema", width="stretch"):
         st.session_state["logado"] = False
         st.session_state["user_email"] = ""
         st.session_state["user_nome"] = ""
