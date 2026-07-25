@@ -28,12 +28,12 @@ API_KEY = st.secrets["GOOGLE_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
 # ---------------------------------------------------------
-# CONSTANTES DO SISTEMA
+# CONSTANTES DU SISTEMA
 # ---------------------------------------------------------
 EMAIL_ADM = "autolabdiagai@gmail.com"
 
 # ---------------------------------------------------------
-# 1. Configuração da Página do Streamlit
+# 1. Configuração da Página du Streamlit
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="AUTOLAB DIAG AI",
@@ -55,6 +55,20 @@ st.markdown("""
     
     /* Remove elementos flutuantes de ferramentas du Streamlit */
     div[data-testid="stToolbar"] {display: none !important;}
+    
+    /* Estilização da Barra de Carregamento (Borda verde neon e preenchimento azul) */
+    .stProgress > div > div > div > div {
+        background: linear-gradient(90deg, #00E5FF 0%, #0088FF 100%) !important;
+        box-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+        border-radius: 10px;
+    }
+    .stProgress > div > div {
+        background-color: #032314 !important;
+        border: 2px solid #00FF88 !important;
+        border-radius: 12px !important;
+        padding: 3px;
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+    }
     
     /* Marca D'água Sutil da Logo ao Fundo du Sistema */
     .stApp::before {
@@ -170,11 +184,13 @@ def init_db():
             data_expiracao_teste TEXT,
             data_expiracao_assinatura TEXT,
             scanners_cadastrados TEXT,
-            programadores_cadastrados TEXT
+            programadores_cadastrados TEXT,
+            documento TEXT,
+            nome_empresa TEXT
         )
     ''')
     
-    for col in ["senha", "data_expiracao_teste", "data_expiracao_assinatura", "scanners_cadastrados", "programadores_cadastrados"]:
+    for col in ["senha", "data_expiracao_teste", "data_expiracao_assinatura", "scanners_cadastrados", "programadores_cadastrados", "documento", "nome_empresa"]:
         try:
             c.execute(f"ALTER TABLE usuarios ADD COLUMN {col} TEXT")
         except Exception:
@@ -199,11 +215,11 @@ def init_db():
     c.execute('SELECT id FROM usuarios WHERE email = ?', (EMAIL_ADM,))
     if not c.fetchone():
         c.execute('''
-            INSERT INTO usuarios (nome, email, whatsapp, senha, fichas, data_cadastro, data_expiracao_teste, data_expiracao_assinatura)
-            VALUES (?, ?, ?, ?, 7, ?, ?, ?)
-        ''', ("Administrador AutoLab", EMAIL_ADM, "(00) 00000-0000", senha_adm_hash, data_atual, data_futura_1ano, data_futura_1ano))
+            INSERT INTO usuarios (nome, email, whatsapp, senha, fichas, data_cadastro, data_expiracao_teste, data_expiracao_assinatura, documento, nome_empresa)
+            VALUES (?, ?, ?, ?, 7, ?, ?, ?, ?, ?)
+        ''', ("Administrador AutoLab", EMAIL_ADM, "(00) 00000-0000", senha_adm_hash, data_atual, data_futura_1ano, data_futura_1ano, "00.000.000/0001-00", "AUTOLAB DIAGNÓSTICOS"))
     else:
-        c.execute('UPDATE usuarios SET fichas = 7, senha = ?, data_expiracao_assinatura = ? WHERE email = ?', (senha_adm_hash, data_futura_1ano, EMAIL_ADM))
+        c.execute('UPDATE usuarios SET fichas = 7, senha = ?, data_expiracao_assinatura = ?, documento = ?, nome_empresa = ? WHERE email = ?', (senha_adm_hash, data_futura_1ano, "00.000.000/0001-00", "AUTOLAB DIAGNÓSTICOS", EMAIL_ADM))
         
     conn.commit()
     conn.close()
@@ -286,25 +302,37 @@ if "logado" not in st.session_state:
     st.session_state["user_nome"] = ""
     st.session_state["user_fichas"] = 0
     st.session_state["user_tipo_acesso"] = "teste"
+    st.session_state["user_empresa"] = ""
+    st.session_state["user_documento"] = ""
+    st.session_state["user_whatsapp"] = ""
 
 def verificar_status_usuario(email):
     conn = sqlite3.connect('diagnosticos.db')
     c = conn.cursor()
-    c.execute('SELECT nome, email, whatsapp, fichas, senha, data_expiracao_teste, data_expiracao_assinatura FROM usuarios WHERE email = ?', (email.strip().lower(),))
+    c.execute('SELECT nome, email, whatsapp, fichas, senha, data_expiracao_teste, data_expiracao_assinatura, documento, nome_empresa FROM usuarios WHERE email = ?', (email.strip().lower(),))
     res = c.fetchone()
     conn.close()
     
     if not res:
         return None
         
-    nome, mail, wsp, fichas, senha_cad, exp_teste, exp_assinatura = res
+    nome, mail, wsp, fichas, senha_cad, exp_teste, exp_assinatura, documento, nome_empresa = res
     agora = datetime.now()
+    
+    dados_user = {
+        "nome": nome, "email": mail, "whatsapp": wsp, "fichas": fichas, 
+        "documento": documento if documento else "00.000.000/0001-00", 
+        "nome_empresa": nome_empresa if nome_empresa else "AUTOLAB DIAGNÓSTICOS"
+    }
     
     if exp_assinatura:
         try:
             dt_exp_ass = datetime.strptime(exp_assinatura, "%Y-%m-%d %H:%M:%S")
             if agora < dt_exp_ass:
-                return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": 999, "tipo": "assinante", "exp": exp_assinatura}
+                dados_user["tipo"] = "assinante"
+                dados_user["exp"] = exp_assinatura
+                dados_user["fichas"] = 999
+                return dados_user
         except Exception:
             pass
 
@@ -312,11 +340,16 @@ def verificar_status_usuario(email):
         try:
             dt_exp_t = datetime.strptime(exp_teste, "%Y-%m-%d %H:%M:%S")
             if agora <= dt_exp_t and fichas > 0:
-                return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": fichas, "tipo": "teste", "exp": exp_teste}
+                dados_user["tipo"] = "teste"
+                dados_user["exp"] = exp_teste
+                return dados_user
         except Exception:
             pass
             
-    return {"nome": nome, "email": mail, "whatsapp": wsp, "fichas": 0, "tipo": "expirado", "exp": "Expirado"}
+    dados_user["tipo"] = "expirado"
+    dados_user["exp"] = "Expirado"
+    dados_user["fichas"] = 0
+    return dados_user
 
 def autenticar_usuario(email, senha):
     conn = sqlite3.connect('diagnosticos.db')
@@ -337,7 +370,7 @@ def atualizar_fichas_banco(email, novas_fichas):
     conn.commit()
     conn.close()
 
-def cadastrar_usuario(nome, email, whatsapp, senha):
+def cadastrar_usuario(nome, email, whatsapp, senha, documento, nome_empresa):
     conn = sqlite3.connect('diagnosticos.db')
     c = conn.cursor()
     agora = datetime.now()
@@ -347,9 +380,9 @@ def cadastrar_usuario(nome, email, whatsapp, senha):
     
     try:
         c.execute('''
-            INSERT INTO usuarios (nome, email, whatsapp, senha, fichas, data_cadastro, data_expiracao_teste)
-            VALUES (?, ?, ?, ?, 7, ?, ?)
-        ''', (nome.strip(), email.strip().lower(), whatsapp.strip(), senha_h, data_atual_str, data_exp_teste_str))
+            INSERT INTO usuarios (nome, email, whatsapp, senha, fichas, data_cadastro, data_expiracao_teste, documento, nome_empresa)
+            VALUES (?, ?, ?, ?, 7, ?, ?, ?, ?)
+        ''', (nome.strip(), email.strip().lower(), whatsapp.strip(), senha_h, data_atual_str, data_exp_teste_str, documento.strip(), nome_empresa.strip()))
         conn.commit()
         conn.close()
         enviar_email_boas_vindas(nome, email)
@@ -465,7 +498,7 @@ def tela_login():
     st.markdown("""
     <div style="background: linear-gradient(135deg, #052E16 0%, #022C22 100%); border: 2px solid #00FF88; padding: 15px; border-radius: 14px; text-align: center; margin-bottom: 25px; box-shadow: 0 0 25px rgba(0,255,136,0.35);">
         <h4 style="color: #FFD700 !important; margin-bottom: 6px; font-size: 1.1rem;">🔊 APRESENTAÇÃO EXCLUSIVA 🔊</h4>
-        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte o play e descubra como o AutoLab Diag AI vai revolucionar sua oficina:</p>
+        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte du play e descubra como du AutoLab Diag AI vai revolucionar sua oficina:</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -557,7 +590,7 @@ def tela_login():
         aba_acesso, aba_cadastro = st.tabs(["💻 ÁREA DE ACESSO 📱", "📝 Criar Conta / Teste por 7 Dias)"])
         
         with aba_acesso:
-            st.subheader("🕵️‍♂️ Acesso do Usuário 💻📱")
+            st.subheader("🕵️‍♂️ Acesso du Usuário 💻📱")
             email_login = st.text_input("E-mail Cadastrado", key="email_log_input")
             senha_login = st.text_input("Sua Senha", type="password", key="senha_log_input")
             
@@ -570,6 +603,9 @@ def tela_login():
                         st.session_state["user_email"] = usr["email"]
                         st.session_state["user_fichas"] = usr["fichas"]
                         st.session_state["user_tipo_acesso"] = usr["tipo"]
+                        st.session_state["user_empresa"] = usr["nome_empresa"]
+                        st.session_state["user_documento"] = usr["documento"]
+                        st.session_state["user_whatsapp"] = usr["whatsapp"]
                         st.rerun()
                     else:
                         st.error("E-mail ou senha incorretos, ou período de teste de 7 dias expirado.")
@@ -578,16 +614,18 @@ def tela_login():
 
         with aba_cadastro:
             st.subheader("🚀 Teste sem Custos (7 Créditos por 7 Dias)")
-            nome_cad = st.text_input("Nome Completo / Oficina", key="nome_cad_input")
+            nome_cad = st.text_input("Seu Nome Completo", key="nome_cad_input")
+            empresa_cad = st.text_input("Nome da Empresa / Oficina", key="empresa_cad_input")
+            doc_cad = st.text_input("CPF ou CNPJ", key="doc_cad_input", placeholder="Ex: 00.000.000/0001-00 ou 000.000.000-00")
             email_cad = st.text_input("E-mail Principal", key="email_cad_input")
             wsp_cad = st.text_input("WhatsApp com DDD", key="wsp_cad_input")
             senha_cad = st.text_input("Crie uma Senha", type="password", key="senha_cad_input")
             senha_conf = st.text_input("Confirme a Senha", type="password", key="senha_conf_input")
             
             if st.button("Criar Conta & Iniciar Teste", width="stretch"):
-                if nome_cad and email_cad and wsp_cad and senha_cad:
+                if nome_cad and empresa_cad and doc_cad and email_cad and wsp_cad and senha_cad:
                     if senha_cad == senha_conf:
-                        sucesso = cadastrar_usuario(nome_cad, email_cad, wsp_cad, senha_cad)
+                        sucesso = cadastrar_usuario(nome_cad, email_cad, wsp_cad, senha_cad, doc_cad, empresa_cad)
                         if sucesso:
                             st.success("Conta criada! 7 Fichas e 7 dias de teste liberados. Faça login na aba ao lado.")
                         else:
@@ -621,7 +659,7 @@ def tela_login():
 
     renderizar_css_planos()
     st.markdown("<h3 style='text-align: center; color: #00FF88;'>💎 Conheça Nossos Planos Anuais (Acesso Ilimitado por 1 Ano) 💎 </h3>", unsafe_allow_html=True)
-    st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha o nível ideal para a sua oficina e tenha o AUTOLAB DIAG AI à sua disposição.</p>", unsafe_allow_html=True)
+    st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha du nível ideal para a sua oficina e tenha du AUTOLAB DIAG AI à sua disposição.</p>", unsafe_allow_html=True)
     st.write("")
 
     col_p1, col_p2, col_p3 = st.columns(3)
@@ -671,12 +709,13 @@ def tela_login():
         </div>
         """, unsafe_allow_html=True)
         st.markdown('<a href="https://pag.ae/81-F5BAYN" target="_blank" class="btn-pulsing-link">ASSINAR NÍVEL 3</a>', unsafe_allow_html=True)
+
 if not st.session_state["logado"]:
     tela_login()
     st.stop()
 
 # ---------------------------------------------------------
-# 9. Barra Lateral (Sidebar) com Botão de Sair & Logo
+# 9. Barra Lateral (Sidebar) com Dados da Oficina Editáveis & Logo
 # ---------------------------------------------------------
 with st.sidebar:
     st.markdown("""
@@ -738,10 +777,21 @@ with st.sidebar:
         st.markdown(f'<div class="fichas-ok-box">🎟️ Fichas de Teste: ({fichas_atuais}/7)</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-    st.subheader("🏢 Dados da Oficina")
-    nome_oficina = st.text_input("Nome da Oficina", value="AUTOLAB DIAGNÓSTICOS")
-    cnpj_oficina = st.text_input("CNPJ", value="00.000.000/0001-00")
-    tel_oficina = st.text_input("Telefone/WhatsApp", value="(00) 00000-0000")
+    st.subheader("🏢 Dados da Oficina (Editáveis)")
+    
+    # Vincula com os dados vindos do login ou sessão
+    val_empresa_sessao = st.session_state.get('user_empresa', 'AUTOLAB DIAGNÓSTICOS')
+    val_doc_sessao = st.session_state.get('user_documento', '00.000.000/0001-00')
+    val_wsp_sessao = st.session_state.get('user_whatsapp', '(00) 00000-0000')
+
+    nome_oficina = st.text_input("Nome da Oficina / Empresa", value=val_empresa_sessao)
+    cnpj_oficina = st.text_input("CNPJ / CPF", value=val_doc_sessao)
+    tel_oficina = st.text_input("Telefone/WhatsApp", value=val_wsp_sessao)
+
+    # Armazena na sessão global para acesso nos relatórios
+    st.session_state.oficina_nome = nome_oficina
+    st.session_state.oficina_cnpj = cnpj_oficina
+    st.session_state.oficina_tel = tel_oficina
 
     st.markdown("---")
     # BOTÃO DE SAIR COM ÍCONE DE PORTA NA BARRA LATERAL
@@ -820,7 +870,7 @@ def gerar_pdf_relatorio(nome_oficina, cnpj, telefone, veiculo, dtc, sintomas, re
     story = []
     nome_clean = html.escape(nome_oficina.upper())
     story.append(Paragraph(f"<b>{nome_clean}</b> | AUTOLAB DIAG AI", title_style))
-    header_info = f"CNPJ: {html.escape(cnpj)} | Tel: {html.escape(telefone)} | Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    header_info = f"CNPJ/CPF: {html.escape(cnpj)} | Tel: {html.escape(telefone)} | Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
     story.append(Paragraph(header_info, subtitle_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#047857'), spaceAfter=12))
     
@@ -1135,7 +1185,7 @@ with aba_empresa:
     <div class="selo-container">
         <div class="selo-header">
             <div style="font-size: 40px; margin-bottom: 5px;">🛡️</div>
-            <h2 class="selo-titulo">Diagnóstico Automotivo Inteligente</h2>
+            <h2 class="selo-titulo">Selo de Qualidade em Diagnóstico Automotivo</h2>
             <p class="selo-subtitulo">Certificado Oficial AutoLab LOA – Excelência em Engenharia de Diagnósticos</p>
         </div>
     """, unsafe_allow_html=True)
@@ -1144,16 +1194,16 @@ with aba_empresa:
 
     with col_emp1:
         st.markdown(f"""
-        <div class="info-label">🏢 Nome da Oficina</div>
-        <div class="info-value">{nome_oficina}</div>
+        <div class="info-label">🏢 Nome da Empresa / Oficina</div>
+        <div class="info-value">{st.session_state.get('oficina_nome', 'AUTOLAB DIAGNÓSTICOS')}</div>
 
-        <div class="info-label">📄 CNPJ</div>
-        <div class="info-value">{cnpj_oficina}</div>
+        <div class="info-label">📄 CPF / CNPJ</div>
+        <div class="info-value">{st.session_state.get('oficina_cnpj', '00.000.000/0001-00')}</div>
 
         <div class="info-label">📞 Celular / WhatsApp</div>
-        <div class="info-value">{tel_oficina}</div>
+        <div class="info-value">{st.session_state.get('oficina_tel', '(00) 00000-0000')}</div>
 
-        <div class="info-label">🕵️‍♂️ Agente de Diagnóstico</div>
+        <div class="info-label">🕵️‍♂️ Agente de Diagnóstico (Usuário)</div>
         <div class="info-value">{nome_usuario_logado}</div>
         """, unsafe_allow_html=True)
 
@@ -1397,15 +1447,15 @@ with aba1:
     col_img1, col_img2, col_img3, col_img4 = st.columns(4)
 
     with col_img1:
-        img1 = st.file_uploader("Fotos do Scanner / DTCs", type=["png", "jpg", "jpeg"], key="img_scanner")
+        img1 = st.file_uploader("Fotos du Scanner / DTCs", type=["png", "jpg", "jpeg"], key="img_scanner")
         if img1: imagens_anexadas.append(("Scanner", Image.open(img1)))
 
     with col_img2:
-        img2 = st.file_uploader("Fotos da Tela do Osciloscópio", type=["png", "jpg", "jpeg"], key="img_osc")
+        img2 = st.file_uploader("Fotos da Tela du Osciloscópio", type=["png", "jpg", "jpeg"], key="img_osc")
         if img2: imagens_anexadas.append(("Osciloscopio", Image.open(img2)))
 
     with col_img3:
-        img3 = st.file_uploader("Leitura do Multímetro", type=["png", "jpg", "jpeg"], key="img_mult")
+        img3 = st.file_uploader("Leitura du Multímetro", type=["png", "jpg", "jpeg"], key="img_mult")
         if img3: imagens_anexadas.append(("Multimetro", Image.open(img3)))
 
     with col_img4:
@@ -1482,10 +1532,26 @@ with aba1:
             tem_video_direto = video_sintomas is not None
 
             if motor and (imagens_anexadas or audio_sintomas or video_sintomas or valores or arquivo_os or tem_audio_wsp or tem_video_wsp or parametros_kts):
-                with st.spinner("🕵️‍♂️ AUTOLAB DIAG AI ANALISANDO DADOS, PARÂMETROS KTS, O.S., IMAGENS, VÍDEOS E ÁUDIOS..."):
-                    instrucao_sistema = "Você é du AUTOLAB DIAG AI, especialista sênior em diagnóstico automotivo, análise de dados de scanner em tempo real (padrão Bosch KTS/SAE J1979), osciloscópio e engenharia reversa de ECUs."
-                    
-                    prompt_caso = f"""DADOS DO CASO:
+                
+                # BARRA DE CARREGAMENTO (0% A 100%)
+                barra_progresso = st.progress(0)
+                status_texto = st.empty()
+                
+                status_texto.markdown("🔍 **[0%]** — Lendo parâmetros KTS, O.S. e mídias anexadas...")
+                barra_progresso.progress(10)
+                time.sleep(0.3)
+
+                status_texto.markdown("🧠 **[35%]** — Cruzando dados com a base técnica AutoLab AI...")
+                barra_progresso.progress(35)
+                time.sleep(0.3)
+
+                status_texto.markdown("⚙️ **[70%]** — Processando engenharia reversa e oscilogramas...")
+                barra_progresso.progress(70)
+                time.sleep(0.3)
+
+                instrucao_sistema = "Você é du AUTOLAB DIAG AI, especialista sênior em diagnóstico automotivo, análise de dados de scanner em tempo real (padrão Bosch KTS/SAE J1979), osciloscópio e engenharia reversa de ECUs."
+                
+                prompt_caso = f"""DADOS DO CASO:
 - Motor/Veículo: {motor}
 - Códigos DTC: {dtc if dtc else 'Consulte imagens/O.S.'}
 - Sintomas Digitados/Importados: {valores if valores else 'Consulte O.S., áudios ou vídeos anexados'}
@@ -1500,78 +1566,88 @@ INSTRUÇÕES DE ANÁLISE:
 4. Cruze todas essas informações com capturas fornecidas.
 5. Forneça relatório claro e direto."""
 
-                    conteudo_envio = [prompt_caso]
-                    
-                    if arquivo_os:
-                        try:
-                            arquivo_os.seek(0)
-                            bytes_os = arquivo_os.read()
-                            mime_os = "application/pdf" if arquivo_os.type == "application/pdf" else "image/jpeg"
-                            conteudo_envio.append(types.Part.from_bytes(data=bytes_os, mime_type=mime_os))
-                        except Exception: pass
-
-                    for label, img_pil in imagens_anexadas:
-                        try:
-                            img_copy = img_pil.copy()
-                            img_copy.thumbnail((1280, 1280))
-                            buf = io.BytesIO()
-                            img_copy.save(buf, format="JPEG", quality=85)
-                            conteudo_envio.append(types.Part.from_bytes(data=buf.getvalue(), mime_type="image/jpeg"))
-                        except Exception: pass
-
-                    if audio_sintomas:
-                        try:
-                            audio_sintomas.seek(0)
-                            conteudo_envio.append(types.Part.from_bytes(data=audio_sintomas.read(), mime_type="audio/wav"))
-                        except Exception: pass
-                    elif tem_audio_wsp:
-                        conteudo_envio.append(types.Part.from_bytes(data=st.session_state['audio_wsp_bytes'], mime_type=st.session_state.get('audio_wsp_mime', 'audio/wav')))
-
-                    if tem_video_direto:
-                        try:
-                            video_sintomas.seek(0)
-                            conteudo_envio.append(types.Part.from_bytes(data=video_sintomas.read(), mime_type=video_sintomas.type if video_sintomas.type else "video/mp4"))
-                        except Exception: pass
-                    elif tem_video_wsp:
-                        conteudo_envio.append(types.Part.from_bytes(data=st.session_state['video_wsp_bytes'], mime_type=st.session_state.get('video_wsp_mime', 'video/mp4')))
-
-                    relatorio_resultado = ""
-                    config_requisicao = types.GenerateContentConfig(system_instruction=instrucao_sistema, temperature=0.2)
-
+                conteudo_envio = [prompt_caso]
+                
+                if arquivo_os:
                     try:
-                        modelos_disponiveis = ['gemini-3-flash-preview', 'gemini-3.5-flash', 'gemini-2.5-pro']
-                        for mod in modelos_disponiveis:
-                            try:
-                                response = client.models.generate_content(model=mod, contents=conteudo_envio, config=config_requisicao)
-                                if response and hasattr(response, 'text') and response.text:
-                                    relatorio_resultado = response.text
-                                    break
-                            except Exception: pass
+                        arquivo_os.seek(0)
+                        bytes_os = arquivo_os.read()
+                        mime_os = "application/pdf" if arquivo_os.type == "application/pdf" else "image/jpeg"
+                        conteudo_envio.append(types.Part.from_bytes(data=bytes_os, mime_type=mime_os))
+                    except Exception: pass
 
-                        if relatorio_resultado.strip():
-                            st.session_state['ultimo_relatorio'] = relatorio_resultado
-                            st.session_state['ultimo_motor'] = motor
-                            st.session_state['ultimo_dtc'] = dtc
-                            sintomas_salvamento = valores if valores else "Analisado via Mídia / O.S."
-                            if parametros_kts: sintomas_salvamento += f" | {len(parametros_kts)} Val. Reais KTS"
-                            st.session_state['ultimo_sintomas'] = sintomas_salvamento
-                            
-                            fichas_atuais = st.session_state.get('user_fichas', 7)
-                            email_atual = st.session_state.get('user_email', '')
-                            
-                            if email_atual != EMAIL_ADM and fichas_atuais < 999:
-                                fichas_atuais -= 1
-                                st.session_state['user_fichas'] = fichas_atuais
-                                atualizar_fichas_banco(email_atual, fichas_atuais)
-                                if fichas_atuais == 0:
-                                    enviar_email_oferta_assinatura(st.session_state.get('user_nome', 'Técnico'), email_atual)
+                for label, img_pil in imagens_anexadas:
+                    try:
+                        img_copy = img_pil.copy()
+                        img_copy.thumbnail((1280, 1280))
+                        buf = io.BytesIO()
+                        img_copy.save(buf, format="JPEG", quality=85)
+                        conteudo_envio.append(types.Part.from_bytes(data=buf.getvalue(), mime_type="image/jpeg"))
+                    except Exception: pass
 
-                            salvar_diagnostico(email_atual, motor, dtc, st.session_state['ultimo_sintomas'], relatorio_resultado)
-                            st.success("Diagnóstico Completo Gerado e Salvo du Histórico!")
-                        else:
-                            st.error("⚠️ Nenhuma resposta gerada.")
-                    except Exception as e:
-                        st.error(f"Erro na requisição: {e}")
+                if audio_sintomas:
+                    try:
+                        audio_sintomas.seek(0)
+                        conteudo_envio.append(types.Part.from_bytes(data=audio_sintomas.read(), mime_type="audio/wav"))
+                    except Exception: pass
+                elif tem_audio_wsp:
+                    conteudo_envio.append(types.Part.from_bytes(data=st.session_state['audio_wsp_bytes'], mime_type=st.session_state.get('audio_wsp_mime', 'audio/wav')))
+
+                if tem_video_direto:
+                    try:
+                        video_sintomas.seek(0)
+                        conteudo_envio.append(types.Part.from_bytes(data=video_sintomas.read(), mime_type=video_sintomas.type if video_sintomas.type else "video/mp4"))
+                    except Exception: pass
+                elif tem_video_wsp:
+                    conteudo_envio.append(types.Part.from_bytes(data=st.session_state['video_wsp_bytes'], mime_type=st.session_state.get('video_wsp_mime', 'video/mp4')))
+
+                relatorio_resultado = ""
+                config_requisicao = types.GenerateContentConfig(system_instruction=instrucao_sistema, temperature=0.2)
+
+                try:
+                    modelos_disponiveis = ['gemini-3-flash-preview', 'gemini-3.5-flash', 'gemini-2.5-pro']
+                    for mod in modelos_disponiveis:
+                        try:
+                            response = client.models.generate_content(model=mod, contents=conteudo_envio, config=config_requisicao)
+                            if response and hasattr(response, 'text') and response.text:
+                                relatorio_resultado = response.text
+                                break
+                        except Exception: pass
+
+                    # 100% CONCLUÍDO
+                    barra_progresso.progress(100)
+                    status_texto.markdown("✅ **[100%]** — Laudo Técnico Concluído com Sucesso!")
+                    time.sleep(0.5)
+                    
+                    barra_progresso.empty()
+                    status_texto.empty()
+
+                    if relatorio_resultado.strip():
+                        st.session_state['ultimo_relatorio'] = relatorio_resultado
+                        st.session_state['ultimo_motor'] = motor
+                        st.session_state['ultimo_dtc'] = dtc
+                        sintomas_salvamento = valores if valores else "Analisado via Mídia / O.S."
+                        if parametros_kts: sintomas_salvamento += f" | {len(parametros_kts)} Val. Reais KTS"
+                        st.session_state['ultimo_sintomas'] = sintomas_salvamento
+                        
+                        fichas_atuais = st.session_state.get('user_fichas', 7)
+                        email_atual = st.session_state.get('user_email', '')
+                        
+                        if email_atual != EMAIL_ADM and fichas_atuais < 999:
+                            fichas_atuais -= 1
+                            st.session_state['user_fichas'] = fichas_atuais
+                            atualizar_fichas_banco(email_atual, fichas_atuais)
+                            if fichas_atuais == 0:
+                                enviar_email_oferta_assinatura(st.session_state.get('user_nome', 'Técnico'), email_atual)
+
+                        salvar_diagnostico(email_atual, motor, dtc, st.session_state['ultimo_sintomas'], relatorio_resultado)
+                        st.success("Diagnóstico Completo Gerado e Salvo du Histórico!")
+                    else:
+                        st.error("⚠️ Nenhuma resposta gerada.")
+                except Exception as e:
+                    barra_progresso.empty()
+                    status_texto.empty()
+                    st.error(f"Erro na requisição: {e}")
             else:
                 st.warning("Atenção: Preencha du campo Veículo/Motor e adicione informações de análise.")
 
@@ -1581,7 +1657,7 @@ INSTRUÇÕES DE ANÁLISE:
         st.markdown(st.session_state['ultimo_relatorio'])
         
         pdf_diag_direto = gerar_pdf_relatorio(
-            nome_oficina, cnpj_oficina, tel_oficina,
+            st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
             motor, dtc, st.session_state.get('ultimo_sintomas', ''),
             st.session_state['ultimo_relatorio'],
             titulo_pdf="LAUDO TÉCNICO DE DIAGNÓSTICO AVANÇADO"
@@ -1595,7 +1671,7 @@ INSTRUÇÕES DE ANÁLISE:
         )
 
 # =========================================================
-# ABA 2: SUPORTE U.C.Es
+# ABA 2: SUPORTE U.C.Es (COM BARRA 0-100% E PDF)
 # =========================================================
 with aba_uces:
     st.subheader("🔌 Suporte Especializado em Módulos Eletrônicos (U.C.Es)")
@@ -1620,7 +1696,7 @@ with aba_uces:
     col_u_id, col_u_duv = st.columns([1, 1])
     with col_u_id:
         veiculo_uce_geral = st.text_input(
-            "🚘 Identificação do Módulo / Veículo / Código da Peça:",
+            "🚘 Identificação du Módulo / Veículo / Código da Peça:",
             placeholder="Ex: Bosch ME7.5 / Marelli IAW 4GV / Denso Hilux / ABS Bosch 9.0",
             key="veiculo_uce_geral"
         )
@@ -1802,137 +1878,171 @@ with aba_uces:
             st.error("⚠️ Seu período de teste de 7 dias ou suas fichas esgotaram! Assine um dos planos na aba 💳 Assinatura para continuar.")
         else:
             if veiculo_uce_geral:
-                with st.spinner("🔬 CONSOLIDANDO TODOS OS DADOS DA UCE, FERRAMENTAS E HARDWARE..."):
-                    
-                    detalhes_componentes_num = ""
-                    if 'lista_componentes_num' in st.session_state:
-                        detalhes_componentes_num = "\nCOMPONENTES NUMERADOS NA PLACA:\n" + "\n".join([f"[{c['numero']}] {c['nome']}: {c['descricao']}" for c in st.session_state['lista_componentes_num']])
+                
+                # BARRA DE CARREGAMENTO (0% A 100%) PARA U.C.Es
+                barra_prog_uce = st.progress(0)
+                status_txt_uce = st.empty()
+                
+                status_txt_uce.markdown("🔌 **[0%]** — Lendo hardware, fotos e dúvidas da U.C.E...")
+                barra_prog_uce.progress(15)
+                time.sleep(0.3)
 
-                    prompt_lab = f"""
-                    ATUE COMO O ESPECIALISTA CHEFE EM ENGENHARIA REVERSA DE U.C.ES DA AUTOLAB.
-                    
-                    CATEGORIA du MÓDULO: {modulo_tipo_sel}
-                    IDENTIFICAÇÃO du MÓDULO/VEÍCULO: {veiculo_uce_geral}
-                    DÚVIDA TÉCNICA PRINCIPAL: {duvida_uce_principal if duvida_uce_principal else 'Consulte os tópicos abaixo'}
-                    {detalhes_componentes_num}
+                status_txt_uce.markdown("🧠 **[45%]** — Executando engenharia reversa com AutoLab AI...")
+                barra_prog_uce.progress(45)
+                time.sleep(0.3)
 
-                    SITUAÇÕES ANALISADAS PELO TÉCNICO:
-                    - Placa Completa: {duvida_placa if duvida_placa else 'Não enviada'}
-                    - Componente Específico: {duvida_comp if duvida_comp else 'Não enviado'}
-                    - Part Number/Silk: {part_number if part_number else 'Não informado'} | {duvida_pn}
-                    - Dúvida Datasheet: {duvida_ds if duvida_ds else 'Não informada'}
-                    - Dúvida Memória SOIC: {duvida_soic if duvida_soic else 'Não informada'}
-                    - Dúvida Processador MCU: {duvida_mcu if duvida_mcu else 'Não informada'}
-                    - Dúvida Boot / Bench: {duvida_boot if duvida_boot else 'Não informada'}
-                    - Dúvida Osciloscópio: {duvida_osc_uce if duvida_osc_uce else 'Não informada'}
-                    - Dúvida Curva V/I: {duvida_curva if duvida_curva else 'Não informada'}
+                status_txt_uce.markdown("⚙️ **[75%]** — Mapeando ferramentas em cascata (Scanner, Bancada e OBD2)...")
+                barra_prog_uce.progress(75)
+                time.sleep(0.3)
+                
+                detalhes_componentes_num = ""
+                if 'lista_componentes_num' in st.session_state:
+                    detalhes_componentes_num = "\nCOMPONENTES NUMERADOS NA PLACA:\n" + "\n".join([f"[{c['numero']}] {c['nome']}: {c['descricao']}" for c in st.session_state['lista_componentes_num']])
 
-                    ESTRUTURA OBRIGATÓRIA DO RELATÓRIO TÉCNICO CONSOLIDADO AUTOLAB U.C.E:
+                prompt_lab = f"""
+                ATUE COMO O ESPECIALISTA CHEFE EM ENGENHARIA REVERSA DE U.C.ES DA AUTOLAB.
+                
+                CATEGORIA du MÓDULO: {modulo_tipo_sel}
+                IDENTIFICAÇÃO du MÓDULO/VEÍCULO: {veiculo_uce_geral}
+                DÚVIDA TÉCNICA PRINCIPAL: {duvida_uce_principal if duvida_uce_principal else 'Consulte os tópicos abaixo'}
+                {detalhes_componentes_num}
 
-                    ### 🎯 1. ANÁLISE TÉCNICA DOS HARDWARES E DÚVIDAS REGISTRADAS
-                    (Responda detalhadamente os procedimentos de teste, medição de componentes/drivers, pinagem, comunicação CAN/LIN e dicas de reparo).
+                SITUAÇÕES ANALISADAS PELO TÉCNICO:
+                - Placa Completa: {duvida_placa if duvida_placa else 'Não enviada'}
+                - Componente Específico: {duvida_comp if duvida_comp else 'Não enviado'}
+                - Part Number/Silk: {part_number if part_number else 'Não informado'} | {duvida_pn}
+                - Dúvida Datasheet: {duvida_ds if duvida_ds else 'Não informada'}
+                - Dúvida Memória SOIC: {duvida_soic if duvida_soic else 'Não informada'}
+                - Dúvida Processador MCU: {duvida_mcu if duvida_mcu else 'Não informada'}
+                - Dúvida Boot / Bench: {duvida_boot if duvida_boot else 'Não informada'}
+                - Dúvida Osciloscópio: {duvida_osc_uce if duvida_osc_uce else 'Não informada'}
+                - Dúvida Curva V/I: {duvida_curva if duvida_curva else 'Não informada'}
 
-                    ---
-                    ### ⚙️ 2. EQUIPAMENTOS RECOMENDADOS PARA ESTE MÓDULO (INFORMAÇÃO IMEDIATA EM CASCATA):
+                ESTRUTURA OBRIGATÓRIA DO RELATÓRIO TÉCNICO CONSOLIDADO AUTOLAB U.C.E:
 
-                    #### 📟 MELHOR SCANNER
-                    (Informe du scanner de diagnóstico ideal para esta U.C.E. Ex: Bosch KTS, Launch X431, Autel Maxisys, Rasther III, Raven, G-Scan, etc., detalhando du motivo).
+                ### 🎯 1. ANÁLISE TÉCNICA DOS HARDWARES E DÚVIDAS REGISTRADAS
+                (Responda detalhadamente os procedimentos de teste, medição de componentes/drivers, pinagem, comunicação CAN/LIN e dicas de reparo).
 
-                    #### 💻 MELHOR PROGRAMADOR PARA PROGRAMAÇÃO (BANCADA / BOOT / BDM / BENCH / JTAG)
-                    (Informe os melhores gravadores/programadores de bancada para este módulo específico. Ex: KTAG, VVDI Prog, Flex Magicmotorsport, Transdata, I/O Terminal, Orange5, UPA-USB, CGDI, DFOX, etc.).
+                ---
+                ### ⚙️ 2. EQUIPAMENTOS RECOMENDADOS PARA ESTE MÓDULO (INFORMAÇÃO IMEDIATA EM CASCATA):
 
-                    #### 🔌 MELHOR PROGRAMADOR VIA OBD2
-                    (Informe du melhor programador via tomada OBD2 direto du veículo para esta U.C.E. Ex: KESS V2, Autohex, VVDI Key Tool Plus, PCMFlash, BitBox, MPPS, Zed-Full, Obdstar, Lonsdor, etc.).
-                    """
+                #### 📟 MELHOR SCANNER
+                (Informe du scanner de diagnóstico ideal para esta U.C.E. Ex: Bosch KTS, Launch X431, Autel Maxisys, Rasther III, Raven, G-Scan, etc., detalhando du motivo).
 
-                    conteudo_lab = [prompt_lab]
+                #### 💻 MELHOR PROGRAMADOR PARA PROGRAMAÇÃO (BANCADA / BOOT / BDM / BENCH / JTAG)
+                (Informe os melhores gravadores/programadores de bancada para este módulo específico. Ex: KTAG, VVDI Prog, Flex Magicmotorsport, Transdata, I/O Terminal, Orange5, UPA-USB, CGDI, DFOX, etc.).
 
-                    if audio_uce:
-                        try:
-                            audio_uce.seek(0)
-                            conteudo_lab.append(types.Part.from_bytes(data=audio_uce.read(), mime_type="audio/wav"))
-                        except Exception: pass
+                #### 🔌 MELHOR PROGRAMADOR VIA OBD2
+                (Informe du melhor programador via tomada OBD2 direto du veículo para esta U.C.E. Ex: KESS V2, Autohex, VVDI Key Tool Plus, PCMFlash, BitBox, MPPS, Zed-Full, Obdstar, Lonsdor, etc.).
+                """
 
-                    if foto_uce_1:
-                        try:
-                            foto_uce_1.seek(0)
-                            img_f1 = Image.open(foto_uce_1)
-                            img_f1.thumbnail((1280, 1280))
-                            buf_f1 = io.BytesIO()
-                            img_f1.save(buf_f1, format="JPEG", quality=85)
-                            conteudo_lab.append(types.Part.from_bytes(data=buf_f1.getvalue(), mime_type="image/jpeg"))
-                        except Exception: pass
+                conteudo_lab = [prompt_lab]
 
-                    if foto_uce_2:
-                        try:
-                            foto_uce_2.seek(0)
-                            img_f2 = Image.open(foto_uce_2)
-                            img_f2.thumbnail((1280, 1280))
-                            buf_f2 = io.BytesIO()
-                            img_f2.save(buf_f2, format="JPEG", quality=85)
-                            conteudo_lab.append(types.Part.from_bytes(data=buf_f2.getvalue(), mime_type="image/jpeg"))
-                        except Exception: pass
-
-                    if video_uce:
-                        try:
-                            video_uce.seek(0)
-                            conteudo_lab.append(types.Part.from_bytes(data=video_uce.read(), mime_type=video_uce.type if video_uce.type else "video/mp4"))
-                        except Exception: pass
-
-                    lista_uploads = [
-                        (img_placa_comp, "Placa_Completa"), (img_comp, "Componente"), (file_ds, "Datasheet"),
-                        (img_soic, "SOIC"), (img_mcu, "MCU"), (img_boot, "Boot"), (img_osc_uce, "Osciloscopio"), (img_curva, "Curva_VI")
-                    ]
-
-                    for up_file, rotulo in lista_uploads:
-                        if up_file:
-                            try:
-                                up_file.seek(0)
-                                if getattr(up_file, 'type', '') == "application/pdf":
-                                    conteudo_lab.append(types.Part.from_bytes(data=up_file.read(), mime_type="application/pdf"))
-                                else:
-                                    img_p = Image.open(up_file)
-                                    img_p.thumbnail((1280, 1280))
-                                    buf_p = io.BytesIO()
-                                    img_p.save(buf_p, format="JPEG", quality=85)
-                                    conteudo_lab.append(types.Part.from_bytes(data=buf_p.getvalue(), mime_type="image/jpeg"))
-                            except Exception: pass
-
-                    config_lab = types.GenerateContentConfig(
-                        system_instruction="Você é du Especialista Master em Reparo de Módulos UCEs e Engenharia Reversa da AutoLab.",
-                        temperature=0.2
-                    )
-
+                if audio_uce:
                     try:
-                        resp_lab = client.models.generate_content(
-                            model='gemini-3-flash-preview',
-                            contents=conteudo_lab,
-                            config=config_lab
-                        )
-                        if resp_lab and hasattr(resp_lab, 'text') and resp_lab.text:
-                            texto_laudo = resp_lab.text
-                            st.session_state['relatorio_uce_laboratorio'] = texto_laudo
-                            
-                            ferramentas_encontradas = {}
-                            for linha in texto_laudo.split('\n'):
-                                if "SCANNER:" in linha.upper() or "BANCADA:" in linha.upper() or "OBD2:" in linha.upper():
-                                    partes = linha.split(":")
-                                    if len(partes) > 1:
-                                        nome_eq = partes[1].strip().replace("*", "")[:40]
-                                        if len(nome_eq) > 3:
-                                            ferramentas_encontradas[nome_eq] = gerar_foto_equipamento(nome_eq)
-                            
-                            if len(ferramentas_encontradas) < 3:
-                                ferramentas_encontradas["Scanner Profissional de Bancada"] = gerar_foto_equipamento("Scanner Profissional")
-                                ferramentas_encontradas["Programador de Bancada (Boot/BDM)"] = gerar_foto_equipamento("Programador Bancada")
-                                ferramentas_encontradas["Programador OBD2 Direto"] = gerar_foto_equipamento("Programador OBD2")
+                        audio_uce.seek(0)
+                        conteudo_lab.append(types.Part.from_bytes(data=audio_uce.read(), mime_type="audio/wav"))
+                    except Exception: pass
 
-                            st.session_state['imagens_ferramentas_uce'] = ferramentas_encontradas
-                            st.success("Análise Consolidada de U.C.Es Concluída com Sucesso!")
-                        else:
-                            st.error("Não foi possível gerar a análise técnica du momento.")
-                    except Exception as err_l:
-                        st.error(f"Erro na requisição: {err_l}")
+                if foto_uce_1:
+                    try:
+                        foto_uce_1.seek(0)
+                        img_f1 = Image.open(foto_uce_1)
+                        img_f1.thumbnail((1280, 1280))
+                        buf_f1 = io.BytesIO()
+                        img_f1.save(buf_f1, format="JPEG", quality=85)
+                        conteudo_lab.append(types.Part.from_bytes(data=buf_f1.getvalue(), mime_type="image/jpeg"))
+                    except Exception: pass
+
+                if foto_uce_2:
+                    try:
+                        foto_uce_2.seek(0)
+                        img_f2 = Image.open(foto_uce_2)
+                        img_f2.thumbnail((1280, 1280))
+                        buf_f2 = io.BytesIO()
+                        img_f2.save(buf_f2, format="JPEG", quality=85)
+                        conteudo_lab.append(types.Part.from_bytes(data=buf_f2.getvalue(), mime_type="image/jpeg"))
+                    except Exception: pass
+
+                if video_uce:
+                    try:
+                        video_uce.seek(0)
+                        conteudo_lab.append(types.Part.from_bytes(data=video_uce.read(), mime_type=video_uce.type if video_uce.type else "video/mp4"))
+                    except Exception: pass
+
+                lista_uploads = [
+                    (img_placa_comp, "Placa_Completa"), (img_comp, "Componente"), (file_ds, "Datasheet"),
+                    (img_soic, "SOIC"), (img_mcu, "MCU"), (img_boot, "Boot"), (img_osc_uce, "Osciloscopio"), (img_curva, "Curva_VI")
+                ]
+
+                for up_file, rotulo in lista_uploads:
+                    if up_file:
+                        try:
+                            up_file.seek(0)
+                            if getattr(up_file, 'type', '') == "application/pdf":
+                                conteudo_lab.append(types.Part.from_bytes(data=up_file.read(), mime_type="application/pdf"))
+                            else:
+                                img_p = Image.open(up_file)
+                                img_p.thumbnail((1280, 1280))
+                                buf_p = io.BytesIO()
+                                img_p.save(buf_p, format="JPEG", quality=85)
+                                conteudo_lab.append(types.Part.from_bytes(data=buf_p.getvalue(), mime_type="image/jpeg"))
+                        except Exception: pass
+
+                config_lab = types.GenerateContentConfig(
+                    system_instruction="Você é du Especialista Master em Reparo de Módulos UCEs e Engenharia Reversa da AutoLab.",
+                    temperature=0.2
+                )
+
+                try:
+                    resp_lab = client.models.generate_content(
+                        model='gemini-3-flash-preview',
+                        contents=conteudo_lab,
+                        config=config_lab
+                    )
+                    
+                    # 100% CONCLUÍDO
+                    barra_prog_uce.progress(100)
+                    status_txt_uce.markdown("✅ **[100%]** — Report U.C.E Concluído com Sucesso!")
+                    time.sleep(0.5)
+                    
+                    barra_prog_uce.empty()
+                    status_txt_uce.empty()
+
+                    if resp_lab and hasattr(resp_lab, 'text') and resp_lab.text:
+                        texto_laudo = resp_lab.text
+                        st.session_state['relatorio_uce_laboratorio'] = texto_laudo
+                        
+                        salvar_diagnostico(
+                            email_usuario,
+                            f"U.C.E: {veiculo_uce_geral} ({modulo_tipo_sel})",
+                            "N/A (Bancada U.C.E)",
+                            duvida_uce_principal if duvida_uce_principal else "Análise de Hardware / Mapeamento",
+                            texto_laudo
+                        )
+                        
+                        ferramentas_encontradas = {}
+                        for linha in texto_laudo.split('\n'):
+                            if "SCANNER:" in linha.upper() or "BANCADA:" in linha.upper() or "OBD2:" in linha.upper():
+                                partes = linha.split(":")
+                                if len(partes) > 1:
+                                    nome_eq = partes[1].strip().replace("*", "")[:40]
+                                    if len(nome_eq) > 3:
+                                        ferramentas_encontradas[nome_eq] = gerar_foto_equipamento(nome_eq)
+                        
+                        if len(ferramentas_encontradas) < 3:
+                            ferramentas_encontradas["Scanner Profissional de Bancada"] = gerar_foto_equipamento("Scanner Profissional")
+                            ferramentas_encontradas["Programador de Bancada (Boot/BDM)"] = gerar_foto_equipamento("Programador Bancada")
+                            ferramentas_encontradas["Programador OBD2 Direto"] = gerar_foto_equipamento("Programador OBD2")
+
+                        st.session_state['imagens_ferramentas_uce'] = ferramentas_encontradas
+                        st.success("Análise Consolidada de U.C.Es Concluída e Salva no Histórico!")
+                    else:
+                        st.error("Não foi possível gerar a análise técnica du momento.")
+                except Exception as err_l:
+                    barra_prog_uce.empty()
+                    status_txt_uce.empty()
+                    st.error(f"Erro na requisição: {err_l}")
             else:
                 st.warning("Informe a identificação du Módulo / Veículo no topo antes de executar.")
 
@@ -1977,7 +2087,7 @@ with aba_uces:
         imgs_fer_arg = st.session_state.get('imagens_ferramentas_uce', None)
         
         pdf_uce = gerar_pdf_relatorio(
-            nome_oficina, cnpj_oficina, tel_oficina,
+            st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
             veiculo_uce_geral if veiculo_uce_geral else "Módulo Eletrônico UCE",
             "Análise de Bancada / Hardware",
             duvida_uce_principal if duvida_uce_principal else "Engenharia Reversa UCE",
@@ -1996,7 +2106,7 @@ with aba_uces:
         )
 
 # =========================================================
-# ABA 📡 SUPORTE SCANNERS
+# ABA 📡 SUPORTE SCANNERS (COM BARRA 0-100% E PDF)
 # =========================================================
 with aba_scanners:
     st.subheader("📡 Suporte Avançado de Scanners & Compatibilidade")
@@ -2042,32 +2152,84 @@ with aba_scanners:
     st.markdown("---")
     if st.button("🚀 Analisar Procedimento com Scanners 🚀", width="stretch"):
         if veic_sc := veiculo_scanner_duvida:
-            with st.spinner("📡 ANALISANDO SCANNERS..."):
-                scanners_do_usuario = ", ".join(scanners_selecionados) if 'scanners_selecionados' in locals() else "Nenhum cadastrado"
-                prompt_scanner_ia = f"""
-                ATUE COMO O ENGENHEIRO CHEFE EM DIAGNÓSTICO AUTOMOTIVO E ESPECIALISTA EM SCANNERS DA AUTOLAB.
-                - Veículo/Sistema: {veiculo_scanner_duvida}
-                - Dúvida: {pergunta_scanner}
-                - Scanners Disponíveis: {scanners_do_usuario}
-                Forneça análise de compatibilidade e passo a passo detalhado du menu du scanner.
-                """
-                contents_sc = [prompt_scanner_ia]
-                if mic_sc:
-                    mic_sc.seek(0)
-                    contents_sc.append(types.Part.from_bytes(data=mic_sc.read(), mime_type="audio/wav"))
-                if foto_tela_scanner:
-                    foto_tela_scanner.seek(0)
-                    img_s = Image.open(foto_tela_scanner)
-                    img_s.thumbnail((1280, 1280))
-                    buf_s = io.BytesIO()
-                    img_s.save(buf_s, format="JPEG", quality=85)
-                    contents_sc.append(types.Part.from_bytes(data=buf_s.getvalue(), mime_type="image/jpeg"))
-                
-                resp_sc = client.models.generate_content(model='gemini-3-flash-preview', contents=contents_sc)
-                st.markdown(resp_sc.text if hasattr(resp_sc, 'text') else "Sem resposta.")
+            
+            # BARRA DE CARREGAMENTO (0% A 100%) PARA SCANNERS
+            barra_prog_sc = st.progress(0)
+            status_txt_sc = st.empty()
+            
+            status_txt_sc.markdown("📡 **[0%]** — Lendo inventário de scanners e dados du veículo...")
+            barra_prog_sc.progress(20)
+            time.sleep(0.3)
+
+            status_txt_sc.markdown("🧠 **[50%]** — Verificando compatibilidade de menus com a IA...")
+            barra_prog_sc.progress(50)
+            time.sleep(0.3)
+
+            status_txt_sc.markdown("⚙️ **[80%]** — Formatando passo a passo técnico...")
+            barra_prog_sc.progress(80)
+            time.sleep(0.3)
+
+            scanners_do_usuario = ", ".join(scanners_selecionados) if 'scanners_selecionados' in locals() else "Nenhum cadastrado"
+            prompt_scanner_ia = f"""
+            ATUE COMO O ENGENHEIRO CHEFE EM DIAGNÓSTICO AUTOMOTIVO E ESPECIALISTA EM SCANNERS DA AUTOLAB.
+            - Veículo/Sistema: {veiculo_scanner_duvida}
+            - Dúvida: {pergunta_scanner}
+            - Scanners Disponíveis: {scanners_do_usuario}
+            Forneça análise de compatibilidade e passo a passo detalhado du menu du scanner.
+            """
+            contents_sc = [prompt_scanner_ia]
+            if mic_sc:
+                mic_sc.seek(0)
+                contents_sc.append(types.Part.from_bytes(data=mic_sc.read(), mime_type="audio/wav"))
+            if foto_tela_scanner:
+                foto_tela_scanner.seek(0)
+                img_s = Image.open(foto_tela_scanner)
+                img_s.thumbnail((1280, 1280))
+                buf_s = io.BytesIO()
+                img_s.save(buf_s, format="JPEG", quality=85)
+                contents_sc.append(types.Part.from_bytes(data=buf_s.getvalue(), mime_type="image/jpeg"))
+            
+            resp_sc = client.models.generate_content(model='gemini-3-flash-preview', contents=contents_sc)
+            texto_resp_sc = resp_sc.text if hasattr(resp_sc, 'text') else "Sem resposta."
+            
+            # 100% CONCLUÍDO
+            barra_prog_sc.progress(100)
+            status_txt_sc.markdown("✅ **[100%]** — Análise de Scanner Concluída com Sucesso!")
+            time.sleep(0.4)
+            
+            barra_prog_sc.empty()
+            status_txt_sc.empty()
+            
+            salvar_diagnostico(
+                email_usuario,
+                f"Scanner / Veículo: {veiculo_scanner_duvida}",
+                "Procedimento de Scanner",
+                pergunta_scanner,
+                texto_resp_sc
+            )
+            
+            st.markdown(texto_resp_sc)
+            st.success("Análise de Scanner salva no Histórico!")
+            
+            # OPÇÃO DE PDF PARA SCANNERS
+            pdf_sc = gerar_pdf_relatorio(
+                st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
+                f"Veículo: {veiculo_scanner_duvida}",
+                "Procedimento de Scanner",
+                pergunta_scanner,
+                texto_resp_sc,
+                titulo_pdf="LAUDO TÉCNICO - SUPORTE DE SCANNERS"
+            )
+            st.download_button(
+                label="📥 BAIXAR ESTE LAUDO DE SCANNER EM PDF",
+                data=pdf_sc,
+                file_name=f"Laudo_Scanner_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                mime="application/pdf",
+                width="stretch"
+            )
 
 # =========================================================
-# ABA 💻 SUPORTE PROGRAMADORES
+# ABA 💻 SUPORTE PROGRAMADORES (COM BARRA 0-100% E PDF)
 # =========================================================
 with aba_programadores:
     st.subheader("💻 Suporte de Programadores, Boots, Memórias & Processadores")
@@ -2097,25 +2259,73 @@ with aba_programadores:
     st.markdown("---")
     if st.button("🚀 Analisar Conexão de Bancada 🚀", width="stretch"):
         if mod_pg:
-            with st.spinner("💻 ANALISANDO BANCADA..."):
-                prompt_pg_ia = f"Módulo/MCU: {mod_pg}. Dúvida: {duv_pg}. Ferramentas: {prog_sel}."
-                c_pg = [prompt_pg_ia]
-                if mic_pg:
-                    mic_pg.seek(0)
-                    c_pg.append(types.Part.from_bytes(data=mic_pg.read(), mime_type="audio/wav"))
-                if foto_pg:
-                    foto_pg.seek(0)
-                    img_pg_f = Image.open(foto_pg)
-                    img_pg_f.thumbnail((1280, 1280))
-                    buf_pg = io.BytesIO()
-                    img_pg_f.save(buf_pg, format="JPEG", quality=85)
-                    c_pg.append(types.Part.from_bytes(data=buf_pg.getvalue(), mime_type="image/jpeg"))
-                
-                resp_pg = client.models.generate_content(model='gemini-3-flash-preview', contents=c_pg)
-                st.markdown(resp_pg.text if hasattr(resp_pg, 'text') else "Sem resposta.")
+            
+            # BARRA DE CARREGAMENTO (0% A 100%) PARA PROGRAMADORES
+            barra_prog_pg = st.progress(0)
+            status_txt_pg = st.empty()
+            
+            status_txt_pg.markdown("💻 **[0%]** — Lendo processador/memória e conexão de bancada...")
+            barra_prog_pg.progress(25)
+            time.sleep(0.3)
+
+            status_txt_pg.markdown("🧠 **[60%]** — Mapeando pinos de Boot/BDM com a IA...")
+            barra_prog_pg.progress(60)
+            time.sleep(0.3)
+
+            prompt_pg_ia = f"Módulo/MCU: {mod_pg}. Dúvida: {duv_pg}. Ferramentas: {prog_sel}."
+            c_pg = [prompt_pg_ia]
+            if mic_pg:
+                mic_pg.seek(0)
+                c_pg.append(types.Part.from_bytes(data=mic_pg.read(), mime_type="audio/wav"))
+            if foto_pg:
+                foto_pg.seek(0)
+                img_pg_f = Image.open(foto_pg)
+                img_pg_f.thumbnail((1280, 1280))
+                buf_pg = io.BytesIO()
+                img_pg_f.save(buf_pg, format="JPEG", quality=85)
+                c_pg.append(types.Part.from_bytes(data=buf_pg.getvalue(), mime_type="image/jpeg"))
+            
+            resp_pg = client.models.generate_content(model='gemini-3-flash-preview', contents=c_pg)
+            texto_resp_pg = resp_pg.text if hasattr(resp_pg, 'text') else "Sem resposta."
+            
+            # 100% CONCLUÍDO
+            barra_prog_pg.progress(100)
+            status_txt_pg.markdown("✅ **[100%]** — Análise de Bancada Concluída com Sucesso!")
+            time.sleep(0.4)
+            
+            barra_prog_pg.empty()
+            status_txt_pg.empty()
+            
+            salvar_diagnostico(
+                email_usuario,
+                f"Programador / MCU: {mod_pg}",
+                "Boot / BDM / Bench",
+                duv_pg,
+                texto_resp_pg
+            )
+            
+            st.markdown(texto_resp_pg)
+            st.success("Análise de Bancada salva no Histórico!")
+            
+            # OPÇÃO DE PDF PARA PROGRAMADORES
+            pdf_pg = gerar_pdf_relatorio(
+                st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
+                f"Módulo/MCU: {mod_pg}",
+                "Boot / BDM / Bench",
+                duv_pg,
+                texto_resp_pg,
+                titulo_pdf="LAUDO TÉCNICO - PROGRAMADORES & BANCADA"
+            )
+            st.download_button(
+                label="📥 BAIXAR ESTE LAUDO DE BANCADA EM PDF",
+                data=pdf_pg,
+                file_name=f"Laudo_Bancada_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                mime="application/pdf",
+                width="stretch"
+            )
 
 # =========================================================
-# ABA ⚙️ SUPORTE PROGRAMAÇÃO (CALCULADORA COMPUTADOR + BUFFER HEX 16xN + CKS + EDITOR)
+# ABA ⚙️ SUPORTE PROGRAMAÇÃO (COM BARRA 0-100% E PDF NAS DÚVIDAS)
 # =========================================================
 with aba_programacao:
     st.subheader("⚙️ Suporte Avançado de Programação & Arquivos Binários")
@@ -2252,18 +2462,36 @@ with aba_programacao:
             
             with col_cks_ia:
                 if st.button("🤖 Pedir Análise Completa de ASCII e CKS à IA", width="stretch", key="btn_ia_cks"):
-                    with st.spinner("Analisando estrutura binária..."):
-                        amostra_ascii = ascii_bruto[:2000]
-                        prompt_ia_bin = f"""
-                        Analise estes dados extraídos em ASCII de um arquivo binário automotivo:
-                        {amostra_ascii}
-                        Identifique e liste:
-                        1. Número da Peça / Software / Hardware
-                        2. Informações de Imobilizador / VIN
-                        3. Status provável du Checksum (CKS).
-                        """
-                        res_bin_ia = client.models.generate_content(model='gemini-3-flash-preview', contents=[prompt_ia_bin])
-                        st.markdown(res_bin_ia.text if hasattr(res_bin_ia, 'text') else "Sem dados.")
+                    
+                    # BARRA DE CARREGAMENTO PARA CKS / IA
+                    barra_prog_cks = st.progress(0)
+                    status_txt_cks = st.empty()
+                    
+                    status_txt_cks.markdown("🔍 **[0%]** — Lendo estrutura binária e CKS...")
+                    barra_prog_cks.progress(30)
+                    time.sleep(0.3)
+                    
+                    amostra_ascii = ascii_bruto[:2000]
+                    prompt_ia_bin = f"""
+                    Analise estes dados extraídos em ASCII de um arquivo binário automotivo:
+                    {amostra_ascii}
+                    Identifique e liste:
+                    1. Número da Peça / Software / Hardware
+                    2. Informações de Imobilizador / VIN
+                    3. Status provável du Checksum (CKS).
+                    """
+                    res_bin_ia = client.models.generate_content(model='gemini-3-flash-preview', contents=[prompt_ia_bin])
+                    texto_res_cks = res_bin_ia.text if hasattr(res_bin_ia, 'text') else "Sem dados."
+                    
+                    # 100% CONCLUÍDO
+                    barra_prog_cks.progress(100)
+                    status_txt_cks.markdown("✅ **[100%]** — Análise Binária Concluída!")
+                    time.sleep(0.4)
+                    
+                    barra_prog_cks.empty()
+                    status_txt_cks.empty()
+                    
+                    st.markdown(texto_res_cks)
 
     with tab_comp:
         st.markdown("### 📊 Comparador de Arquivos (File Comparer)")
@@ -2290,21 +2518,65 @@ with aba_programacao:
 
         if st.button("🚀 Enviar Dúvida para a IA 🚀", width="stretch", key="btn_enviar_duv_prog"):
             if duv_arq_texto:
-                with st.spinner("Analisando solicitação..."):
-                    c_prog_sup = [f"Dúvida sobre arquivos/programação: {duv_arq_texto}"]
-                    if mic_prog_sup:
-                        mic_prog_sup.seek(0)
-                        c_prog_sup.append(types.Part.from_bytes(data=mic_prog_sup.read(), mime_type="audio/wav"))
-                    if foto_arq_sup:
-                        foto_arq_sup.seek(0)
-                        img_ds = Image.open(foto_arq_sup)
-                        img_ds.thumbnail((1280, 1280))
-                        buf_ds = io.BytesIO()
-                        img_ds.save(buf_ds, format="JPEG", quality=85)
-                        c_prog_sup.append(types.Part.from_bytes(data=buf_ds.getvalue(), mime_type="image/jpeg"))
-                    
-                    r_prog_sup = client.models.generate_content(model='gemini-3-flash-preview', contents=c_prog_sup)
-                    st.markdown(r_prog_sup.text if hasattr(r_prog_sup, 'text') else "Sem resposta.")
+                
+                # BARRA DE CARREGAMENTO PARA SUPORTE DE ARQUIVOS
+                barra_prog_arq = st.progress(0)
+                status_txt_arq = st.empty()
+                
+                status_txt_arq.markdown("💬 **[0%]** — Lendo arquivo e solicitação técnica...")
+                barra_prog_arq.progress(30)
+                time.sleep(0.3)
+                
+                c_prog_sup = [f"Dúvida sobre arquivos/programação: {duv_arq_texto}"]
+                if mic_prog_sup:
+                    mic_prog_sup.seek(0)
+                    c_prog_sup.append(types.Part.from_bytes(data=mic_prog_sup.read(), mime_type="audio/wav"))
+                if foto_arq_sup:
+                    foto_arq_sup.seek(0)
+                    img_ds = Image.open(foto_arq_sup)
+                    img_ds.thumbnail((1280, 1280))
+                    buf_ds = io.BytesIO()
+                    img_ds.save(buf_ds, format="JPEG", quality=85)
+                    c_prog_sup.append(types.Part.from_bytes(data=buf_ds.getvalue(), mime_type="image/jpeg"))
+                
+                r_prog_sup = client.models.generate_content(model='gemini-3-flash-preview', contents=c_prog_sup)
+                texto_resp_prog = r_prog_sup.text if hasattr(r_prog_sup, 'text') else "Sem resposta."
+                
+                # 100% CONCLUÍDO
+                barra_prog_arq.progress(100)
+                status_txt_arq.markdown("✅ **[100%]** — Suporte Concluído com Sucesso!")
+                time.sleep(0.4)
+                
+                barra_prog_arq.empty()
+                status_txt_arq.empty()
+                
+                salvar_diagnostico(
+                    email_usuario,
+                    "Suporte de Arquivos & CKS",
+                    "Binário / Flash / EEPROM",
+                    duv_arq_texto,
+                    texto_resp_prog
+                )
+                
+                st.markdown(texto_resp_prog)
+                st.success("Consulta de Arquivos salva no Histórico!")
+                
+                # OPÇÃO DE PDF PARA ARQUIVOS
+                pdf_arq = gerar_pdf_relatorio(
+                    st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
+                    "Suporte de Arquivos & CKS",
+                    "Binário / Flash / EEPROM",
+                    duv_arq_texto,
+                    texto_resp_prog,
+                    titulo_pdf="LAUDO TÉCNICO - SUPORTE DE ARQUIVOS"
+                )
+                st.download_button(
+                    label="📥 BAIXAR ESTE LAUDO DE ARQUIVOS EM PDF",
+                    data=pdf_arq,
+                    file_name=f"Laudo_Arquivos_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    mime="application/pdf",
+                    width="stretch"
+                )
             else:
                 st.warning("Escreva a sua dúvida antes de enviar.")
 
@@ -2312,19 +2584,19 @@ with aba_programacao:
 # ABA 3: HISTÓRICO DOS DIAGNÓSTICOS
 # =========================================================
 with aba2:
-    st.subheader("📜 Histórico dos seus Diagnósticos")
+    st.subheader("📜 Histórico Geral de Todas as Consultas e Diagnósticos")
     registros = carregar_historico(st.session_state['user_email'])
     
     if registros:
         for reg in registros:
             reg_id, reg_data, reg_veiculo, reg_dtc, reg_sintomas, reg_relatorio = reg
-            with st.expander(f"🗓️ {reg_data} | 🚗 {reg_veiculo} | DTC: {reg_dtc or 'N/A'}"):
-                st.write(f"**Sintomas:** {reg_sintomas or 'Não informado'}")
-                st.markdown("**Relatório Técnico:**")
+            with st.expander(f"🗓️ {reg_data} | 🚗 {reg_veiculo} | Ref/DTC: {reg_dtc or 'N/A'}"):
+                st.write(f"**Detalhes / Sintomas:** {reg_sintomas or 'Não informado'}")
+                st.markdown("**Relatório Técnico Gerado:**")
                 st.markdown(reg_relatorio)
                 
                 pdf_hist = gerar_pdf_relatorio(
-                    nome_oficina, cnpj_oficina, tel_oficina,
+                    st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
                     reg_veiculo, reg_dtc, reg_sintomas, reg_relatorio
                 )
                 st.download_button(
@@ -2335,7 +2607,7 @@ with aba2:
                     key=f"btn_pdf_{reg_id}"
                 )
     else:
-        st.info("Nenhum diagnóstico salvo até du momento.")
+        st.info("Nenhum diagnóstico ou consulta salva até du momento.")
 
 # =========================================================
 # ABA 4: CURSOS & REDES SOCIAIS (COM EFEITO PULSANTE NEON)
@@ -2543,7 +2815,7 @@ if is_adm:
         st.markdown("---")
 
         conn = sqlite3.connect('diagnosticos.db')
-        df_clientes = pd.read_sql_query("SELECT id, nome, email, whatsapp, fichas, data_cadastro, data_expiracao_teste, data_expiracao_assinatura FROM usuarios", conn)
+        df_clientes = pd.read_sql_query("SELECT id, nome, nome_empresa, documento, email, whatsapp, fichas, data_cadastro, data_expiracao_teste, data_expiracao_assinatura FROM usuarios", conn)
         conn.close()
 
         total_clientes = len(df_clientes)
