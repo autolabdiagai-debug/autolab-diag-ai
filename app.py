@@ -614,26 +614,30 @@ def tela_login():
 
         with aba_cadastro:
             st.subheader("🚀 Teste sem Custos (7 Créditos por 7 Dias)")
-            nome_cad = st.text_input("Seu Nome Completo", key="nome_cad_input")
-            empresa_cad = st.text_input("Nome da Empresa / Oficina", key="empresa_cad_input")
-            doc_cad = st.text_input("CPF ou CNPJ", key="doc_cad_input", placeholder="Ex: 00.000.000/0001-00 ou 000.000.000-00")
-            email_cad = st.text_input("E-mail Principal", key="email_cad_input")
-            wsp_cad = st.text_input("WhatsApp com DDD", key="wsp_cad_input")
-            senha_cad = st.text_input("Crie uma Senha", type="password", key="senha_cad_input")
-            senha_conf = st.text_input("Confirme a Senha", type="password", key="senha_conf_input")
             
-            if st.button("Criar Conta & Iniciar Teste", width="stretch"):
-                if nome_cad and empresa_cad and doc_cad and email_cad and wsp_cad and senha_cad:
+            with st.form("form_cadastro_autolab"):
+                nome_cad = st.text_input("Nome Completo / Oficina", key="nome_cad_input")
+                doc_cad = st.text_input("CPF ou CNPJ", key="doc_cad_input", placeholder="Ex: 000.000.000-00 ou 00.000.000/0001-00")
+                email_cad = st.text_input("E-mail Principal", key="email_cad_input")
+                wsp_cad = st.text_input("WhatsApp com DDD", key="wsp_cad_input")
+                senha_cad = st.text_input("Crie uma Senha", type="password", key="senha_cad_input")
+                senha_conf = st.text_input("Confirme a Senha", type="password", key="senha_conf_input")
+                
+                btn_enviar_cadastro = st.form_submit_button("Criar Conta & Iniciar Teste")
+            
+            if btn_enviar_cadastro:
+                if nome_cad.strip() and doc_cad.strip() and email_cad.strip() and wsp_cad.strip() and senha_cad.strip():
                     if senha_cad == senha_conf:
-                        sucesso = cadastrar_usuario(nome_cad, email_cad, wsp_cad, senha_cad, doc_cad, empresa_cad)
+                        # Chamando a função passando o CPF/CNPJ junto
+                        sucesso = cadastrar_usuario(nome_cad, email_cad, wsp_cad, senha_cad, doc_cad, "AUTOLAB DIAGNÓSTICOS")
                         if sucesso:
-                            st.success("Conta criada! 7 Fichas e 7 dias de teste liberados. Faça login na aba ao lado.")
+                            st.success("🎉 Conta criada com sucesso! 7 Fichas e 7 dias de teste liberados. Faça login na aba ao lado.")
                         else:
-                            st.error("Este e-mail já está cadastrado du sistema.")
+                            st.error("⚠️ Este e-mail já está cadastrado no sistema.")
                     else:
-                        st.error("As senhas não coincidem. Digite novamente.")
+                        st.error("⚠️ As senhas não coincidem. Digite novamente.")
                 else:
-                    st.warning("Preencha todos os campos para se cadastrar.")
+                    st.warning("⚠️ Por favor, preencha todos os campos para se cadastrar.")
 
     st.markdown("---")
     st.markdown("""
