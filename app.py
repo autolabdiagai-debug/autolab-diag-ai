@@ -26,7 +26,6 @@ import pandas as pd
 # ---------------------------------------------------------
 API_KEY = st.secrets["GOOGLE_API_KEY"]
 client = genai.Client(api_key=API_KEY)
-
 # ---------------------------------------------------------
 # CONSTANTES DU SISTEMA
 # ---------------------------------------------------------
@@ -172,8 +171,6 @@ def hash_senha(senha):
 def init_db():
     conn = sqlite3.connect('diagnosticos.db')
     c = conn.cursor()
-    
-    # 1. Criação das tabelas principais e da AUTOREDE
     c.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -191,6 +188,12 @@ def init_db():
             nome_empresa TEXT
         )
     ''')
+    
+    for col in ["senha", "data_expiracao_teste", "data_expiracao_assinatura", "scanners_cadastrados", "programadores_cadastrados", "documento", "nome_empresa"]:
+        try:
+            c.execute(f"ALTER TABLE usuarios ADD COLUMN {col} TEXT")
+        except Exception:
+            pass
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS historico (
@@ -203,50 +206,7 @@ def init_db():
             relatorio TEXT
         )
     ''')
-
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS autorede_usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome_pessoal TEXT,
-            nome_oficina TEXT,
-            email TEXT UNIQUE,
-            documento TEXT,
-            apelido TEXT UNIQUE,
-            senha TEXT,
-            data_cadastro TEXT
-        )
-    ''')
-
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS autorede_posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            autor_apelido TEXT,
-            autor_oficina TEXT,
-            conteudo TEXT,
-            midia_url TEXT,
-            data_postagem TEXT
-        )
-    ''')
-
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS autorede_comentarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            post_id INTEGER,
-            autor_apelido TEXT,
-            comentario TEXT,
-            data_comentario TEXT,
-            FOREIGN KEY(post_id) REFERENCES autorede_posts(id)
-        )
-    ''')
     
-    # 2. Atualização de colunas (caso o banco seja antigo)
-    for col in ["senha", "data_expiracao_teste", "data_expiracao_assinatura", "scanners_cadastrados", "programadores_cadastrados", "documento", "nome_empresa"]:
-        try:
-            c.execute(f"ALTER TABLE usuarios ADD COLUMN {col} TEXT")
-        except Exception:
-            pass
-
-    # 3. Configuração do Administrador
     data_atual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     data_futura_1ano = (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
     senha_adm_hash = hash_senha("autolab2026")
@@ -260,12 +220,11 @@ def init_db():
     else:
         c.execute('UPDATE usuarios SET fichas = 7, senha = ?, data_expiracao_assinatura = ?, documento = ?, nome_empresa = ? WHERE email = ?', (senha_adm_hash, data_futura_1ano, "00.000.000/0001-00", "AUTOLAB DIAGNÓSTICOS", EMAIL_ADM))
         
-    # 4. Fechamento seguro da conexão (apenas no final de tudo)
     conn.commit()
     conn.close()
 
-# Executa a inicialização do banco de dados ao iniciar o script
 init_db()
+
 # ---------------------------------------------------------
 # 5. Funções de Disparo de E-mail
 # ---------------------------------------------------------
@@ -481,7 +440,7 @@ def tela_login():
             z-index: -999; overflow: hidden; background: #03140C;
         }
         .video-bg-container video {
-            width: 100vw; height: 100vw; object-fit: cover;
+            width: 100vw; height: 100vh; object-fit: cover;
             filter: brightness(0.3) contrast(1.25);
         }
         .video-mask {
@@ -530,13 +489,15 @@ def tela_login():
     """, unsafe_allow_html=True)
 
     st.markdown("<h1 style='text-align: center; color: #00FF88; font-weight: 900; text-shadow: 0 0 20px rgba(0,255,136,0.8); font-size: 2.5rem; margin-bottom: 5px;'>🧠 AUTOLAB DIAG AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #FFD700; font-size: 1.15rem; font-weight: 700; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-bottom: 25px;'>O Assistente de Diagnóstico mais rápido do mundo à sua disposição</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #FFD700; font-size: 1.15rem; font-weight: 700; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-bottom: 25px;'>O Assistente de Diagnóstico mais rápido du mundo à sua disposição</p>", unsafe_allow_html=True)
     
-    # --- PLAYER DE ÁUDIO ÚNICO ---
+    # ---------------------------------------------------------
+    # PLAYER DE ÁUDIO ROBUSTO (VELOCIDADE 1.25X)
+    # ---------------------------------------------------------
     st.markdown("""
     <div style="background: linear-gradient(135deg, #052E16 0%, #022C22 100%); border: 2px solid #00FF88; padding: 15px; border-radius: 14px; text-align: center; margin-bottom: 25px; box-shadow: 0 0 25px rgba(0,255,136,0.35);">
         <h4 style="color: #FFD700 !important; margin-bottom: 6px; font-size: 1.1rem;">🔊 APRESENTAÇÃO EXCLUSIVA 🔊</h4>
-        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte o play e descubra como o AutoLab Diag AI vai revolucionar sua oficina:</p>
+        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte du play e descubra como du AutoLab Diag AI vai revolucionar sua oficina:</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -551,7 +512,7 @@ def tela_login():
         <div style="text-align: center; margin-bottom: 20px;">
             <audio id="audio_autolab_v2" controls style="width: 100%; max-width: 500px;">
                 <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-                Seu navegador não suporta o elemento de áudio.
+                Seu navegador não suporta du elemento de áudio.
             </audio>
             <script>
                 var aud = document.getElementById('audio_autolab_v2');
@@ -562,6 +523,8 @@ def tela_login():
             </script>
         </div>
         """, unsafe_allow_html=True)
+    else:
+        st.error(f"⚠️ Arquivo de áudio não encontrado na pasta: {caminho_audio}")
 
     col_info, col_forms = st.columns([1.1, 0.9], gap="large")
     
@@ -572,10 +535,10 @@ def tela_login():
                 ⚡ Imagine um Assistente à sua disposição 24 horas por dia fazendo Diagnósticos complexos em tempo recorde! ⚡
             </h3>
             <p style="color: #A7F3D0 !important; font-size: 0.95rem; line-height: 1.5; margin-bottom: 12px;">
-                Agora sua oficina não precisa mais pagar treinamentos avançados para todos os mecânicos, com o AUTOLAB DIAG AI você faz diagnósticos Complexos em Tempo recorde, basta Alimentar o sistema com os Sintomas e Parâmetros dos Veículos através de textos, áudios, fotos e vídeos que o AUTOLAB DIAG AI faz o diagnóstico e entrega um passo a passo completo e detalhado com relatório técnico completo para que seus Mecânicos, Chaveiros E Eletricistas façam os testes conforme a instrução do Diagnóstico Inteligente gerado.
+                Agora sua oficina não precisa mais pagar treinamentos avançados para todos os mecânicos, com du AUTOLAB DIAG AI você faz diagnósticos Complexos em Tempo recorde, basta Alimentar du sistema com os Sintomas e Paramêtros dos Veículos através de textos, áudios, fotos e videos que du AUTOLAB DIAG AI faz du diagnóstico e entrega um passo a passo completo e detalhado com relatório técnico completo para que seus Mecânicos, Chaveiros E Eletricistas façam os testes conforme a instrução du Diagnóstico Inteligente gerado.
             </p>
             <p style="color: #FFD700 !important; font-size: 0.95rem; font-weight: 700; margin-bottom: 15px;">
-                🌐 Alimentado pelo maior banco de dados técnico existente no mundo através de Inteligência Artificial 💻.
+                🌐 Alimentado pelo maior banco de dados técnico existente du mundo através de Inteligência Artificial 💻.
             </p>
             <div>
                 <span class="device-badge">💻 100% Otimizado para Computadores</span>
@@ -586,10 +549,36 @@ def tela_login():
 
         celular_reels_html = f"""
         <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 25px;">
-            <div style="width: 270px; height: 420px; background: linear-gradient(135deg, #00FF88 0%, #FFD700 100%); padding: 5px; border-radius: 32px; box-shadow: 0px 0px 25px rgba(0, 255, 136, 0.4);">
-                <div style="width: 100%; height: 100%; background-color: #000; border-radius: 28px; overflow: hidden; position: relative;">
-                    <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 70px; height: 14px; background-color: #111; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; z-index: 10;"></div>
-                    <iframe src="{link_reels}" width="100%" height="100%" frameborder="0" scrolling="no" allowtransparency="true" style="border:none; overflow:hidden;"></iframe>
+            <div style="
+                width: 270px; 
+                height: 420px; 
+                background: linear-gradient(135deg, #00FF88 0%, #FFD700 100%);
+                padding: 5px; 
+                border-radius: 32px; 
+                box-shadow: 0px 0px 25px rgba(0, 255, 136, 0.4);
+            ">
+                <div style="
+                    width: 100%; 
+                    height: 100%; 
+                    background-color: #000; 
+                    border-radius: 28px; 
+                    overflow: hidden; 
+                    position: relative;
+                ">
+                    <div style="
+                        position: absolute; top: 0; left: 50%; transform: translateX(-50%); 
+                        width: 70px; height: 14px; background-color: #111; 
+                        border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; z-index: 10;
+                    "></div>
+                    <iframe 
+                        src="{link_reels}" 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        scrolling="no" 
+                        allowtransparency="true"
+                        style="border:none; overflow:hidden;">
+                    </iframe>
                 </div>
             </div>
         </div>
@@ -597,18 +586,14 @@ def tela_login():
         st.markdown(celular_reels_html, unsafe_allow_html=True)
 
     with col_forms:
-        aba_acesso, aba_cadastro, aba_autoredes = st.tabs([
-            "💻 ÁREA DE ACESSO", 
-            "📝 CRIAR CONTA", 
-            "🌐 AUTOREDE"
-        ])
+        aba_acesso, aba_cadastro = st.tabs(["💻 ÁREA DE ACESSO 📱", "📝 Criar Conta / Teste por 7 Dias)"])
         
         with aba_acesso:
-            st.subheader("🕵️‍♂️ Acesso do Usuário")
-            email_login = st.text_input("E-mail Cadastrado", key="email_log_input_home")
-            senha_login = st.text_input("Sua Senha", type="password", key="senha_log_input_home")
+            st.subheader("🕵️‍♂️ Acesso du Usuário 💻📱")
+            email_login = st.text_input("E-mail Cadastrado", key="email_log_input")
+            senha_login = st.text_input("Sua Senha", type="password", key="senha_log_input")
             
-            if st.button("Entrar", use_container_width=True, key="btn_entrar_home"):
+            if st.button("Entrar", width="stretch"):
                 if email_login and senha_login:
                     usr = autenticar_usuario(email_login, senha_login)
                     if usr:
@@ -622,104 +607,33 @@ def tela_login():
                         st.session_state["user_whatsapp"] = usr["whatsapp"]
                         st.rerun()
                     else:
-                        st.error("E-mail ou senha incorretos, ou período de teste expirado.")
+                        st.error("E-mail ou senha incorretos, ou período de teste de 7 dias expirado.")
                 else:
-                    st.warning("Por favor, preencha o e-mail e a senha.")
+                    st.warning("Por favor, preencha du e-mail e a senha.")
 
         with aba_cadastro:
-            st.subheader("🚀 Teste sem Custos (7 Fichas / 7 Dias)")
-            nome_cad = st.text_input("Seu Nome Completo", key="nome_cad_input_home")
-            empresa_cad = st.text_input("Nome da Empresa / Oficina", key="empresa_cad_input_home")
-            doc_cad = st.text_input("CPF ou CNPJ", key="doc_cad_input_home", placeholder="Ex: 00.000.000/0001-00")
-            email_cad = st.text_input("E-mail Principal", key="email_cad_input_home")
-            wsp_cad = st.text_input("WhatsApp com DDD", key="wsp_cad_input_home")
-            senha_cad = st.text_input("Crie uma Senha", type="password", key="senha_cad_input_home")
-            senha_conf = st.text_input("Confirme a Senha", type="password", key="senha_conf_input_home")
+            st.subheader("🚀 Teste sem Custos (7 Créditos por 7 Dias)")
+            nome_cad = st.text_input("Seu Nome Completo", key="nome_cad_input")
+            empresa_cad = st.text_input("Nome da Empresa / Oficina", key="empresa_cad_input")
+            doc_cad = st.text_input("CPF ou CNPJ", key="doc_cad_input", placeholder="Ex: 00.000.000/0001-00 ou 000.000.000-00")
+            email_cad = st.text_input("E-mail Principal", key="email_cad_input")
+            wsp_cad = st.text_input("WhatsApp com DDD", key="wsp_cad_input")
+            senha_cad = st.text_input("Crie uma Senha", type="password", key="senha_cad_input")
+            senha_conf = st.text_input("Confirme a Senha", type="password", key="senha_conf_input")
             
-            if st.button("Criar Conta & Iniciar Teste", use_container_width=True, key="btn_cad_home"):
+            if st.button("Criar Conta & Iniciar Teste", width="stretch"):
                 if nome_cad and empresa_cad and doc_cad and email_cad and wsp_cad and senha_cad:
                     if senha_cad == senha_conf:
                         sucesso = cadastrar_usuario(nome_cad, email_cad, wsp_cad, senha_cad, doc_cad, empresa_cad)
                         if sucesso:
-                            st.success("Conta criada! 7 Fichas liberadas. Faça login na aba ao lado.")
+                            st.success("Conta criada! 7 Fichas e 7 dias de teste liberados. Faça login na aba ao lado.")
                         else:
-                            st.error("Este e-mail já está cadastrado no sistema.")
+                            st.error("Este e-mail já está cadastrado du sistema.")
                     else:
-                        st.error("As senhas não coincidem.")
+                        st.error("As senhas não coincidem. Digite novamente.")
                 else:
                     st.warning("Preencha todos os campos para se cadastrar.")
 
-        with aba_autoredes:
-            st.markdown("### 🌐 AUTOREDE — Rede Colaborativa")
-            
-            if 'usuario_logado_autorede' in st.session_state:
-                col_sair1, col_sair2 = st.columns([7, 3])
-                with col_sair2:
-                    if st.button("🚪 Sair", use_container_width=True, key="btn_sair_ar_home"):
-                        del st.session_state['usuario_logado_autorede']
-                        st.rerun()
-                
-                tela_feed_autorede(st.session_state['usuario_logado_autorede'])
-                
-            else:
-                tab_ar_login, tab_ar_cad = st.tabs(["🔑 Entrar na Rede", "📝 Cadastrar na Rede"])
-                
-                with tab_ar_login:
-                    email_ou_apelido_ar = st.text_input("E-mail ou Apelido (@7...)", key="login_ar_input_user_home")
-                    senha_login_ar = st.text_input("Sua Senha", type="password", key="login_ar_input_pass_home")
-                    
-                    if st.button("Entrar no Feed", use_container_width=True, key="btn_entrar_ar_home"):
-                        if email_ou_apelido_ar and senha_login_ar:
-                            conn_l = sqlite3.connect('diagnosticos.db')
-                            c_l = conn_l.cursor()
-                            senha_h_ar = hash_senha(senha_login_ar)
-                            c_l.execute('SELECT nome_pessoal, nome_oficina, apelido FROM autorede_usuarios WHERE (email = ? OR apelido = ?) AND senha = ?', (email_ou_apelido_ar.strip().lower(), email_ou_apelido_ar.strip(), senha_h_ar))
-                            res_ar = c_l.fetchone()
-                            conn_l.close()
-                            
-                            if res_ar:
-                                st.session_state['usuario_logado_autorede'] = {'nome_pessoal': res_ar[0], 'nome_oficina': res_ar[1], 'apelido': res_ar[2]}
-                                st.success("✅ Login realizado!")
-                                st.rerun()
-                            else:
-                                st.error("⚠️ Dados incorretos.")
-                        else:
-                            st.warning("⚠️ Preencha os campos.")
-
-                with tab_ar_cad:
-                    with st.form("form_autorede_cadastro_home"):
-                        nome_pessoal_ar = st.text_input("Nome Pessoal", key="ar_nome_pessoal_home")
-                        nome_oficina_ar = st.text_input("Oficina / Empresa", key="ar_nome_oficina_home")
-                        email_ar = st.text_input("E-mail", key="ar_email_home")
-                        doc_ar = st.text_input("CPF ou CNPJ", key="ar_doc_home")
-                        sufixo_apelido = st.text_input("Apelido (@7...)", placeholder="ex: carlosedm", key="ar_sufixo_apelido_home")
-                        senha_ar = st.text_input("Senha", type="password", key="ar_senha_home")
-                        senha_conf_ar = st.text_input("Confirme a Senha", type="password", key="ar_senha_conf_home")
-                        btn_cad_autorede = st.form_submit_button("Criar Acesso", use_container_width=True)
-                    
-                    if btn_cad_autorede:
-                        if nome_pessoal_ar.strip() and email_ar.strip() and sufixo_apelido.strip() and senha_ar.strip():
-                            apelido_final = f"@7{sufixo_apelido.strip().replace('@', '').replace('7', '')}"
-                            if senha_ar != senha_conf_ar:
-                                st.error("⚠️ As senhas não coincidem.")
-                            else:
-                                try:
-                                    conn_ar = sqlite3.connect('diagnosticos.db')
-                                    c_ar = conn_ar.cursor()
-                                    senha_ar_hash = hash_senha(senha_ar)
-                                    c_ar.execute('INSERT INTO autorede_usuarios (nome_pessoal, nome_oficina, email, documento, apelido, senha, data_cadastro) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-                                                 (nome_pessoal_ar.strip(), nome_oficina_ar.strip(), email_ar.strip().lower(), doc_ar.strip(), apelido_final, senha_ar_hash, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                                    conn_ar.commit()
-                                    conn_ar.close()
-                                    st.session_state['usuario_logado_autorede'] = {'apelido': apelido_final, 'nome_oficina': nome_oficina_ar.strip(), 'nome_pessoal': nome_pessoal_ar.strip()}
-                                    st.success(f"✨ Cadastrado com sucesso como **{apelido_final}**!")
-                                    st.rerun()
-                                except sqlite3.IntegrityError:
-                                    st.error("⚠️ E-mail ou apelido já cadastrado.")
-                        else:
-                            st.warning("⚠️ Preencha os campos obrigatórios.")
-
-    # --- BOTÃO DE SUPORTE E PLANOS ABAIXO DAS ABAS ---
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; margin-top: 25px; margin-bottom: 30px;">
@@ -744,7 +658,7 @@ def tela_login():
 
     renderizar_css_planos()
     st.markdown("<h3 style='text-align: center; color: #00FF88;'>💎 Conheça Nossos Planos Anuais (Acesso Ilimitado por 1 Ano) 💎 </h3>", unsafe_allow_html=True)
-    st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha o nível ideal para a sua oficina e tenha o AUTOLAB DIAG AI à sua disposição.</p>", unsafe_allow_html=True)
+    st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha du nível ideal para a sua oficina e tenha du AUTOLAB DIAG AI à sua disposição.</p>", unsafe_allow_html=True)
     st.write("")
 
     col_p1, col_p2, col_p3 = st.columns(3)
@@ -794,6 +708,7 @@ def tela_login():
         </div>
         """, unsafe_allow_html=True)
         st.markdown('<a href="https://pag.ae/81-F5BAYN" target="_blank" class="btn-pulsing-link">ASSINAR NÍVEL 3</a>', unsafe_allow_html=True)
+
 if not st.session_state["logado"]:
     tela_login()
     st.stop()
@@ -1153,21 +1068,16 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
         return imagem_pil, [], False
 
 # ---------------------------------------------------------
-# 11. Interface Principal e Abas (Controle de Perfil: AutoLab vs AutoRede)
+# 11. Interface Principal e Abas
 # ---------------------------------------------------------
 st.title("🔬 Sistema de Diagnóstico Avançado 🔬")
 st.write("Análise de sinais de osciloscópio, leituras de parâmetros de scanner, códigos de falha (DTC), textos, áudios e vídeos técnicos.")
 
 is_adm = str(st.session_state.get('user_email', '')).strip().lower() == EMAIL_ADM.lower()
 
-# Identifica se o usuário está logado apenas na AUTOREDE (sem conta principal no AutoLab)
-usuario_tem_autolab = st.session_state.get("logado", False)
-usuario_tem_autorede = 'usuario_logado_autorede' in st.session_state
-
 if is_adm:
-    aba_empresa, aba_autorede_feed, aba1, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5, aba6 = st.tabs([
+    aba_empresa, aba1, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5, aba6 = st.tabs([
         "🏢 Minha Empresa",
-        "🌐 AUTOREDE (Feed)",
         "🔬 Diagnóstico", 
         "🔌 Suporte U.C.Es",
         "📡 Suporte Scanners",
@@ -1179,18 +1089,9 @@ if is_adm:
         "💳 Assinatura",
         "💎 Gestão de Clientes 💎"
     ])
-elif usuario_tem_autorede and not usuario_tem_autolab:
-    # USUÁRIO EXCLUSIVO DA AUTOREDE: Vê apenas Minha Empresa e o Feed com os Planos Fixos
-    aba_empresa, aba_autorede_feed, aba_planos_fixos = st.tabs([
-        "🏢 Minha Empresa",
-        "🌐 AUTOREDE (Feed)",
-        "💳 Assinatura & Planos"
-    ])
 else:
-    # USUÁRIO COMPLETO DO AUTOLAB
-    aba_empresa, aba_autorede_feed, aba1, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5 = st.tabs([
+    aba_empresa, aba1, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5 = st.tabs([
         "🏢 Minha Empresa",
-        "🌐 AUTOREDE (Feed)",
         "🔬 Diagnóstico", 
         "🔌 Suporte U.C.Es",
         "📡 Suporte Scanners",
@@ -1202,246 +1103,6 @@ else:
         "💳 Assinatura"
     ])
 
-# =========================================================
-# ABA: 🌐 AUTOREDE (FEED ESTILO INSTAGRAM + BANNER COMERCIAL FIXO)
-# =========================================================
-with aba_autorede_feed:
-    st.markdown("""
-        <style>
-            .feed-container { max-width: 650px; margin: 0 auto; }
-            .post-card {
-                background: linear-gradient(145deg, #03140C 0%, #052E16 100%);
-                border: 1px solid rgba(0, 255, 136, 0.35);
-                border-radius: 16px;
-                padding: 20px;
-                margin-bottom: 25px;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-            }
-            .post-header {
-                display: flex;
-                align-items: center;
-                margin-bottom: 12px;
-                border-bottom: 1px solid rgba(6, 95, 70, 0.6);
-                padding-bottom: 10px;
-            }
-            .post-author { font-weight: 800; color: #FFD700 !important; font-size: 1.05rem; }
-            .post-oficina { color: #A7F3D0 !important; font-size: 0.85rem; }
-            
-            /* BANNER COMERCIAL FIXO DE CONVERSÃO */
-            .banner-comercial-fixo {
-                background: linear-gradient(135deg, rgba(5, 46, 22, 0.95) 0%, rgba(2, 44, 34, 0.98) 100%);
-                border: 2px solid #FFD700;
-                border-radius: 16px;
-                padding: 20px;
-                text-align: center;
-                margin-bottom: 25px;
-                box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # BANNER FIXO NO TOPO PARA QUEM É SÓ DA AUTOREDE CONHECER O SISTEMA
-    if usuario_tem_autorede and not usuario_tem_autolab and not is_adm:
-        st.markdown("""
-        <div class="banner-comercial-fixo">
-            <h3 style="color: #FFD700 !important; margin-bottom: 8px; font-size: 1.25rem;">⚡ DESBLOQUEIE O PODER DA INTELIGÊNCIA ARTIFICIAL NA SUA OFICINA! ⚡</h3>
-            <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 15px;">
-                Faça sua assinatura e tenha um Agente de Diagnóstico à sua disposição 24 horas por dia para resolver falhas complexas em tempo recorde.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<h2 style='text-align: center; color: #00FF88; text-shadow: 0 0 15px rgba(0,255,136,0.5);'>🌐 AUTOREDE — O Feed da Oficina</h2>", unsafe_allow_html=True)
-    st.write("<p style='text-align: center; color: #A7F3D0;'>Compartilhe dicas de bancada, fotos de reparos de U.C.Es e interaja com outros profissionais da comunidade.</p>", unsafe_allow_html=True)
-    st.markdown("---")
-
-    # Verifica se o usuário está logado na AUTOREDE
-    if not usuario_tem_autorede:
-        st.markdown("""
-            <div style="background: rgba(5, 46, 22, 0.8); border: 1px solid #00FF88; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
-                <h4 style="color: #FFD700 !important; margin-bottom: 5px;">🔑 Acesso Exclusivo à Rede</h4>
-                <p style="color: #A7F3D0 !important; font-size: 0.95rem;">Faça login na AUTOREDE para publicar fotos, interagir no feed e comentar nas publicações dos colegas. Visitantes podem navegar pelo modo leitura.</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-        tab_ar_log, tab_ar_cad = st.tabs(["🔑 Entrar na Rede", "📝 Cadastrar na Rede"])
-        
-        with tab_ar_log:
-            email_ou_apelido_ar = st.text_input("E-mail ou Apelido (@7...)", key="login_ar_feed_user")
-            senha_login_ar = st.text_input("Sua Senha", type="password", key="login_ar_feed_pass")
-            
-            if st.button("Entrar no Feed", use_container_width=True, key="btn_entrar_ar_feed"):
-                if email_ou_apelido_ar and senha_login_ar:
-                    conn_l = sqlite3.connect('diagnosticos.db')
-                    c_l = conn_l.cursor()
-                    senha_h_ar = hash_senha(senha_login_ar)
-                    c_l.execute('SELECT nome_pessoal, nome_oficina, apelido FROM autorede_usuarios WHERE (email = ? OR apelido = ?) AND senha = ?', (email_ou_apelido_ar.strip().lower(), email_ou_apelido_ar.strip(), senha_h_ar))
-                    res_ar = c_l.fetchone()
-                    conn_l.close()
-                    
-                    if res_ar:
-                        st.session_state['usuario_logado_autorede'] = {'nome_pessoal': res_ar[0], 'nome_oficina': res_ar[1], 'apelido': res_ar[2]}
-                        st.success("✅ Login realizado com sucesso!")
-                        st.rerun()
-                    else:
-                        st.error("⚠️ Dados incorretos.")
-                else:
-                    st.warning("⚠️ Preencha todos os campos.")
-
-        with tab_ar_cad:
-            with st.form("form_autorede_cadastro_feed"):
-                nome_pessoal_ar = st.text_input("Nome Pessoal", key="ar_nome_pessoal_feed")
-                nome_oficina_ar = st.text_input("Oficina / Empresa", key="ar_nome_oficina_feed")
-                email_ar = st.text_input("E-mail", key="ar_email_feed")
-                doc_ar = st.text_input("CPF ou CNPJ", key="ar_doc_feed")
-                sufixo_apelido = st.text_input("Apelido (@7...)", placeholder="ex: carlosedm", key="ar_sufixo_apelido_feed")
-                senha_ar = st.text_input("Senha", type="password", key="ar_senha_feed")
-                senha_conf_ar = st.text_input("Confirme a Senha", type="password", key="ar_senha_conf_feed")
-                btn_cad_autorede = st.form_submit_button("Criar Acesso à Rede", use_container_width=True)
-            
-            if btn_cad_autorede:
-                if nome_pessoal_ar.strip() and email_ar.strip() and sufixo_apelido.strip() and senha_ar.strip():
-                    apelido_final = f"@7{sufixo_apelido.strip().replace('@', '').replace('7', '')}"
-                    if senha_ar != senha_conf_ar:
-                        st.error("⚠️ As senhas não coincidem.")
-                    else:
-                        try:
-                            conn_ar = sqlite3.connect('diagnosticos.db')
-                            c_ar = conn_ar.cursor()
-                            senha_ar_hash = hash_senha(senha_ar)
-                            c_ar.execute('INSERT INTO autorede_usuarios (nome_pessoal, nome_oficina, email, documento, apelido, senha, data_cadastro) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-                                         (nome_pessoal_ar.strip(), nome_oficina_ar.strip(), email_ar.strip().lower(), doc_ar.strip(), apelido_final, senha_ar_hash, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                            conn_ar.commit()
-                            conn_ar.close()
-                            st.session_state['usuario_logado_autorede'] = {'apelido': apelido_final, 'nome_oficina': nome_oficina_ar.strip(), 'nome_pessoal': nome_pessoal_ar.strip()}
-                            st.success(f"✨ Cadastrado com sucesso como **{apelido_final}**!")
-                            st.rerun()
-                        except sqlite3.IntegrityError:
-                            st.error("⚠️ E-mail ou apelido já cadastrado.")
-                else:
-                    st.warning("⚠️ Preencha os campos obrigatórios.")
-
-    else:
-        # Se estiver logado, exibe painel de perfil e criador de posts
-        user_ar = st.session_state['usuario_logado_autorede']
-        
-        col_perfil1, col_perfil2 = st.columns([8, 2])
-        with col_perfil1:
-            st.markdown(f"👋 Olá, **{user_ar['nome_pessoal']}** | Oficina: **{user_ar['nome_oficina']}** (`{user_ar['apelido']}`)")
-        with col_perfil2:
-            if st.button("🚪 Sair da Rede", use_container_width=True, key="btn_sair_ar_feed_main"):
-                del st.session_state['usuario_logado_autorede']
-                st.rerun()
-
-        st.markdown("---")
-
-        # Caixa para criar nova postagem
-        st.markdown("### 📸 Criar Nova Publicação na AUTOREDE")
-        with st.form("form_criar_post_feed"):
-            conteudo_post = st.text_area("O que está acontecendo na bancada hoje?", placeholder="Compartilhe uma dica, oscilograma, reparo de módulo ou dúvida com a rede...", height=90)
-            foto_post = st.file_uploader("Anexar Foto da Bancada / Módulo / Veículo", type=["png", "jpg", "jpeg"])
-            btn_publicar = st.form_submit_button("🚀 Publicar no Feed", use_container_width=True)
-
-        if btn_publicar:
-            if conteudo_post.strip() or foto_post:
-                caminho_foto_url = ""
-                if foto_post:
-                    os.makedirs("uploads_autorede", exist_ok=True)
-                    nome_arquivo_img = f"uploads_autorede/{datetime.now().strftime('%Y%m%d_%H%M%S')}_{foto_post.name}"
-                    with open(nome_arquivo_img, "wb") as f_img:
-                        f_img.write(foto_post.getbuffer())
-                    caminho_foto_url = nome_arquivo_img
-
-                conn_p = sqlite3.connect('diagnosticos.db')
-                c_p = conn_p.cursor()
-                c_p.execute('''
-                    INSERT INTO autorede_posts (autor_apelido, autor_oficina, conteudo, midia_url, data_postagem)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (user_ar['apelido'], user_ar['nome_oficina'], conteudo_post.strip(), caminho_foto_url, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                conn_p.commit()
-                conn_p.close()
-                st.success("✅ Publicação realizada com sucesso no feed!")
-                st.rerun()
-            else:
-                st.warning("⚠️ Escreva algo ou adicione uma foto para publicar.")
-
-    st.markdown("---")
-    st.markdown("### 📱 Feed de Publicações")
-
-    # Carrega os posts do banco de dados em ordem decrescente
-    conn_feed = sqlite3.connect('diagnosticos.db')
-    c_feed = conn_feed.cursor()
-    c_feed.execute('SELECT id, autor_apelido, autor_oficina, conteudo, midia_url, data_postagem FROM autorede_posts ORDER BY id DESC')
-    posts = c_feed.fetchall()
-    conn_feed.close()
-
-    if posts:
-        for post in posts:
-            p_id, p_autor, p_oficina, p_conteudo, p_midia, p_data = post
-            
-            st.markdown(f"""
-            <div class="post-card">
-                <div class="post-header">
-                    <div>
-                        <div class="post-author">{p_autor}</div>
-                        <div class="post-oficina">🏢 {p_oficina} • 🕒 {p_data}</div>
-                    </div>
-                </div>
-                <div style="color: #FFFFFF !important; font-size: 1rem; line-height: 1.5; margin-bottom: 12px;">
-                    {p_conteudo}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            if p_midia and os.path.exists(p_midia):
-                st.image(p_midia, use_container_width=True)
-
-            # Seção de Comentários
-            with st.expander(f"💬 Comentários na Publicação #{p_id}", expanded=False):
-                conn_com = sqlite3.connect('diagnosticos.db')
-                c_com = conn_com.cursor()
-                c_com.execute('SELECT autor_apelido, comentario, data_comentario FROM autorede_comentarios WHERE post_id = ? ORDER BY id ASC', (p_id,))
-                comentarios = c_com.fetchall()
-                conn_com.close()
-
-                if comentarios:
-                    for com in comentarios:
-                        c_autor, c_texto, c_data = com
-                        st.markdown(f"""
-                        <div style="background: rgba(2, 12, 8, 0.6); border-left: 3px solid #00FF88; padding: 8px 12px; border-radius: 4px; margin-bottom: 8px;">
-                            <b style="color: #FFD700;">{c_autor}</b> <span style="font-size: 0.75rem; color: #A7F3D0;">({c_data})</span><br>
-                            <span style="color: #FFF; font-size: 0.9rem;">{c_texto}</span>
-                        </div>
-                        """, unsafe_allow_html=True)
-                else:
-                    st.caption("Nenhum comentário ainda.")
-
-                if usuario_tem_autorede:
-                    user_ar = st.session_state['usuario_logado_autorede']
-                    with st.form(f"form_comentario_{p_id}"):
-                        texto_comentario = st.text_input("Escreva um comentário técnico...", key=f"input_com_{p_id}")
-                        btn_enviar_com = st.form_submit_button("Enviar Comentário")
-                    
-                    if btn_enviar_com:
-                        if texto_comentario.strip():
-                            conn_ins = sqlite3.connect('diagnosticos.db')
-                            c_ins = conn_ins.cursor()
-                            c_ins.execute('''
-                                INSERT INTO autorede_comentarios (post_id, autor_apelido, comentario, data_comentario)
-                                VALUES (?, ?, ?, ?)
-                            ''', (p_id, user_ar['apelido'], texto_comentario.strip(), datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                            conn_ins.commit()
-                            conn_ins.close()
-                            st.success("Comentário enviado!")
-                            st.rerun()
-                        else:
-                            st.warning("Digite um comentário válido.")
-                else:
-                    st.info("💡 Faça login na AUTOREDE para poder comentar nas publicações.")
-            
-            st.write("")
-    else:
-        st.info("ℹ️ Nenhuma publicação no feed da AUTOREDE ainda.")
 # =========================================================
 # ABA 🏢 MINHA EMPRESA (SELO DE QUALIDADE EM DIAGNÓSTICO)
 # =========================================================
@@ -2339,7 +2000,6 @@ with aba_uces:
                         config=config_lab
                     )
                     
-                    # 100% CONCLUÍDO
                     barra_prog_uce.progress(100)
                     status_txt_uce.markdown("✅ **[100%]** — Report U.C.E Concluído com Sucesso!")
                     time.sleep(0.5)
@@ -2351,8 +2011,18 @@ with aba_uces:
                         texto_laudo = resp_lab.text
                         st.session_state['relatorio_uce_laboratorio'] = texto_laudo
                         
+                        fichas_atuais = st.session_state.get('user_fichas', 7)
+                        email_atual = st.session_state.get('user_email', '')
+                        
+                        if email_atual != EMAIL_ADM and fichas_atuais < 999:
+                            fichas_atuais -= 1
+                            st.session_state['user_fichas'] = fichas_atuais
+                            atualizar_fichas_banco(email_atual, fichas_atuais)
+                            if fichas_atuais == 0:
+                                enviar_email_oferta_assinatura(st.session_state.get('user_nome', 'Técnico'), email_atual)
+
                         salvar_diagnostico(
-                            email_usuario,
+                            email_atual,
                             f"U.C.E: {veiculo_uce_geral} ({modulo_tipo_sel})",
                             "N/A (Bancada U.C.E)",
                             duvida_uce_principal if duvida_uce_principal else "Análise de Hardware / Mapeamento",
@@ -2440,7 +2110,7 @@ with aba_uces:
             data=pdf_uce,
             file_name=f"Report_AutoLab_UCE_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             mime="application/pdf",
-            width="stretch"
+            use_container_width=True
         )
 
 # =========================================================
@@ -2489,54 +2159,112 @@ with aba_scanners:
 
     st.markdown("---")
     if st.button("🚀 Analisar Procedimento com Scanners 🚀", width="stretch"):
-        if veic_sc := veiculo_scanner_duvida:
-            
-            # BARRA DE CARREGAMENTO (0% A 100%) PARA SCANNERS
-            barra_prog_sc = st.progress(0)
-            status_txt_sc = st.empty()
-            
-            status_txt_sc.markdown("📡 **[0%]** — Lendo inventário de scanners e dados du veículo...")
-            barra_prog_sc.progress(20)
-            time.sleep(0.3)
+        status_atual_check = verificar_status_usuario(st.session_state['user_email'])
+        if st.session_state['user_email'] != EMAIL_ADM and (status_atual_check["tipo"] == "expirado" or (status_atual_check["tipo"] == "teste" and status_atual_check["fichas"] <= 0)):
+            st.error("⚠️ Seu período de teste de 7 dias ou suas fichas esgotaram! Assine um dos planos na aba 💳 Assinatura para continuar.")
+        else:
+            if veic_sc := veiculo_scanner_duvida:
+                
+                # BARRA DE CARREGAMENTO (0% A 100%) PARA SCANNERS
+                barra_prog_sc = st.progress(0)
+                status_txt_sc = st.empty()
+                
+                status_txt_sc.markdown("📡 **[0%]** — Lendo inventário de scanners e dados du veículo...")
+                barra_prog_sc.progress(20)
+                time.sleep(0.3)
 
-            status_txt_sc.markdown("🧠 **[50%]** — Verificando compatibilidade de menus com a IA...")
-            barra_prog_sc.progress(50)
-            time.sleep(0.3)
+                status_txt_sc.markdown("🧠 **[50%]** — Verificando compatibilidade de menus com a IA...")
+                barra_prog_sc.progress(50)
+                time.sleep(0.3)
 
-            status_txt_sc.markdown("⚙️ **[80%]** — Formatando passo a passo técnico...")
-            barra_prog_sc.progress(80)
-            time.sleep(0.3)
+                status_txt_sc.markdown("⚙️ **[80%]** — Formatando passo a passo técnico...")
+                barra_prog_sc.progress(80)
+                time.sleep(0.3)
 
-            scanners_do_usuario = ", ".join(scanners_selecionados) if 'scanners_selecionados' in locals() else "Nenhum cadastrado"
-            prompt_scanner_ia = f"""
-            ATUE COMO O ENGENHEIRO CHEFE EM DIAGNÓSTICO AUTOMOTIVO E ESPECIALISTA EM SCANNERS DA AUTOLAB.
-            - Veículo/Sistema: {veiculo_scanner_duvida}
-            - Dúvida: {pergunta_scanner}
-            - Scanners Disponíveis: {scanners_do_usuario}
-            Forneça análise de compatibilidade e passo a passo detalhado du menu du scanner.
-            """
-            contents_sc = [prompt_scanner_ia]
-            if mic_sc:
-                mic_sc.seek(0)
-                contents_sc.append(types.Part.from_bytes(data=mic_sc.read(), mime_type="audio/wav"))
-            if foto_tela_scanner:
-                foto_tela_scanner.seek(0)
-                img_s = Image.open(foto_tela_scanner)
-                img_s.thumbnail((1280, 1280))
-                buf_s = io.BytesIO()
-                img_s.save(buf_s, format="JPEG", quality=85)
-                contents_sc.append(types.Part.from_bytes(data=buf_s.getvalue(), mime_type="image/jpeg"))
-            
-            resp_sc = client.models.generate_content(model='gemini-3-flash-preview', contents=contents_sc)
-            texto_resp_sc = resp_sc.text if hasattr(resp_sc, 'text') else "Sem resposta."
-            
-            # 100% CONCLUÍDO
-            barra_prog_sc.progress(100)
-            status_txt_sc.markdown("✅ **[100%]** — Análise de Scanner Concluída com Sucesso!")
-            time.sleep(0.4)
-            
-            barra_prog_sc.empty()
-            status_txt_sc.empty()
+                scanners_do_usuario = ", ".join(scanners_selecionados) if 'scanners_selecionados' in locals() else "Nenhum cadastrado"
+                prompt_scanner_ia = f"""
+                ATUE COMO O ENGENHEIRO CHEFE EM DIAGNÓSTICO AUTOMOTIVO E ESPECIALISTA EM SCANNERS DA AUTOLAB.
+                - Veículo/Sistema: {veiculo_scanner_duvida}
+                - Dúvida: {pergunta_scanner}
+                - Scanners Disponíveis: {scanners_do_usuario}
+                Forneça análise de compatibilidade e passo a passo detalhado du menu du scanner.
+                """
+                contents_sc = [prompt_scanner_ia]
+                if mic_sc:
+                    try:
+                        mic_sc.seek(0)
+                        contents_sc.append(types.Part.from_bytes(data=mic_sc.read(), mime_type="audio/wav"))
+                    except Exception: pass
+                    
+                if foto_tela_scanner:
+                    try:
+                        foto_tela_scanner.seek(0)
+                        img_s = Image.open(foto_tela_scanner)
+                        img_s.thumbnail((1280, 1280))
+                        buf_s = io.BytesIO()
+                        img_s.save(buf_s, format="JPEG", quality=85)
+                        contents_sc.append(types.Part.from_bytes(data=buf_s.getvalue(), mime_type="image/jpeg"))
+                    except Exception: pass
+                
+                try:
+                    resp_sc = client.models.generate_content(model='gemini-3-flash-preview', contents=contents_sc)
+                    
+                    # 100% CONCLUÍDO
+                    barra_prog_sc.progress(100)
+                    status_txt_sc.markdown("✅ **[100%]** — Análise de Scanner Concluída com Sucesso!")
+                    time.sleep(0.4)
+                    
+                    barra_prog_sc.empty()
+                    status_txt_sc.empty()
+
+                    if resp_sc and hasattr(resp_sc, 'text') and resp_sc.text:
+                        texto_resp_sc = resp_sc.text
+                        
+                        # DESCONTO DA FICHA E SALVAMENTO
+                        fichas_atuais = st.session_state.get('user_fichas', 7)
+                        email_atual = st.session_state.get('user_email', '')
+                        
+                        if email_atual != EMAIL_ADM and fichas_atuais < 999:
+                            fichas_atuais -= 1
+                            st.session_state['user_fichas'] = fichas_atuais
+                            atualizar_fichas_banco(email_atual, fichas_atuais)
+                            if fichas_atuais == 0:
+                                enviar_email_oferta_assinatura(st.session_state.get('user_nome', 'Técnico'), email_atual)
+
+                        salvar_diagnostico(
+                            email_atual,
+                            f"Scanner / Veículo: {veiculo_scanner_duvida}",
+                            "Procedimento de Scanner",
+                            pergunta_scanner,
+                            texto_resp_sc
+                        )
+                        
+                        st.markdown(texto_resp_sc)
+                        st.success("Análise de Scanner salva no Histórico!")
+                        
+                        pdf_sc = gerar_pdf_relatorio(
+                            st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
+                            f"Veículo: {veiculo_scanner_duvida}",
+                            "Procedimento de Scanner",
+                            pergunta_scanner,
+                            texto_resp_sc,
+                            titulo_pdf="LAUDO TÉCNICO - SUPORTE DE SCANNERS"
+                        )
+                        st.download_button(
+                            label="📥 BAIXAR ESTE LAUDO DE SCANNER EM PDF",
+                            data=pdf_sc,
+                            file_name=f"Laudo_Scanner_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    else:
+                        st.error("⚠️ Nenhuma resposta gerada pelo sistema.")
+                except Exception as err_sc:
+                    barra_prog_sc.empty()
+                    status_txt_sc.empty()
+                    st.error(f"Erro na requisição: {err_sc}")
+            else:
+                st.warning("⚠️ Informe o veículo ou sistema para o procedimento.")
             
             salvar_diagnostico(
                 email_usuario,
@@ -2596,71 +2324,101 @@ with aba_programadores:
 
     st.markdown("---")
     if st.button("🚀 Analisar Conexão de Bancada 🚀", width="stretch"):
-        if mod_pg:
-            
-            # BARRA DE CARREGAMENTO (0% A 100%) PARA PROGRAMADORES
-            barra_prog_pg = st.progress(0)
-            status_txt_pg = st.empty()
-            
-            status_txt_pg.markdown("💻 **[0%]** — Lendo processador/memória e conexão de bancada...")
-            barra_prog_pg.progress(25)
-            time.sleep(0.3)
+        status_atual_check = verificar_status_usuario(st.session_state['user_email'])
+        if st.session_state['user_email'] != EMAIL_ADM and (status_atual_check["tipo"] == "expirado" or (status_atual_check["tipo"] == "teste" and status_atual_check["fichas"] <= 0)):
+            st.error("⚠️ Seu período de teste de 7 dias ou suas fichas esgotaram! Assine um dos planos na aba 💳 Assinatura para continuar.")
+        else:
+            if mod_pg:
+                
+                # BARRA DE CARREGAMENTO (0% A 100%) PARA PROGRAMADORES
+                barra_prog_pg = st.progress(0)
+                status_txt_pg = st.empty()
+                
+                status_txt_pg.markdown("💻 **[0%]** — Lendo processador/memória e conexão de bancada...")
+                barra_prog_pg.progress(25)
+                time.sleep(0.3)
 
-            status_txt_pg.markdown("🧠 **[60%]** — Mapeando pinos de Boot/BDM com a IA...")
-            barra_prog_pg.progress(60)
-            time.sleep(0.3)
+                status_txt_pg.markdown("🧠 **[60%]** — Mapeando pinos de Boot/BDM com a IA...")
+                barra_prog_pg.progress(60)
+                time.sleep(0.3)
 
-            prompt_pg_ia = f"Módulo/MCU: {mod_pg}. Dúvida: {duv_pg}. Ferramentas: {prog_sel}."
-            c_pg = [prompt_pg_ia]
-            if mic_pg:
-                mic_pg.seek(0)
-                c_pg.append(types.Part.from_bytes(data=mic_pg.read(), mime_type="audio/wav"))
-            if foto_pg:
-                foto_pg.seek(0)
-                img_pg_f = Image.open(foto_pg)
-                img_pg_f.thumbnail((1280, 1280))
-                buf_pg = io.BytesIO()
-                img_pg_f.save(buf_pg, format="JPEG", quality=85)
-                c_pg.append(types.Part.from_bytes(data=buf_pg.getvalue(), mime_type="image/jpeg"))
-            
-            resp_pg = client.models.generate_content(model='gemini-3-flash-preview', contents=c_pg)
-            texto_resp_pg = resp_pg.text if hasattr(resp_pg, 'text') else "Sem resposta."
-            
-            # 100% CONCLUÍDO
-            barra_prog_pg.progress(100)
-            status_txt_pg.markdown("✅ **[100%]** — Análise de Bancada Concluída com Sucesso!")
-            time.sleep(0.4)
-            
-            barra_prog_pg.empty()
-            status_txt_pg.empty()
-            
-            salvar_diagnostico(
-                email_usuario,
-                f"Programador / MCU: {mod_pg}",
-                "Boot / BDM / Bench",
-                duv_pg,
-                texto_resp_pg
-            )
-            
-            st.markdown(texto_resp_pg)
-            st.success("Análise de Bancada salva no Histórico!")
-            
-            # OPÇÃO DE PDF PARA PROGRAMADORES
-            pdf_pg = gerar_pdf_relatorio(
-                st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
-                f"Módulo/MCU: {mod_pg}",
-                "Boot / BDM / Bench",
-                duv_pg,
-                texto_resp_pg,
-                titulo_pdf="LAUDO TÉCNICO - PROGRAMADORES & BANCADA"
-            )
-            st.download_button(
-                label="📥 BAIXAR ESTE LAUDO DE BANCADA EM PDF",
-                data=pdf_pg,
-                file_name=f"Laudo_Bancada_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                mime="application/pdf",
-                width="stretch"
-            )
+                prompt_pg_ia = f"Módulo/MCU: {mod_pg}. Dúvida: {duv_pg}. Ferramentas: {prog_sel}."
+                c_pg = [prompt_pg_ia]
+                if mic_pg:
+                    try:
+                        mic_pg.seek(0)
+                        c_pg.append(types.Part.from_bytes(data=mic_pg.read(), mime_type="audio/wav"))
+                    except Exception: pass
+                    
+                if foto_pg:
+                    try:
+                        foto_pg.seek(0)
+                        img_pg_f = Image.open(foto_pg)
+                        img_pg_f.thumbnail((1280, 1280))
+                        buf_pg = io.BytesIO()
+                        img_pg_f.save(buf_pg, format="JPEG", quality=85)
+                        c_pg.append(types.Part.from_bytes(data=buf_pg.getvalue(), mime_type="image/jpeg"))
+                    except Exception: pass
+                
+                try:
+                    resp_pg = client.models.generate_content(model='gemini-3-flash-preview', contents=c_pg)
+                    
+                    # 100% CONCLUÍDO
+                    barra_prog_pg.progress(100)
+                    status_txt_pg.markdown("✅ **[100%]** — Análise de Bancada Concluída com Sucesso!")
+                    time.sleep(0.4)
+                    
+                    barra_prog_pg.empty()
+                    status_txt_pg.empty()
+
+                    if resp_pg and hasattr(resp_pg, 'text') and resp_pg.text:
+                        texto_resp_pg = resp_pg.text
+                        
+                        # DESCONTO DA FICHA E SALVAMENTO
+                        fichas_atuais = st.session_state.get('user_fichas', 7)
+                        email_atual = st.session_state.get('user_email', '')
+                        
+                        if email_atual != EMAIL_ADM and fichas_atuais < 999:
+                            fichas_atuais -= 1
+                            st.session_state['user_fichas'] = fichas_atuais
+                            atualizar_fichas_banco(email_atual, fichas_atuais)
+                            if fichas_atuais == 0:
+                                enviar_email_oferta_assinatura(st.session_state.get('user_nome', 'Técnico'), email_atual)
+
+                        salvar_diagnostico(
+                            email_atual,
+                            f"Programador / MCU: {mod_pg}",
+                            "Boot / BDM / Bench",
+                            duv_pg,
+                            texto_resp_pg
+                        )
+                        
+                        st.markdown(texto_resp_pg)
+                        st.success("Análise de Bancada salva no Histórico!")
+                        
+                        pdf_pg = gerar_pdf_relatorio(
+                            st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
+                            f"Módulo/MCU: {mod_pg}",
+                            "Boot / BDM / Bench",
+                            duv_pg,
+                            texto_resp_pg,
+                            titulo_pdf="LAUDO TÉCNICO - PROGRAMADORES & BANCADA"
+                        )
+                        st.download_button(
+                            label="📥 BAIXAR ESTE LAUDO DE BANCADA EM PDF",
+                            data=pdf_pg,
+                            file_name=f"Laudo_Bancada_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    else:
+                        st.error("⚠️ Nenhuma resposta gerada pelo sistema.")
+                except Exception as err_pg:
+                    barra_prog_pg.empty()
+                    status_txt_pg.empty()
+                    st.error(f"Erro na requisição: {err_pg}")
+            else:
+                st.warning("⚠️ Informe o módulo, MCU ou memória para analisar a conexão.")
 
 # =========================================================
 # ABA ⚙️ SUPORTE PROGRAMAÇÃO (COM BARRA 0-100% E PDF NAS DÚVIDAS)
@@ -3096,23 +2854,23 @@ with aba5:
         st.markdown('<a href="https://pag.ae/81-F5BAYN" target="_blank" class="btn-pulsing-link">ASSINAR NÍVEL 3</a>', unsafe_allow_html=True)
 
 # =========================================================
-# ABA: 💎 GESTÃO DE CLIENTES & ASSINATURAS (EXCLUSIVO ADM)
+# ABA 7: 💎 GESTÃO DE CLIENTES & ASSINATURAS (EXCLUSIVO ADM)
 # =========================================================
 if is_adm:
     with aba6:
         st.markdown("""
             <div style="background: linear-gradient(135deg, #052E16 0%, #064E3B 100%); 
                         border: 1px solid #10B981; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                <h3 style="color: #00FF88 !important; margin: 0; padding-bottom: 5px;">👑 Painel do Administrador - Gestão de Assinaturas & Clientes</h3>
+                <h3 style="color: #00FF88 !important; margin: 0; padding-bottom: 5px;">👑 Painel du Administrador - Gestão de Assinaturas & Clientes</h3>
                 <p style="color: #A7F3D0 !important; margin: 0; font-size: 0.95rem;">
-                    Liberar plano anual (365 dias) para clientes pagantes, recarregar fichas de teste e exportar base completa de clientes em Excel.
+                    Liberar plano anual (365 dias) para clientes pagantes, recarregar fichas de teste e exportar base de clientes em Excel.
                 </p>
             </div>
         """, unsafe_allow_html=True)
 
         with st.expander("👑 Ativar Plano Anual (365 Dias) para Cliente", expanded=True):
-            email_ativar = st.text_input("E-mail do Cliente para Ativar Assinatura Anual", placeholder="cliente@oficina.com", key="adm_ativar_ass_novo")
-            if st.button("Ativar 1 Ano de Acesso Ilimitado", key="btn_ativar_ass_adm_novo"):
+            email_ativar = st.text_input("E-mail du Cliente para Ativar Assinatura Anual", placeholder="cliente@oficina.com")
+            if st.button("Ativar 1 Ano de Acesso Ilimitado"):
                 if email_ativar.strip():
                     conn = sqlite3.connect('diagnosticos.db')
                     c = conn.cursor()
@@ -3122,20 +2880,20 @@ if is_adm:
                     conn.commit()
                     conn.close()
                     if linhas_a > 0:
-                        st.success(f"✅ Plano anual de 365 dias ativado com sucesso para {email_ativar.strip()}!")
+                        st.success(f"Plano anual de 365 dias ativado com sucesso para {email_ativar.strip()}!")
                     else:
-                        st.error("⚠️ E-mail não encontrado no banco de dados.")
+                        st.error("E-mail não encontrado du banco de dados.")
                 else:
-                    st.warning("⚠️ Digite um e-mail válido.")
+                    st.warning("Digite um e-mail válido.")
 
         with st.expander("🔑 Gerenciar Fichas de Teste", expanded=False):
             col_adm_f1, col_adm_f2 = st.columns(2)
             with col_adm_f1:
-                email_target = st.text_input("E-mail do Usuário para Recarregar Teste", placeholder="usuario@oficina.com", key="adm_email_fichas_novo")
+                email_target = st.text_input("E-mail du Usuário para Recarregar Teste", placeholder="usuario@oficina.com")
             with col_adm_f2:
-                fichas_add = st.number_input("Quantidade de Fichas", min_value=1, max_value=500, value=7, key="adm_qtd_fichas_novo")
+                fichas_add = st.number_input("Quantidade de Fichas", min_value=1, max_value=500, value=7)
             
-            if st.button("Recarregar Fichas de Teste", key="btn_recarregar_fichas_adm_novo"):
+            if st.button("Recarregar Fichas de Teste"):
                 if email_target.strip():
                     conn = sqlite3.connect('diagnosticos.db')
                     c = conn.cursor()
@@ -3144,15 +2902,14 @@ if is_adm:
                     conn.commit()
                     conn.close()
                     if linhas_afetadas > 0:
-                        st.success(f"✅ Adicionadas {fichas_add} fichas para {email_target.strip()} com sucesso!")
+                        st.success(f"Adicionadas {fichas_add} fichas para {email_target.strip()} com sucesso!")
                     else:
-                        st.error("⚠️ E-mail não encontrado no banco de dados.")
+                        st.error("E-mail não encontrado du banco de dados.")
                 else:
-                    st.warning("⚠️ Digite um e-mail válido.")
+                    st.warning("Digite um e-mail válido.")
 
         st.markdown("---")
 
-        # --- CARREGAR DADOS DOS CLIENTES PARA A PLANILHA ---
         conn = sqlite3.connect('diagnosticos.db')
         df_clientes = pd.read_sql_query("SELECT id, nome, nome_empresa, documento, email, whatsapp, fichas, data_cadastro, data_expiracao_teste, data_expiracao_assinatura FROM usuarios", conn)
         conn.close()
@@ -3170,61 +2927,20 @@ if is_adm:
         st.write("")
 
         if not df_clientes.empty:
-            st.subheader("📋 Lista de Clientes Ativos no Sistema")
-            st.dataframe(df_clientes, use_container_width=True)
+            st.subheader("📋 Lista de Clientes Ativos")
+            st.dataframe(df_clientes, width="stretch")
             
-            # Geração do arquivo Excel na memória para download
             buffer_excel = io.BytesIO()
             with pd.ExcelWriter(buffer_excel, engine='openpyxl') as writer:
                 df_clientes.to_excel(writer, index=False, sheet_name='Clientes_AutoLab')
             data_excel = buffer_excel.getvalue()
             
             st.download_button(
-                label="📥 Baixar Lista Completa de Clientes em Excel (.xlsx)",
+                label="📥 Baixar Lista de Clientes em Excel (.xlsx)",
                 data=data_excel,
-                file_name=f"clientes_autolab_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                file_name="clientes_cadastrados_autolab.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="btn_excel_geral_clientes_adm_v2",
-                use_container_width=True
+                width="stretch"
             )
         else:
-            st.info("ℹ️ Nenhum cliente registrado na base de dados no momento.")
-
-        # --- SEÇÃO DA AUTOREDE NO PAINEL ADM ---
-        st.markdown("---")
-        st.markdown("### 🌐 Gestão de Membros da AUTOREDE")
-        st.write("Acompanhe todos os profissionais cadastrados na rede colaborativa e exporte a base em Excel.")
-
-        conn_ar_adm = sqlite3.connect('diagnosticos.db')
-        df_autorede = pd.read_sql_query("SELECT id, nome_pessoal, nome_oficina, apelido, email, documento, data_cadastro FROM autorede_usuarios", conn_ar_adm)
-        conn_ar_adm.close()
-
-        total_autorede = len(df_autorede)
-        col_ar1, col_ar2, col_ar3 = st.columns(3)
-        with col_ar1:
-            st.metric("👥 Membros AUTOREDE", total_autorede)
-        with col_ar2:
-            st.metric("🟢 Rede", "Ativa" if total_autorede > 0 else "Sem Membros")
-        with col_ar3:
-            st.metric("📊 Planilha", "Excel (.xlsx)")
-
-        st.write("")
-
-        if not df_autorede.empty:
-            st.dataframe(df_autorede, use_container_width=True)
-            
-            buffer_excel_ar = io.BytesIO()
-            with pd.ExcelWriter(buffer_excel_ar, engine='openpyxl') as writer:
-                df_autorede.to_excel(writer, index=False, sheet_name='Usuarios_AUTOREDE')
-            data_excel_ar = buffer_excel_ar.getvalue()
-            
-            st.download_button(
-                label="📥 Baixar Lista de Membros AUTOREDE em Excel (.xlsx)",
-                data=data_excel_ar,
-                file_name=f"membros_autorede_{datetime.now().strftime('%Y%m%d')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="btn_excel_autorede_adm_v2",
-                use_container_width=True
-            )
-        else:
-            st.info("ℹ️ Nenhum membro cadastrado na AUTOREDE até o momento.")
+            st.info("ℹ️ Nenhum cliente registrado na base de dados du momento.")
