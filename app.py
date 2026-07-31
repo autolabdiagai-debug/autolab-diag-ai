@@ -1793,7 +1793,7 @@ with aba_cancode:
             st.markdown("### 📊 Pacotes Capturados via Arduino")
             st.dataframe(df_sniffer, width="stretch")
         else:
-            st.warning("⚠️ Nenhum pacote lido. Verifique se o pino CS (10) e o pino de interrupção (2) estão ligados corretamente no módulo MCP2515 do Arduino.")
+            st.warning("⚠️ Nenhum pacote lido.")
 
     if 'df_sniffer_ativo' in st.session_state and not st.session_state['df_sniffer_ativo'].empty:
         if st.button("🤖 Enviar Frames Capturados para Análise do Gemini", key="btn_analisar_sniffer_ia"):
