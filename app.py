@@ -659,7 +659,7 @@ def tela_login():
 
     renderizar_css_planos()
     st.markdown("<h3 style='text-align: center; color: #00FF88;'>💎 Conheça Nossos Planos Anuais (Acesso Ilimitado por 1 Ano) 💎 </h3>", unsafe_allow_html=True)
-    st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha o nível ideal para a sua oficina e tenha du AUTOLAB DIAG AI à sua disposição.</p>", unsafe_allow_html=True)
+    st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha o nível ideal para a sua oficina e tenha o AUTOLAB DIAG à sua disposição 24 horas por Dia.</p>", unsafe_allow_html=True)
     st.write("")
 
     col_p1, col_p2, col_p3 = st.columns(3)
