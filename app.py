@@ -36,7 +36,7 @@ EMAIL_ADM = "autolabdiagai@gmail.com"
 # 1. Configuração da Página du Streamlit
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="AUTOLAB DIAG AI",
+    page_title="AUTOLAB DIAG",
     page_icon="🧠",
     layout="wide"
 )
