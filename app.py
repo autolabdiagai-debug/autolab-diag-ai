@@ -498,7 +498,7 @@ def tela_login():
     st.markdown("""
     <div style="background: linear-gradient(135deg, #052E16 0%, #022C22 100%); border: 2px solid #00FF88; padding: 15px; border-radius: 14px; text-align: center; margin-bottom: 25px; box-shadow: 0 0 25px rgba(0,255,136,0.35);">
         <h4 style="color: #FFD700 !important; margin-bottom: 6px; font-size: 1.1rem;">🔊 APRESENTAÇÃO EXCLUSIVA 🔊</h4>
-        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte du play e descubra como du AutoLab Diag AI vai revolucionar sua oficina:</p>
+        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte o play e descubra como o AutoLab Diag vai revolucionar sua oficina:</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -536,7 +536,7 @@ def tela_login():
                 ⚡ Imagine um Assistente à sua disposição 24 horas por dia fazendo Diagnósticos complexos em tempo recorde! ⚡
             </h3>
             <p style="color: #A7F3D0 !important; font-size: 0.95rem; line-height: 1.5; margin-bottom: 12px;">
-                Agora sua oficina não precisa mais pagar treinamentos avançados para todos os mecânicos, com du AUTOLAB DIAG AI você faz diagnósticos Complexos em Tempo recorde, basta Alimentar du sistema com os Sintomas e Paramêtros dos Veículos através de textos, áudios, fotos e videos que du AUTOLAB DIAG AI faz du diagnóstico e entrega um passo a passo completo e detalhado com relatório técnico completo para que seus Mecânicos, Chaveiros E Eletricistas façam os testes conforme a instrução du Diagnóstico Inteligente gerado.
+                Agora sua oficina não precisa mais pagar treinamentos avançados para todos os mecânicos, com o AUTOLAB DIAG AI você faz diagnósticos Complexos em Tempo recorde, basta Alimentar o sistema com os Sintomas e Paramêtros dos Veículos através de textos, áudios, fotos e videos que du AUTOLAB DIAG faz o diagnóstico e entrega um passo a passo completo e detalhado com relatório técnico para que seus Mecânicos, Chaveiros E Eletricistas façam os testes conforme a instrução do Diagnóstico Inteligente gerado.
             </p>
             <p style="color: #FFD700 !important; font-size: 0.95rem; font-weight: 700; margin-bottom: 15px;">
                 🌐 Alimentado pelo maior banco de dados técnico existente du mundo através de Inteligência Artificial 💻.
@@ -590,7 +590,7 @@ def tela_login():
         aba_acesso, aba_cadastro = st.tabs(["💻 ÁREA DE ACESSO 📱", "📝 Criar Conta / Teste por 7 Dias)"])
         
         with aba_acesso:
-            st.subheader("🕵️‍♂️ Acesso du Usuário 💻📱")
+            st.subheader("🕵️‍♂️ Acesso do Usuário 💻📱")
             email_login = st.text_input("E-mail Cadastrado", key="email_log_input")
             senha_login = st.text_input("Sua Senha", type="password", key="senha_log_input")
             
@@ -659,7 +659,7 @@ def tela_login():
 
     renderizar_css_planos()
     st.markdown("<h3 style='text-align: center; color: #00FF88;'>💎 Conheça Nossos Planos Anuais (Acesso Ilimitado por 1 Ano) 💎 </h3>", unsafe_allow_html=True)
-    st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha du nível ideal para a sua oficina e tenha du AUTOLAB DIAG AI à sua disposição.</p>", unsafe_allow_html=True)
+    st.write("<p style='text-align: center; color: #A7F3D0;'>Escolha o nível ideal para a sua oficina e tenha du AUTOLAB DIAG AI à sua disposição.</p>", unsafe_allow_html=True)
     st.write("")
 
     col_p1, col_p2, col_p3 = st.columns(3)
@@ -3291,7 +3291,7 @@ if is_adm:
         st.write("Acompanhe todos os profissionais cadastrados na rede colaborativa e exporte a base em Excel.")
 
         conn_ar_adm = sqlite3.connect('diagnosticos.db')
-        df_autorede = pd.read_sql_query("SELECT id, nome_pessoal, nome_oficina, apelido, email, documento, data_cadastro FROM autorede_usuarios", conn_ar_adm)
+        df_autorede = pd.read_sql_query("SELECT * FROM autorede_usuarios", conn_ar_adm)
         conn_ar_adm.close()
 
         total_autorede = len(df_autorede)
