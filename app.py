@@ -1698,7 +1698,6 @@ with aba_cancode:
     <div class="cancode-container">
         <h3 class="cancode-header">📡 SUPORTE CANCODE — Decodificação de Protocolo CAN 📡</h3>
         <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
-            Análise em tempo real da rede CANbus e monitoramento via porta USB.
         </p>
     </div>
     """, unsafe_allow_html=True)
