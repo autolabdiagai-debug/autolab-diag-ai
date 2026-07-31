@@ -1727,7 +1727,7 @@ with aba_cancode:
     # MONITORAMENTO SNIFFER USB EM TEMPO REAL (PORTA COM)
     # =========================================================
     st.markdown("---")
-    st.markdown("### 🔌 Monitoramento Sniffer USB em Tempo Real (Porta COM)")
+    st.markdown("### 🔌 Monitoramento da Rede CANbus Tempo Real - Conecte o CANCode")
     
     col_usb1, col_usb2, col_usb3 = st.columns(3)
     with col_usb1:
