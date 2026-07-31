@@ -795,7 +795,7 @@ with st.sidebar:
 
     st.markdown("---")
     # BOTÃO DE SAIR COM ÍCONE DE PORTA NA BARRA LATERAL
-    if st.button("🚪 Sair du Sistema", key="btn_sair_sistema_sidebar", type="primary", width="stretch"):
+    if st.button("🚪 Sair do Sistema", key="btn_sair_sistema_sidebar", type="primary", width="stretch"):
         st.session_state["logado"] = False
         st.session_state["user_email"] = ""
         st.session_state["user_nome"] = ""
