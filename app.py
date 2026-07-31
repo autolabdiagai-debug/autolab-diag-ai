@@ -3138,7 +3138,7 @@ with aba4:
 # =========================================================
 with aba5:
     renderizar_css_planos()
-    st.markdown("<h3 style='text-align: center; color: #00FF88;'>💎 Planos & Níveis de Classificação AUTOLAB DIAG AI</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center; color: #00FF88;'>💎 Planos & Níveis de Classificação AUTOLAB DIAG 💎</h3>", unsafe_allow_html=True)
     st.write("<p style='text-align: center; color: #A7F3D0;'>Eleve du patamar tecnológico da sua oficina com inteligência artificial de alta performance.</p>", unsafe_allow_html=True)
     st.markdown("---")
     
