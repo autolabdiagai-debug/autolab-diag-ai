@@ -26,6 +26,7 @@ import pandas as pd
 # ---------------------------------------------------------
 API_KEY = st.secrets["GOOGLE_API_KEY"]
 client = genai.Client(api_key=API_KEY)
+
 # ---------------------------------------------------------
 # CONSTANTES DU SISTEMA
 # ---------------------------------------------------------
@@ -794,7 +795,7 @@ with st.sidebar:
 
     st.markdown("---")
     # BOTÃO DE SAIR COM ÍCONE DE PORTA NA BARRA LATERAL
-    if st.button("🚪 Sair du Sistema", key="btn_sair_sistema_sidebar", type="primary", use_container_width=True):
+    if st.button("🚪 Sair du Sistema", key="btn_sair_sistema_sidebar", type="primary", width="stretch"):
         st.session_state["logado"] = False
         st.session_state["user_email"] = ""
         st.session_state["user_nome"] = ""
@@ -1068,17 +1069,24 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
         return imagem_pil, [], False
 
 # ---------------------------------------------------------
-# 11. Interface Principal e Abas
+# 11. Interface Principal e Abas (CORRIGIDO SEM NAMEERROR)
 # ---------------------------------------------------------
 st.title("🔬 Sistema de Diagnóstico Avançado 🔬")
 st.write("Análise de sinais de osciloscópio, leituras de parâmetros de scanner, códigos de falha (DTC), textos, áudios e vídeos técnicos.")
 
 is_adm = str(st.session_state.get('user_email', '')).strip().lower() == EMAIL_ADM.lower()
 
+# Verifica se o usuário tem perfil exclusivo da AutoRede
+usuario_tem_autolab = st.session_state.get("logado", False)
+usuario_tem_autorede = 'usuario_logado_autorede' in st.session_state
+
 if is_adm:
-    aba_empresa, aba1, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5, aba6 = st.tabs([
+    # ADM possui 13 abas no total (incluindo CANCODE e aba6 para Gestão de Clientes)
+    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5, aba6 = st.tabs([
         "🏢 Minha Empresa",
+        "🌐 AUTOREDE (Feed)",
         "🔬 Diagnóstico", 
+        "📡 Suporte CANCODE",
         "🔌 Suporte U.C.Es",
         "📡 Suporte Scanners",
         "💻 Suporte Programadores",
@@ -1089,10 +1097,21 @@ if is_adm:
         "💳 Assinatura",
         "💎 Gestão de Clientes 💎"
     ])
-else:
-    aba_empresa, aba1, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5 = st.tabs([
+elif usuario_tem_autorede and not usuario_tem_autolab:
+    aba_empresa, aba_autorede_feed, aba_planos_fixos = st.tabs([
         "🏢 Minha Empresa",
+        "🌐 AUTOREDE (Feed)",
+        "💳 Assinatura & Planos"
+    ])
+    # Declara variáveis nulas para não quebrar o código no restante das abas
+    aba1 = aba_cancode = aba_uces = aba_scanners = aba_programadores = aba_programacao = aba2 = aba3 = aba4 = aba5 = aba6 = None
+else:
+    # Usuário comum do AutoLab recebe 12 abas (incluindo CANCODE)
+    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5 = st.tabs([
+        "🏢 Minha Empresa",
+        "🌐 AUTOREDE (Feed)",
         "🔬 Diagnóstico", 
+        "📡 Suporte CANCODE",
         "🔌 Suporte U.C.Es",
         "📡 Suporte Scanners",
         "💻 Suporte Programadores",
@@ -1102,6 +1121,8 @@ else:
         "💬 Connect WhatsApp", 
         "💳 Assinatura"
     ])
+    # Define aba6 como None para nunca mais dar NameError em usuários comuns
+    aba6 = None
 
 # =========================================================
 # ABA 🏢 MINHA EMPRESA (SELO DE QUALIDADE EM DIAGNÓSTICO)
@@ -1670,6 +1691,323 @@ INSTRUÇÕES DE ANÁLISE:
         )
 
 # =========================================================
+# ABA: 📡 SUPORTE CANCODE & DECODIFICAÇÃO DE PROTOCOLO CAN
+# =========================================================
+with aba_cancode:
+    st.markdown("""
+    <div class="cancode-container">
+        <h3 class="cancode-header">📡 SUPORTE CANCODE — Decodificação de Protocolo CAN 📡</h3>
+        <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+            Análise em tempo real da rede CANbus e monitoramento via porta USB.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_cc1, col_cc2 = st.columns(2)
+    with col_cc1:
+        sintomas_rede_can = st.text_area(
+            "⚠️ Coloque aqui as Dúvidas da -Rede CAN-:",
+            placeholder="Ex: Painel apaga ponteiros, erro de comunicação no scanner, rede CAN caindo em Bus-Off, luz de ABS/Injeção acesa intermitente...",
+            height=100,
+            key="cancode_sintomas"
+        )
+    with col_cc2:
+        dtc_rede_can = st.text_input(
+            "🔍 IDs Que Deseja decodificar na Rede Can:",
+            placeholder="Ex: 0x320, 0x420, 0x5D8, 0x470",
+            key="cancode_dtcs"
+        )
+        veiculo_cancode = st.text_input(
+            "🚗 Veículo / Sistema de Rede:",
+            placeholder="Ex: VW Gol G5, Painel Magneti Marelli, Sistema de Injeção 4GV",
+            key="cancode_veiculo"
+        )
+
+    # =========================================================
+    # MONITORAMENTO SNIFFER USB EM TEMPO REAL (PORTA COM)
+    # =========================================================
+    st.markdown("---")
+    st.markdown("### 🔌 Monitoramento Sniffer USB em Tempo Real (Porta COM)")
+    
+    col_usb1, col_usb2, col_usb3 = st.columns(3)
+    with col_usb1:
+        porta_com_input = st.text_input("Porta USB / COM:", value="COM3", help="Ex: COM3 no Windows", key="sniff_porta")
+    with col_usb2:
+        baudrate_input = st.selectbox("Baudrate (Velocidade Serial):", [115200, 1000000, 500000, 250000, 125000], index=0, key="sniff_baud")
+    with col_usb3:
+        tempo_captura = st.slider("Tempo de Varredura (segundos):", min_value=1, max_value=10, value=3, key="sniff_tempo")
+
+    if st.button("🟢 Iniciar Captura Sniffer USB", key="btn_sniffer_usb_ativo"):
+        import serial
+        import time
+        
+        buffer_frames = []
+        
+        with st.status("📡 Conectando ao Arduino CanHacker...", expanded=True) as status_box:
+            st.write(f"⏳ Abrindo porta **{porta_com_input}** a **{baudrate_input} bps**...")
+            try:
+                # Usa exatamente 115200 conforme o código do Arduino
+                ser = serial.Serial(porta_com_input, 115200, timeout=0.1)
+                time.sleep(2) # Tempo para o Arduino resetar após abrir a serial
+                
+                # Protocolo CanHacker via Serial:
+                # C = Fecha/Reseta, S8 = Configura 1Mbps no CAN, O = Abre o canal (Open)
+                ser.write(b'C\r')
+                time.sleep(0.05)
+                ser.write(b'S8\r') # S8 = 1Mbps no barramento CAN do MCP2515
+                time.sleep(0.05)
+                ser.write(b'O\r')
+                time.sleep(0.1)
+                
+                ser.reset_input_buffer()
+                tempo_inicio = time.time()
+                
+                st.write("🟢 Capturando pacotes do Arduino em tempo real...")
+                while (time.time() - tempo_inicio) < tempo_captura:
+                    linha_bytes = ser.readline()
+                    if linha_bytes:
+                        try:
+                            linha_bruta = linha_bytes.decode('utf-8', errors='ignore').strip()
+                            if linha_bruta and linha_bruta not in ['C', 'O', '\r', '\n', '']:
+                                buffer_frames.append({
+                                    "Frame Bruto USB": linha_bruta, 
+                                    "Timestamp": datetime.now().strftime("%H:%M:%S.%f")[:-3]
+                                })
+                        except:
+                            pass
+                
+                ser.write(b'C\r')
+                ser.close()
+                
+                if buffer_frames:
+                    status_box.update(label=f"✅ Captura finalizada! {len(buffer_frames)} pacotes lidos.", state="complete", expanded=False)
+                else:
+                    status_box.update(label="⚠️ Arduino conectado, mas nenhum pacote retornado pelo CAN.", state="error", expanded=True)
+                    
+            except Exception as e:
+                status_box.update(label=f"❌ Erro na porta USB: {e}", state="error", expanded=True)
+
+        if buffer_frames:
+            df_sniffer = pd.DataFrame(buffer_frames)
+            st.session_state['df_sniffer_ativo'] = df_sniffer
+            st.markdown("### 📊 Pacotes Capturados via Arduino")
+            st.dataframe(df_sniffer, width="stretch")
+        else:
+            st.warning("⚠️ Nenhum pacote lido. Verifique se o pino CS (10) e o pino de interrupção (2) estão ligados corretamente no módulo MCP2515 do Arduino.")
+
+    if 'df_sniffer_ativo' in st.session_state and not st.session_state['df_sniffer_ativo'].empty:
+        if st.button("🤖 Enviar Frames Capturados para Análise do Gemini", key="btn_analisar_sniffer_ia"):
+            with st.spinner("🧠 Analisando pacotes capturados via USB..."):
+                amostra_frames = "\n".join(st.session_state['df_sniffer_ativo']['Frame Bruto USB'].head(50).tolist())
+                
+                prompt_sniffer_ia = f"""
+                Analise estes pacotes brutos capturados em tempo real por uma interface Sniffer USB da rede CAN:
+                {amostra_frames}
+                
+                Faça a engenharia reversa identificando os IDs, os prováveis transmissores e a função dos dados de acordo com os padrões automotivos.
+                """
+                
+                resp_sniff = client.models.generate_content(model='gemini-3-flash-preview', contents=[prompt_sniffer_ia])
+                texto_resp_sniff = resp_sniff.text if hasattr(resp_sniff, 'text') else "Sem resposta."
+                
+                st.markdown("### 📊 Laudo de Análise dos Pacotes USB")
+                st.markdown(texto_resp_sniff)
+
+    st.markdown("---")
+    st.markdown("### 🎙️ / 📸 / 🎥 / 📄 Anexo de Mídias e Arquivos da Rede Salvo com o CANCODE")
+
+    col_m_cc1, col_m_cc2, col_m_cc3, col_m_cc4 = st.columns(4)
+    with col_m_cc1:
+        arquivo_tracer_can = st.file_uploader(
+            "📄 Arquivo Trace Rede CAN",
+            type=["trc", "asc", "txt", "csv", "log"],
+            key="cancode_file_tracer",
+            help="Suba o arquivo de captura Salvo pelo CANCODE."
+        )
+    with col_m_cc2:
+        foto_cancode = st.file_uploader("📸 Foto da -Frame- (Pacote de Dados)", type=["png", "jpg", "jpeg"], key="cancode_foto")
+    with col_m_cc3:
+        audio_cancode = st.audio_input("🎙️ Gravar Dúvida em Áudio", key="cancode_audio")
+    with col_m_cc4:
+        video_cancode = st.file_uploader("🎥 Vídeo da Dúvida (Máx 1 min)", type=["mp4", "mov", "avi", "mkv"], key="cancode_video")
+
+    st.markdown("---")
+
+    if st.button("⚡ Decodificar Protocolo CanBus ⚡", width="stretch", key="btn_executar_cancode"):
+        if veiculo_cancode and (arquivo_tracer_can or sintomas_rede_can or dtc_rede_can or foto_cancode or audio_cancode or video_cancode):
+            
+            barra_prog_cc = st.progress(0)
+            status_txt_cc = st.empty()
+
+            status_txt_cc.markdown("📡 **[0%]** — Lendo log .TRC / .ASC da rede CAN e mídias...")
+            barra_prog_cc.progress(20)
+            time.sleep(0.3)
+
+            status_txt_cc.markdown("🧠 **[55%]** — Decodificando IDs (Hex), Payloads e Bus-Off via Gemini AI...")
+            barra_prog_cc.progress(55)
+            time.sleep(0.3)
+
+            status_txt_cc.markdown("📊 **[85%]** — Mapeando transmissores prováveis e engenharia de sinais...")
+            barra_prog_cc.progress(85)
+            time.sleep(0.3)
+
+            conteudo_log_texto = ""
+            if arquivo_tracer_can:
+                try:
+                    arquivo_tracer_can.seek(0)
+                    conteudo_log_texto = arquivo_tracer_can.read().decode("utf-8", errors="ignore")[:8000]
+                except Exception:
+                    conteudo_log_texto = "Erro ao ler arquivo texto de log."
+
+            prompt_cancode = f"""
+            VOCÊ É O ENGENHEIRO CHEFE EM PROTOCOLOS CANBUS E EQUIPAMENTO CANCODE DA AUTOLAB.
+            ANALISE A TRACE DA REDE CAN ABAIXO E FORNEÇA DUAS RESPOSTAS:
+
+            1. UM OBJETO JSON ESTRUTURADO PARA PREENCHER A TABELA DO SISTEMA.
+            2. UM LAUDO TÉCNICO COMPLETO EM TEXTO DESCREVENDO A SAÚDE DA REDE, ERROS, COMANDOS INJETÁVEIS E DIAGNÓSTICO.
+
+            DADOS DO VEÍCULO: {veiculo_cancode}
+            DTCs DA REDE: {dtc_rede_can}
+            SINTOMAS DA REDE: {sintomas_rede_can}
+
+            CONTEÚDO CAPTURADO DA TRACE CAN:
+            {conteudo_log_texto}
+
+            RETORNE O JSON EXATAMENTE NESTE FORMATO NO INÍCIO DA SUA RESPOSTA:
+            ```json
+            {{
+                "ids_mapeados": [
+                    {{"id_hex": "0x320", "transmissor": "ECU (Motor)", "funcao": "RPM do Motor e Status do Motor."}},
+                    {{"id_hex": "0x420", "transmissor": "ECU (Motor)", "funcao": "Temperatura do Líquido de Arrefecimento (ECT) e luzes de advertência do motor."}},
+                    {{"id_hex": "0x520", "transmissor": "ECU (Motor)", "funcao": "Velocidade do Veículo (Speedometer) e hodômetro."}},
+                    {{"id_hex": "0x470", "transmissor": "ABS / BCM", "funcao": "Status dos freios e estado de portas / luzes."}},
+                    {{"id_hex": "0x570", "transmissor": "ECU / BCM", "funcao": "Temperatura externa e gerenciamento de energia."}},
+                    {{"id_hex": "0x5D0", "transmissor": "Painel (Kombi)", "funcao": "Status do Imobilizador / Transponder / Painel de Instrumentos."}},
+                    {{"id_hex": "0x5D8", "transmissor": "Imobilizador / Gateway", "funcao": "Estado do Imobilizador e handshake do sistema Antifurto (Immo 4)."}}
+                ]
+            }}
+            ```
+
+            EM SEGUIDA, ESCREVA O LAUDO TÉCNICO COMPLETO COM:
+            - Análise de Saúde da Rede (Presença de Bus-Off, pacotes de erro, taxa de transmissão).
+            - Análise dos Payloads principais (Valores lidos de RPM, Temp, Velocidade, Portas).
+            - Tabela de Comandos em Hexadecimal prontos para injeção via CANHacker/CANCODE (Ex: Fazer ponteiro subir, acender luzes).
+            """
+
+            contents_cc = [prompt_cancode]
+
+            if foto_cancode:
+                try:
+                    foto_cancode.seek(0)
+                    img_cc = Image.open(foto_cancode)
+                    img_cc.thumbnail((1280, 1280))
+                    buf_cc = io.BytesIO()
+                    img_cc.save(buf_cc, format="JPEG", quality=85)
+                    contents_cc.append(types.Part.from_bytes(data=buf_cc.getvalue(), mime_type="image/jpeg"))
+                except Exception: pass
+
+            if audio_cancode:
+                try:
+                    audio_cancode.seek(0)
+                    contents_cc.append(types.Part.from_bytes(data=audio_cancode.read(), mime_type="audio/wav"))
+                except Exception: pass
+
+            if video_cancode:
+                try:
+                    video_cancode.seek(0)
+                    contents_cc.append(types.Part.from_bytes(data=video_cancode.read(), mime_type=video_cancode.type if video_cancode.type else "video/mp4"))
+                except Exception: pass
+
+            try:
+                res_cc = client.models.generate_content(
+                    model='gemini-3-flash-preview',
+                    contents=contents_cc,
+                    config=types.GenerateContentConfig(
+                        system_instruction="Você é o especialista mestre em decodificação de redes CANbus, CANCODE e engenharia reversa de montadoras.",
+                        temperature=0.1
+                    )
+                )
+
+                barra_prog_cc.progress(100)
+                status_txt_cc.markdown("✅ **[100%]** — Decodificação da Trace CAN Concluída!")
+                time.sleep(0.4)
+                
+                barra_prog_cc.empty()
+                status_txt_cc.empty()
+
+                if res_cc and hasattr(res_cc, 'text') and res_cc.text:
+                    texto_resposta = res_cc.text
+                    
+                    json_str_match = re.search(r'```json\s*(\{.*?\})\s*```', texto_resposta, re.DOTALL)
+                    dados_tabela_ids = []
+                    
+                    if json_str_match:
+                        try:
+                            json_extraido = json.loads(json_str_match.group(1))
+                            dados_tabela_ids = json_extraido.get("ids_mapeados", [])
+                        except Exception:
+                            pass
+                    
+                    texto_laudo_limpo = re.sub(r'```json\s*\{.*?\}\s*```', '', texto_resposta, flags=re.DOTALL).strip()
+                    
+                    st.session_state['cancode_tabela_ids'] = dados_tabela_ids
+                    st.session_state['cancode_laudo_texto'] = texto_laudo_limpo
+                    
+                    salvar_diagnostico(
+                        email_usuario,
+                        f"CANCODE Trace / {veiculo_cancode}",
+                        dtc_rede_can if dtc_rede_can else "Tracer CAN",
+                        sintomas_rede_can if sintomas_rede_can else "Análise de Protocolo CAN",
+                        texto_laudo_limpo
+                    )
+                    st.success("Análise de Trace CAN processada e salva no Histórico!")
+            except Exception as err_cc:
+                barra_prog_cc.empty()
+                status_txt_cc.empty()
+                st.error(f"Erro ao processar trace CAN: {err_cc}")
+        else:
+            st.warning("⚠️ Preencha o campo do Veículo/Sistema e adicione um arquivo trace ou dados para análise.")
+
+    if 'cancode_laudo_texto' in st.session_state and st.session_state['cancode_laudo_texto']:
+        st.markdown("---")
+        st.markdown("### 📊 Mapeamento de IDs Encontrados na REDE CAN")
+        
+        if 'cancode_tabela_ids' in st.session_state and st.session_state['cancode_tabela_ids']:
+            df_can = pd.DataFrame(st.session_state['cancode_tabela_ids'])
+            df_can.rename(columns={
+                "id_hex": "ID (Hex)",
+                "transmissor": "Transmissor Provável",
+                "funcao": "Função Principal / Sinais Mapeados"
+            }, inplace=True)
+            
+            st.markdown('<div class="cancode-table-box">', unsafe_allow_html=True)
+            st.dataframe(df_can, width="stretch")
+            st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            st.info("Nenhum ID específico gerou tabela estruturada.")
+
+        st.markdown("---")
+        st.markdown("### 📋 Laudo Técnico de Engenharia de Protocolo CAN")
+        st.markdown(st.session_state['cancode_laudo_texto'])
+
+        pdf_cancode = gerar_pdf_relatorio(
+            st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
+            veiculo_cancode if veiculo_cancode else "Veículo / Rede CAN",
+            dtc_rede_can if dtc_rede_can else "Análise CANCODE",
+            sintomas_rede_can if sintomas_rede_can else "Decodificação de Trace CAN",
+            st.session_state['cancode_laudo_texto'],
+            titulo_pdf="REPORT CANCODE - DECODIFICAÇÃO DE PROTOCOLO CANBUS"
+        )
+
+        st.download_button(
+            label="📥 BAIXAR REPORT CANCODE EM PDF",
+            data=pdf_cancode,
+            file_name=f"Report_CANCODE_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+            mime="application/pdf",
+            width="stretch"
+        )
+
+# =========================================================
 # ABA 2: SUPORTE U.C.Es (COM BARRA 0-100% E PDF)
 # =========================================================
 with aba_uces:
@@ -1800,14 +2138,14 @@ with aba_uces:
 
         if 'imagem_mapeada_cor' in st.session_state:
             st.markdown("#### 🎨 Mapeamento Colorido por Setores de Circuitos")
-            st.image(st.session_state['imagem_mapeada_cor'], caption="Mapeamento Colorido - AutoLab LOA", use_container_width=True)
+            st.image(st.session_state['imagem_mapeada_cor'], caption="Mapeamento Colorido - AutoLab LOA", width="stretch")
             st.markdown("""
             **Legenda:** 🟢 Processadores | 🔵 Memórias | 🟡 Reguladores/Fonte | 🔴 Drivers de Potência | 🟣 Comunicação CAN/LIN
             """)
             
         if 'imagem_mapeada_num' in st.session_state:
             st.markdown("#### 🔢 Mapeamento Numerado com Descrição Individual")
-            st.image(st.session_state['imagem_mapeada_num'], caption="Mapeamento Numerado - AutoLab LOA", use_container_width=True)
+            st.image(st.session_state['imagem_mapeada_num'], caption="Mapeamento Numerado - AutoLab LOA", width="stretch")
             if 'lista_componentes_num' in st.session_state:
                 st.markdown("##### 📋 Descrição Individual de Cada Componente Numerado:")
                 for comp in st.session_state['lista_componentes_num']:
@@ -2066,7 +2404,7 @@ with aba_uces:
             cols_fer = st.columns(len(st.session_state['imagens_ferramentas_uce']))
             for idx, (nome_fer, img_f) in enumerate(st.session_state['imagens_ferramentas_uce'].items()):
                 with cols_fer[idx]:
-                    st.image(img_f, caption=nome_fer, use_container_width=True)
+                    st.image(img_f, caption=nome_fer, width="stretch")
 
         st.markdown("---")
         st.markdown("#### ⚡ Atalhos de Consulta Rápidas de Ferramentas")
@@ -2110,7 +2448,7 @@ with aba_uces:
             data=pdf_uce,
             file_name=f"Report_AutoLab_UCE_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             mime="application/pdf",
-            use_container_width=True
+            width="stretch"
         )
 
 # =========================================================
@@ -2255,7 +2593,7 @@ with aba_scanners:
                             data=pdf_sc,
                             file_name=f"Laudo_Scanner_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                             mime="application/pdf",
-                            use_container_width=True
+                            width="stretch"
                         )
                     else:
                         st.error("⚠️ Nenhuma resposta gerada pelo sistema.")
@@ -2409,7 +2747,7 @@ with aba_programadores:
                             data=pdf_pg,
                             file_name=f"Laudo_Bancada_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                             mime="application/pdf",
-                            use_container_width=True
+                            width="stretch"
                         )
                     else:
                         st.error("⚠️ Nenhuma resposta gerada pelo sistema.")
@@ -2854,23 +3192,23 @@ with aba5:
         st.markdown('<a href="https://pag.ae/81-F5BAYN" target="_blank" class="btn-pulsing-link">ASSINAR NÍVEL 3</a>', unsafe_allow_html=True)
 
 # =========================================================
-# ABA 7: 💎 GESTÃO DE CLIENTES & ASSINATURAS (EXCLUSIVO ADM)
+# ABA 10: GESTÃO DE CLIENTES & ASSINATURAS (EXCLUSIVO ADM)
 # =========================================================
 if is_adm:
     with aba6:
         st.markdown("""
             <div style="background: linear-gradient(135deg, #052E16 0%, #064E3B 100%); 
                         border: 1px solid #10B981; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                <h3 style="color: #00FF88 !important; margin: 0; padding-bottom: 5px;">👑 Painel du Administrador - Gestão de Assinaturas & Clientes</h3>
+                <h3 style="color: #00FF88 !important; margin: 0; padding-bottom: 5px;">👑 Painel do Administrador - Gestão de Assinaturas & Clientes</h3>
                 <p style="color: #A7F3D0 !important; margin: 0; font-size: 0.95rem;">
-                    Liberar plano anual (365 dias) para clientes pagantes, recarregar fichas de teste e exportar base de clientes em Excel.
+                    Liberar plano anual (365 dias) para clientes pagantes, recarregar fichas de teste e exportar base completa de clientes em Excel.
                 </p>
             </div>
         """, unsafe_allow_html=True)
 
         with st.expander("👑 Ativar Plano Anual (365 Dias) para Cliente", expanded=True):
-            email_ativar = st.text_input("E-mail du Cliente para Ativar Assinatura Anual", placeholder="cliente@oficina.com")
-            if st.button("Ativar 1 Ano de Acesso Ilimitado"):
+            email_ativar = st.text_input("E-mail do Cliente para Ativar Assinatura Anual", placeholder="cliente@oficina.com", key="adm_ativar_ass_novo")
+            if st.button("Ativar 1 Ano de Acesso Ilimitado", key="btn_ativar_ass_adm_novo"):
                 if email_ativar.strip():
                     conn = sqlite3.connect('diagnosticos.db')
                     c = conn.cursor()
@@ -2880,20 +3218,20 @@ if is_adm:
                     conn.commit()
                     conn.close()
                     if linhas_a > 0:
-                        st.success(f"Plano anual de 365 dias ativado com sucesso para {email_ativar.strip()}!")
+                        st.success(f"✅ Plano anual de 365 dias ativado com sucesso para {email_ativar.strip()}!")
                     else:
-                        st.error("E-mail não encontrado du banco de dados.")
+                        st.error("⚠️ E-mail não encontrado no banco de dados.")
                 else:
-                    st.warning("Digite um e-mail válido.")
+                    st.warning("⚠️ Digite um e-mail válido.")
 
         with st.expander("🔑 Gerenciar Fichas de Teste", expanded=False):
             col_adm_f1, col_adm_f2 = st.columns(2)
             with col_adm_f1:
-                email_target = st.text_input("E-mail du Usuário para Recarregar Teste", placeholder="usuario@oficina.com")
+                email_target = st.text_input("E-mail do Usuário para Recarregar Teste", placeholder="usuario@oficina.com", key="adm_email_fichas_novo")
             with col_adm_f2:
-                fichas_add = st.number_input("Quantidade de Fichas", min_value=1, max_value=500, value=7)
+                fichas_add = st.number_input("Quantidade de Fichas", min_value=1, max_value=500, value=7, key="adm_qtd_fichas_novo")
             
-            if st.button("Recarregar Fichas de Teste"):
+            if st.button("Recarregar Fichas de Teste", key="btn_recarregar_fichas_adm_novo"):
                 if email_target.strip():
                     conn = sqlite3.connect('diagnosticos.db')
                     c = conn.cursor()
@@ -2902,14 +3240,15 @@ if is_adm:
                     conn.commit()
                     conn.close()
                     if linhas_afetadas > 0:
-                        st.success(f"Adicionadas {fichas_add} fichas para {email_target.strip()} com sucesso!")
+                        st.success(f"✅ Adicionadas {fichas_add} fichas para {email_target.strip()} com sucesso!")
                     else:
-                        st.error("E-mail não encontrado du banco de dados.")
+                        st.error("⚠️ E-mail não encontrado no banco de dados.")
                 else:
-                    st.warning("Digite um e-mail válido.")
+                    st.warning("⚠️ Digite um e-mail válido.")
 
         st.markdown("---")
 
+        # --- CARREGAR DADOS DOS CLIENTES PARA A PLANILHA ---
         conn = sqlite3.connect('diagnosticos.db')
         df_clientes = pd.read_sql_query("SELECT id, nome, nome_empresa, documento, email, whatsapp, fichas, data_cadastro, data_expiracao_teste, data_expiracao_assinatura FROM usuarios", conn)
         conn.close()
@@ -2927,7 +3266,7 @@ if is_adm:
         st.write("")
 
         if not df_clientes.empty:
-            st.subheader("📋 Lista de Clientes Ativos")
+            st.subheader("📋 Lista de Clientes Ativos no Sistema")
             st.dataframe(df_clientes, width="stretch")
             
             buffer_excel = io.BytesIO()
@@ -2936,11 +3275,51 @@ if is_adm:
             data_excel = buffer_excel.getvalue()
             
             st.download_button(
-                label="📥 Baixar Lista de Clientes em Excel (.xlsx)",
+                label="📥 Baixar Lista Completa de Clientes em Excel (.xlsx)",
                 data=data_excel,
-                file_name="clientes_cadastrados_autolab.xlsx",
+                file_name=f"clientes_autolab_{datetime.now().strftime('%Y%m%d')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_excel_geral_clientes_adm_v2",
                 width="stretch"
             )
         else:
-            st.info("ℹ️ Nenhum cliente registrado na base de dados du momento.")
+            st.info("ℹ️ Nenhum cliente registrado na base de dados no momento.")
+
+        # --- SEÇÃO DA AUTOREDE NO PAINEL ADM ---
+        st.markdown("---")
+        st.markdown("### 🌐 Gestão de Membros da AUTOREDE")
+        st.write("Acompanhe todos os profissionais cadastrados na rede colaborativa e exporte a base em Excel.")
+
+        conn_ar_adm = sqlite3.connect('diagnosticos.db')
+        df_autorede = pd.read_sql_query("SELECT id, nome_pessoal, nome_oficina, apelido, email, documento, data_cadastro FROM autorede_usuarios", conn_ar_adm)
+        conn_ar_adm.close()
+
+        total_autorede = len(df_autorede)
+        col_ar1, col_ar2, col_ar3 = st.columns(3)
+        with col_ar1:
+            st.metric("👥 Membros AUTOREDE", total_autorede)
+        with col_ar2:
+            st.metric("🟢 Rede", "Ativa" if total_autorede > 0 else "Sem Membros")
+        with col_ar3:
+            st.metric("📊 Planilha", "Excel (.xlsx)")
+
+        st.write("")
+
+        if not df_autorede.empty:
+            st.dataframe(df_autorede, width="stretch")
+            
+            buffer_excel_ar = io.BytesIO()
+            with pd.ExcelWriter(buffer_excel_ar, engine='openpyxl') as writer:
+                df_autorede.to_excel(writer, index=False, sheet_name='Usuarios_AUTOREDE')
+            data_excel_ar = buffer_excel_ar.getvalue()
+            
+            st.download_button(
+                label="📥 Baixar Lista de Membros AUTOREDE em Excel (.xlsx)",
+                data=data_excel_ar,
+                file_name=f"membros_autorede_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_excel_autorede_adm_v2",
+                width="stretch"
+            )
+        else:
+            st.info("ℹ️ Nenhum membro cadastrado na AUTOREDE até o momento.")
