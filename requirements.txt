@@ -4,3 +4,4 @@ reportlab
 pandas
 pillow
 openpyxl
+pyserial
