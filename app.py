@@ -1072,7 +1072,7 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
 # 11. Interface Principal e Abas (CORRIGIDO SEM NAMEERROR)
 # ---------------------------------------------------------
 st.title("🔬 Sistema de Diagnóstico Avançado 🔬")
-st.write("Análise de sinais de osciloscópio, leituras de parâmetros de scanner, códigos de falha (DTC), textos, áudios e vídeos técnicos.")
+st.write("Suporte em Diagnóstico, Reparo e Programação de Módulos Eletrônicos Veicular (Eletrônica Embarcada)")
 
 is_adm = str(st.session_state.get('user_email', '')).strip().lower() == EMAIL_ADM.lower()
 
