@@ -490,7 +490,7 @@ def tela_login():
     """, unsafe_allow_html=True)
 
     st.markdown("<h1 style='text-align: center; color: #00FF88; font-weight: 900; text-shadow: 0 0 20px rgba(0,255,136,0.8); font-size: 2.5rem; margin-bottom: 5px;'>🧠 AUTOLAB DIAG AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #FFD700; font-size: 1.15rem; font-weight: 700; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-bottom: 25px;'>O Assistente de Diagnóstico mais rápido du mundo à sua disposição</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #FFD700; font-size: 1.15rem; font-weight: 700; text-shadow: 0 0 10px rgba(255,215,0,0.5); margin-bottom: 25px;'>O Assistente de Diagnóstico mais rápido do mundo à sua disposição</p>", unsafe_allow_html=True)
     
     # ---------------------------------------------------------
     # PLAYER DE ÁUDIO ROBUSTO (VELOCIDADE 1.25X)
