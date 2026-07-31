@@ -3287,25 +3287,26 @@ if is_adm:
 
         # --- SEÇÃO DA AUTOREDE NO PAINEL ADM ---
         st.markdown("---")
+        st.markdown("---")
         st.markdown("### 🌐 Gestão de Membros da AUTOREDE")
         st.write("Acompanhe todos os profissionais cadastrados na rede colaborativa e exporte a base em Excel.")
 
         conn_ar_adm = sqlite3.connect('diagnosticos.db')
-    cursor_ar = conn_ar_adm.cursor()
-    
-    # Cria a tabela caso ela não exista no banco atual (evita o erro no Streamlit Cloud)
-    cursor_ar.execute('''
-        CREATE TABLE IF NOT EXISTS autorede_usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT,
-            email TEXT,
-            data_cadastro TEXT
-        )
-    ''')
-    conn_ar_adm.commit()
+        cursor_ar = conn_ar_adm.cursor()
+        
+        # Cria a tabela caso ela não exista no banco atual (evita o erro no Streamlit Cloud)
+        cursor_ar.execute('''
+            CREATE TABLE IF NOT EXISTS autorede_usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT,
+                email TEXT,
+                data_cadastro TEXT
+            )
+        ''')
+        conn_ar_adm.commit()
 
-    df_autorede = pd.read_sql_query("SELECT * FROM autorede_usuarios", conn_ar_adm)
-    conn_ar_adm.close()
+        df_autorede = pd.read_sql_query("SELECT * FROM autorede_usuarios", conn_ar_adm)
+        conn_ar_adm.close()
 
         total_autorede = len(df_autorede)
         col_ar1, col_ar2, col_ar3 = st.columns(3)
