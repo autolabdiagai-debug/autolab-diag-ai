@@ -3,6 +3,7 @@ import io
 import re
 import html
 import json
+import serial
 import sqlite3
 import smtplib
 import os
@@ -20,6 +21,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import pandas as pd
+import streamlit as st
 
 # ---------------------------------------------------------
 # 3. Chave da API Embutida e Inicialização
@@ -1742,46 +1744,57 @@ with aba_cancode:
         
         buffer_frames = []
         
-        with st.status("📡 Conectando ao Arduino CanHacker...", expanded=True) as status_box:
-            st.write(f"⏳ Abrindo porta **{porta_com_input}** a **{baudrate_input} bps**...")
+        with st.status("📡 Conectando ao CANcode...", expanded=True) as status_box:
+            st.write(f"⏳ Abrindo porta **{porta_com_input}** a **115200 bps**...")
             try:
-                # Usa exatamente 115200 conforme o código do Arduino
-                ser = serial.Serial(porta_com_input, 115200, timeout=0.1)
-                time.sleep(2) # Tempo para o Arduino resetar após abrir a serial
+                ser = serial.Serial(porta_com_input, 115200, timeout=0.2)
+                time.sleep(1.5) # Aguarda o reset do Arduino via DTR
                 
-                # Protocolo CanHacker via Serial:
-                # C = Fecha/Reseta, S8 = Configura 1Mbps no CAN, O = Abre o canal (Open)
+                # Sequência exata de comandos do protocolo CanHacker
+                # 1. Fecha canal / Reseta
                 ser.write(b'C\r')
-                time.sleep(0.05)
-                ser.write(b'S8\r') # S8 = 1Mbps no barramento CAN do MCP2515
-                time.sleep(0.05)
-                ser.write(b'O\r')
                 time.sleep(0.1)
+                
+                # 2. Configura a velocidade (Ex: S6 para 500kbps ou S8 para 1Mbps)
+                # Dica: Se o seu CAN roda a 500k, use b'S6\r'. O padrão do soft oficial costuma usar S6 ou S8.
+                ser.write(b'S8\r') 
+                time.sleep(0.1)
+                
+                # 3. Abre o canal CAN (Open)
+                ser.write(b'O\r')
+                time.sleep(0.2)
                 
                 ser.reset_input_buffer()
                 tempo_inicio = time.time()
                 
-                st.write("🟢 Capturando pacotes do Arduino em tempo real...")
+                st.write("🟢 Capturando pacotes do CANcode em tempo real...")
+                placeholder_status = st.empty()
+                
                 while (time.time() - tempo_inicio) < tempo_captura:
                     linha_bytes = ser.readline()
                     if linha_bytes:
                         try:
                             linha_bruta = linha_bytes.decode('utf-8', errors='ignore').strip()
-                            if linha_bruta and linha_bruta not in ['C', 'O', '\r', '\n', '']:
+                            # Filtra eco e retornos de comando do CanHacker
+                            if linha_bruta and linha_bruta not in ['C', 'O', 'S8', 's8', '\r', '\n', '']:
                                 buffer_frames.append({
                                     "Frame Bruto USB": linha_bruta, 
                                     "Timestamp": datetime.now().strftime("%H:%M:%S.%f")[:-3]
                                 })
-                        except:
+                                placeholder_status.text(f"📥 Frames capturados até agora: {len(buffer_frames)}")
+                        except Exception:
                             pass
+                    else:
+                        time.sleep(0.01)
                 
+                # Encerra a sessão corretamente enviando o comando de fechamento
                 ser.write(b'C\r')
                 ser.close()
                 
                 if buffer_frames:
                     status_box.update(label=f"✅ Captura finalizada! {len(buffer_frames)} pacotes lidos.", state="complete", expanded=False)
                 else:
-                    status_box.update(label="⚠️ Arduino conectado, mas nenhum pacote retornado pelo CAN.", state="error", expanded=True)
+                    status_box.update(label="⚠️ Conectado, mas nenhum pacote retornado. Verifique a velocidade (S6/S8).", state="error", expanded=True)
                     
             except Exception as e:
                 status_box.update(label=f"❌ Erro na porta USB: {e}", state="error", expanded=True)
@@ -1795,7 +1808,7 @@ with aba_cancode:
             st.warning("⚠️ Nenhum pacote lido.")
 
     if 'df_sniffer_ativo' in st.session_state and not st.session_state['df_sniffer_ativo'].empty:
-        if st.button("🤖 Enviar Frames Capturados para Análise do Gemini", key="btn_analisar_sniffer_ia"):
+        if st.button("🤖 Enviar Frames Capturados para Análise do AutoLab Diag", key="btn_analisar_sniffer_ia"):
             with st.spinner("🧠 Analisando pacotes capturados via USB..."):
                 amostra_frames = "\n".join(st.session_state['df_sniffer_ativo']['Frame Bruto USB'].head(50).tolist())
                 
@@ -1809,7 +1822,7 @@ with aba_cancode:
                 resp_sniff = client.models.generate_content(model='gemini-3-flash-preview', contents=[prompt_sniffer_ia])
                 texto_resp_sniff = resp_sniff.text if hasattr(resp_sniff, 'text') else "Sem resposta."
                 
-                st.markdown("### 📊 Laudo de Análise dos Pacotes USB")
+                st.markdown("### 📊 Laudo de Análise dos Pacotes da Rede CANbus Capturados Via USB")
                 st.markdown(texto_resp_sniff)
 
     st.markdown("---")
