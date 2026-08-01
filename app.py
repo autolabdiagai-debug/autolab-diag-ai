@@ -9,7 +9,6 @@ import smtplib
 import os
 import time
 import hashlib
-import platform
 from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -1738,68 +1737,6 @@ with aba_cancode:
         baudrate_input = st.selectbox("Baudrate (Velocidade Serial):", [115200, 1000000, 500000, 250000, 125000], index=0, key="sniff_baud")
     with col_usb3:
         tempo_captura = st.slider("Tempo de Varredura (segundos):", min_value=1, max_value=10, value=3, key="sniff_tempo")
-
-# 1. Verifica se está no Streamlit Cloud (Linux) ou no PC local (Windows)
-is_cloud = platform.system() == "Linux"
-
-if is_cloud:
-    st.warning("⚠️ **Modo Nuvem Detectado:** A captura via porta USB física (COM3) só está disponível quando o AutoLab Diag AI é executado localmente na sua máquina/oficina.")
-    st.info("Para utilizar o Sniffer USB em tempo real, acesse o sistema através da sua versão local ou via Ngrok.")
-else:
-    # 2. Se estiver no Windows localmente, exibe o botão e executa a captura normal na COM3
-    if st.button("🟢 Iniciar Captura Sniffer USB", key="btn_sniffer_usb_ativo"):
-        import serial
-        import time
-        from datetime import datetime
-        
-        buffer_frames = []
-        porta_com_input = "COM3" # ou sua variável de input de porta
-        
-        with st.status("📡 Conectando ao CANcode...", expanded=True) as status_box:
-            st.write(f"⏳ Abrindo porta **{porta_com_input}** a **115200 bps**...")
-            try:
-                ser = serial.Serial(porta_com_input, 115200, timeout=0.2)
-                time.sleep(1.5)
-                
-                ser.write(b'C\r')
-                time.sleep(0.1)
-                ser.write(b'S8\r') 
-                time.sleep(0.1)
-                ser.write(b'O\r')
-                time.sleep(0.2)
-                
-                ser.reset_input_buffer()
-                tempo_inicio = time.time()
-                
-                st.write("🟢 Capturando pacotes do CANcode em tempo real...")
-                placeholder_status = st.empty()
-                
-                while (time.time() - tempo_inicio) < tempo_captura:
-                    linha_bytes = ser.readline()
-                    if linha_bytes:
-                        try:
-                            linha_bruta = linha_bytes.decode('utf-8', errors='ignore').strip()
-                            if linha_bruta and linha_bruta not in ['C', 'O', 'S8', 's8', '\r', '\n', '']:
-                                buffer_frames.append({
-                                    "Frame Bruto USB": linha_bruta, 
-                                    "Timestamp": datetime.now().strftime("%H:%M:%S.%f")[:-3]
-                                })
-                                placeholder_status.text(f"📥 Frames capturados até agora: {len(buffer_frames)}")
-                        except Exception:
-                            pass
-                    else:
-                        time.sleep(0.01)
-                
-                ser.write(b'C\r')
-                ser.close()
-                
-                if buffer_frames:
-                    status_box.update(label=f"✅ Captura finalizada! {len(buffer_frames)} pacotes lidos.", state="complete", expanded=False)
-                else:
-                    status_box.update(label="⚠️ Conectado, mas nenhum pacote retornado. Verifique a velocidade.", state="error", expanded=True)
-                    
-            except Exception as e:
-                status_box.update(label=f"❌ Erro na porta USB: {e}", state="error", expanded=True)
 
     if st.button("🟢 Iniciar Captura Sniffer USB", key="btn_sniffer_usb_ativo"):
         import serial
