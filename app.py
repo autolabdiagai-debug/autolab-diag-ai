@@ -2464,113 +2464,126 @@ with aba_uces:
         )
 
 # =========================================================
-# ABA 📡 SUPORTE SCANNERS (COM BARRA 0-100% E PDF)
+# ABA 📡 SUPORTE SCANNERS (CADASTRO DINÂMICO & IA)
 # =========================================================
 with aba_scanners:
-    st.subheader("📡 Suporte Avançado de Scanners & Compatibilidade")
-    st.write("Cadastre os scanners que você possui na oficina para a IA analisar a viabilidade de execução dos procedimentos ou tire dúvidas técnicas.")
-    st.markdown("---")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(3, 20, 12, 0.95) 0%, rgba(5, 46, 22, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+        <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🛠️ Suporte a Scanners - Equipamentos de Diagnóstico</h3>
+        <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+            Cadastre os equipamentos do seu Laboratório Automotivo. O AUTOLAB DIAG cruzará o seu inventário com o procedimento desejado e informará com clareza se o seu scanner atende e qual é o passo a passo técnico detalhado.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    col_sc_cad, col_sc_duv = st.columns([1, 1], gap="large")
-
-    with col_sc_cad:
-        st.markdown("### 🛠️ Cadastro de Scanners da Oficina")
-        scanners_disponiveis = [
+    # 1. INICIALIZAÇÃO DO ESTADO NA SESSÃO PARA SCANNERS
+    if "scanners_cadastrados" not in st.session_state:
+        st.session_state.scanners_cadastrados = [
             "Bosch KTS (540 / 560 / 590 / 350)",
             "Launch X431 (Pro / Pad / Diagzone)",
             "Autel MaxiSys (Elite / MS908 / Ultra)",
             "Tecnomotor Rasther (III / TS / I)",
             "Raven (III / II)",
             "G-Scan (2 / 3 / Z)",
-            "Kess / K-Tag / DFOX (Bancada)",
-            "Outros Scanners / Interface J2534"
         ]
-        scanners_selecionados = st.multiselect("Selecione seus Scanners:", scanners_disponiveis, default=["Bosch KTS (540 / 560 / 590 / 350)", "Launch X431 (Pro / Pad / Diagzone)"])
-        outro_scanner = st.text_input("Cadastre Aqui Seus Scanners / Versão Específica:", placeholder="Ex: Scanner específico...")
-        
-        if st.button("💾 Salvar Inventário de Scanners", width="stretch"):
-            lista_final_scanners = ", ".join(scanners_selecionados)
-            if outro_scanner: lista_final_scanners += f", {outro_scanner}"
-            conn = sqlite3.connect('diagnosticos.db')
-            c = conn.cursor()
-            c.execute('UPDATE usuarios SET scanners_cadastrados = ? WHERE email = ?', (lista_final_scanners, email_usuario))
-            conn.commit()
-            conn.close()
-            st.success("✅ Scanners salvos com sucesso!")
 
-    with col_sc_duv:
-        st.markdown("### 💬 Dúvidas sobre Procedimentos com Scanners")
-        veiculo_scanner_duvida = st.text_input("Veículo / Sistema para Procedimento:", placeholder="Ex: Hilux 2.8 D4D - Sangria de ABS ou Codificação de Bicos")
-        pergunta_scanner = st.text_area("Descreva a dúvida sobre o procedimento:")
-        col_m_sc1, col_m_sc2 = st.columns(2)
-        with col_m_sc1: foto_tela_scanner = st.file_uploader("📸 Foto a ser analisada", type=["png", "jpg", "jpeg"], key="foto_tela_sc")
-        with col_m_sc2: audio_video_scanner = st.file_uploader("🎥 Vídeo / Áudio / Imagem Extra", type=["mp4", "mov", "avi", "mkv", "mp3", "wav", "ogg"], key="midia_extra_sc")
-        mic_sc = st.audio_input("🎙️ Gravar sua Dúvida por Áudio Aqui)", key="mic_sc")
+    # 2. CADASTRO DE NOVO SCANNER / VERSÃO ESPECÍFICA
+    with st.expander("➕ Cadastre Aqui Seus Scanners / Versão Específica:", expanded=False):
+        with st.form("form_cadastro_scanner_dinamico"):
+            novo_scanner_input = st.text_input("Nome do Equipamento / Marca / Versão Específica:", placeholder="Ex: Delphi DS150e, Alfatest, Rastreador Bosch...")
+            submitted_scanner = st.form_submit_button("Salvar Scanner no Inventário")
+            
+            if submitted_scanner:
+                if novo_scanner_input.strip():
+                    if novo_scanner_input.strip() not in st.session_state.scanners_cadastrados:
+                        st.session_state.scanners_cadastrados.append(novo_scanner_input.strip())
+                        st.success(f"✅ Scanners salvos com sucesso!")
+                        st.rerun() # Atualiza a tela imediatamente para aparecer no seletor
+                    else:
+                        st.warning("⚠️ Este equipamento já consta na lista cadastrada.")
+                else:
+                    st.error("❌ Por favor, digite o nome do equipamento.")
 
     st.markdown("---")
-    if st.button("🚀 Analisar Procedimento com Scanners 🚀", width="stretch"):
+
+    # 3. SELEÇÃO DOS SCANNERS DA OFICINA
+    st.subheader("📋 Selecione seus scanners disponíveis para esta operação:")
+    scanners_selecionados = st.multiselect(
+        "Escolha os equipamentos que vai utilizar agora no seu Laboratório Automotivo:",
+        options=st.session_state.scanners_cadastrados,
+        default=st.session_state.scanners_cadastrados[:2]
+    )
+
+    st.markdown("---")
+
+    # 4. CONSULTA INTELIGENTE COM AUTOLAB DIAG
+    st.subheader("🔍 Descreva o procedimento que você quer fazer para verificação, Viabilidade & Passo a Passo Técnico")
+    
+    col_sc_veiculo, col_sc_proc = st.columns(2)
+    with col_sc_veiculo:
+        veiculo_modelo_sc = st.text_input("Veículo / Sistema Aplicado:", placeholder="Ex: VW Gol G5 1.0 - Magneti Marelli IAW 4GV")
+    with col_sc_proc:
+        procedimento_desejado_sc = st.text_input("-Procedimento Desejado:", placeholder="Ex: Adaptação de corpo de borboleta, Sangria ABS, Codificação de Injetores")
+
+    detalhes_extras_sc = st.text_area("Detalhes Adicionais para Cruzamento de Informações  (Opcional):", placeholder="Insira detalhes adicionais se necessário...")
+
+    if st.button("🤖 Consultar AUTOLAB DIAG sobre Viabilidade e Passo a Passo Técnico", width="stretch"):
         status_atual_check = verificar_status_usuario(st.session_state['user_email'])
         if st.session_state['user_email'] != EMAIL_ADM and (status_atual_check["tipo"] == "expirado" or (status_atual_check["tipo"] == "teste" and status_atual_check["fichas"] <= 0)):
             st.error("⚠️ Seu período de teste de 7 dias ou suas fichas esgotaram! Assine um dos planos na aba 💳 Assinatura para continuar.")
         else:
-            if veic_sc := veiculo_scanner_duvida:
-                
-                # BARRA DE CARREGAMENTO (0% A 100%) PARA SCANNERS
+            if not veiculo_modelo_sc or not procedimento_desejado_sc:
+                st.warning("⚠️ Preencha o Veículo/Sistema e o Procedimento Desejado.")
+            elif not scanners_selecionados:
+                st.warning("⚠️ Selecione ao menos um scanner da sua oficina acima para a análise.")
+            else:
+                # BARRA DE PROGRESSO PROFISSIONAL
                 barra_prog_sc = st.progress(0)
                 status_txt_sc = st.empty()
                 
-                status_txt_sc.markdown("📡 **[0%]** — Lendo inventário de scanners e dados du veículo...")
-                barra_prog_sc.progress(20)
+                status_txt_sc.markdown("📡 **[0%]** — Cruzando inventário de scanners com a base técnica...")
+                barra_prog_sc.progress(25)
                 time.sleep(0.3)
 
-                status_txt_sc.markdown("🧠 **[50%]** — Verificando compatibilidade de menus com a IA...")
-                barra_prog_sc.progress(50)
+                status_txt_sc.markdown("🧠 **[60%]** — Verificando compatibilidade de menus e funções com o AUTOLAB DIAG...")
+                barra_prog_sc.progress(60)
                 time.sleep(0.3)
 
-                status_txt_sc.markdown("⚙️ **[80%]** — Formatando passo a passo técnico...")
-                barra_prog_sc.progress(80)
+                status_txt_sc.markdown("⚙️ **[90%]** — Formatando o passo a passo técnico detalhado...")
+                barra_prog_sc.progress(90)
                 time.sleep(0.3)
 
-                scanners_do_usuario = ", ".join(scanners_selecionados) if 'scanners_selecionados' in locals() else "Nenhum cadastrado"
-                prompt_scanner_ia = f"""
-                ATUE COMO O ENGENHEIRO CHEFE EM DIAGNÓSTICO AUTOMOTIVO E ESPECIALISTA EM SCANNERS DA AUTOLAB.
-                - Veículo/Sistema: {veiculo_scanner_duvida}
-                - Dúvida: {pergunta_scanner}
-                - Scanners Disponíveis: {scanners_do_usuario}
-                Forneça análise de compatibilidade e passo a passo detalhado du menu du scanner.
+                prompt_sistema_scanners = f"""
+                Você é um Engenheiro Automotivo Sênior, Especialista em Diagnóstico Eletrônico Avançado e Operação de Scanners Multimarcas e Originais.
+                O reparador na oficina possui os seguintes scanners disponíveis: {scanners_selecionados}.
+                O veículo/sistema alvo é: {veiculo_modelo_sc}.
+                O procedimento que ele deseja realizar é: {procedimento_desejado_sc}.
+                Observações extras: {detalhes_extras_sc}
+
+                Sua tarefa e instrução obrigatória:
+                1. Analise com honestidade técnica se PELO MENOS UM dos scanners informados na lista ({scanners_selecionados}) possui capacidade técnica de realizar este procedimento específico neste veículo.
+                2. Se nenhum dos scanners selecionados fizer o procedimento, aponte claramente qual ferramenta ou nível (original, bancada, etc.) seria obrigatório.
+                3. Se for viável com algum dos equipamentos selecionados, forneça um **Passo a Passo Técnico e Extremamente Detalhado** (indicando caminhos de menu típicos no equipamento, condições prévias do motor, temperatura, ignição ligada/desligada, procedimentos de reset ou segurança).
+                4. Formate a resposta de forma limpa, técnica, direta e profissional utilizando Markdown.
                 """
-                contents_sc = [prompt_scanner_ia]
-                if mic_sc:
-                    try:
-                        mic_sc.seek(0)
-                        contents_sc.append(types.Part.from_bytes(data=mic_sc.read(), mime_type="audio/wav"))
-                    except Exception: pass
-                    
-                if foto_tela_scanner:
-                    try:
-                        foto_tela_scanner.seek(0)
-                        img_s = Image.open(foto_tela_scanner)
-                        img_s.thumbnail((1280, 1280))
-                        buf_s = io.BytesIO()
-                        img_s.save(buf_s, format="JPEG", quality=85)
-                        contents_sc.append(types.Part.from_bytes(data=buf_s.getvalue(), mime_type="image/jpeg"))
-                    except Exception: pass
-                
+
                 try:
-                    resp_sc = client.models.generate_content(model='gemini-3-flash-preview', contents=contents_sc)
-                    
-                    # 100% CONCLUÍDO
+                    response_sc = client.models.generate_content(
+                        model='gemini-3-flash-preview',
+                        contents=[prompt_sistema_scanners]
+                    )
+
                     barra_prog_sc.progress(100)
-                    status_txt_sc.markdown("✅ **[100%]** — Análise de Scanner Concluída com Sucesso!")
+                    status_txt_sc.markdown("✅ **[100%]** — Análise Concluída com Sucesso!")
                     time.sleep(0.4)
                     
                     barra_prog_sc.empty()
                     status_txt_sc.empty()
 
-                    if resp_sc and hasattr(resp_sc, 'text') and resp_sc.text:
-                        texto_resp_sc = resp_sc.text
+                    if response_sc and hasattr(response_sc, 'text') and response_sc.text:
+                        texto_laudo_sc = response_sc.text
                         
-                        # DESCONTO DA FICHA E SALVAMENTO
+                        # Desconto de ficha para usuários de teste
                         fichas_atuais = st.session_state.get('user_fichas', 7)
                         email_atual = st.session_state.get('user_email', '')
                         
@@ -2583,137 +2596,205 @@ with aba_scanners:
 
                         salvar_diagnostico(
                             email_atual,
-                            f"Scanner / Veículo: {veiculo_scanner_duvida}",
-                            "Procedimento de Scanner",
-                            pergunta_scanner,
-                            texto_resp_sc
+                            f"Scanner / Veículo: {veiculo_modelo_sc}",
+                            f"Procedimento: {procedimento_desejado_sc}",
+                            f"Scanners usados: {', '.join(scanners_selecionados)}",
+                            texto_laudo_sc
                         )
-                        
-                        st.markdown(texto_resp_sc)
-                        st.success("Análise de Scanner salva no Histórico!")
-                        
-                        pdf_sc = gerar_pdf_relatorio(
+
+                        st.markdown("### 📊 Laudo Técnico de Viabilidade & Passo a Passo:")
+                        st.markdown(texto_laudo_sc)
+                        st.success("✅ Análise salva no Histórico com sucesso!")
+
+                        # Botão para baixar em PDF
+                        pdf_sc_rel = gerar_pdf_relatorio(
                             st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
-                            f"Veículo: {veiculo_scanner_duvida}",
-                            "Procedimento de Scanner",
-                            pergunta_scanner,
-                            texto_resp_sc,
-                            titulo_pdf="LAUDO TÉCNICO - SUPORTE DE SCANNERS"
+                            f"Veículo: {veiculo_modelo_sc}",
+                            f"Procedimento: {procedimento_desejado_sc}",
+                            f"Scanners: {', '.join(scanners_selecionados)}",
+                            texto_laudo_sc,
+                            titulo_pdf="LAUDO TÉCNICO - COMPATIBILIDADE DE SCANNERS"
                         )
                         st.download_button(
-                            label="📥 BAIXAR ESTE LAUDO DE SCANNER EM PDF",
-                            data=pdf_sc,
-                            file_name=f"Laudo_Scanner_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                            label="📥 BAIXAR ESTE PASSO A PASSO EM PDF",
+                            data=pdf_sc_rel,
+                            file_name=f"Laudo_Scanners_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                             mime="application/pdf",
                             width="stretch"
                         )
                     else:
-                        st.error("⚠️ Nenhuma resposta gerada pelo sistema.")
-                except Exception as err_sc:
+                        st.error("⚠️ Nenhuma resposta gerado pelo AUTOLAB DIAG.")
+                except Exception as e:
                     barra_prog_sc.empty()
                     status_txt_sc.empty()
-                    st.error(f"Erro na requisição: {err_sc}")
-            else:
-                st.warning("⚠️ Informe o veículo ou sistema para o procedimento.")
-            
-            salvar_diagnostico(
-                email_usuario,
-                f"Scanner / Veículo: {veiculo_scanner_duvida}",
-                "Procedimento de Scanner",
-                pergunta_scanner,
-                texto_resp_sc
-            )
-            
-            st.markdown(texto_resp_sc)
-            st.success("Análise de Scanner salva no Histórico!")
-            
-            # OPÇÃO DE PDF PARA SCANNERS
-            pdf_sc = gerar_pdf_relatorio(
-                st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
-                f"Veículo: {veiculo_scanner_duvida}",
-                "Procedimento de Scanner",
-                pergunta_scanner,
-                texto_resp_sc,
-                titulo_pdf="LAUDO TÉCNICO - SUPORTE DE SCANNERS"
-            )
-            st.download_button(
-                label="📥 BAIXAR ESTE LAUDO DE SCANNER EM PDF",
-                data=pdf_sc,
-                file_name=f"Laudo_Scanner_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                mime="application/pdf",
-                width="stretch"
-            )
+                    st.error(f"Erro na requisição: {e}")
 
 # =========================================================
-# ABA 💻 SUPORTE PROGRAMADORES (COM BARRA 0-100% E PDF)
+# ABA 💻 SUPORTE PROGRAMADORES (CADASTRO, DATASHEETS & IA)
 # =========================================================
 with aba_programadores:
-    st.subheader("💻 Suporte de Programadores, Boots, Memórias & Processadores")
-    st.write("Tire dúvidas sobre conexões de Boot, BDM, JTAG, leitura de memórias SOIC/Flash e processadores MCU.")
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(3, 20, 12, 0.95) 0%, rgba(5, 46, 22, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+        <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">💻 Suporte de Programadores, Memórias & Processadores (MCUs / SOICs)</h3>
+        <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+            Cadastre seus gravadores e programadores de bancada. Consulte datasheets, tire dúvidas com mídias completas e obtenha laudos técnicos detalhados com o passo a passo exato da operação.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 1. INICIALIZAÇÃO DO ESTADO NA SESSÃO PARA PROGRAMADORES
+    if "programadores_cadastrados_oficina" not in st.session_state:
+        st.session_state.programadores_cadastrados_oficina = [
+            "K-Tag / Kess (Alientech)",
+            "VVDI Prog / Key Tool Plus (Xhorse)",
+            "Orange 5",
+            "UPA-USB / UPA-USB S",
+            "Flex (Magicmotorsport)",
+            "DFOX / D-Sport",
+            "I/O Terminal",
+            "CGDI Prog",
+            "PCMtuner / BitBox"
+        ]
+
+    # 2. CADASTRO DE NOVOS PROGRAMADORES / VERSÕES NA OFICINA
+    with st.expander("➕ Cadastrar Novo Programador / Versão Específica", expanded=False):
+        with st.form("form_cadastro_programador_dinamico"):
+            novo_prog_input = st.text_input("Nome do Equipamento / Gravador / Versão Específica:", placeholder="Ex: Xprog-m, TL866II Plus, GQ-4X...")
+            submitted_prog = st.form_submit_button("Salvar Programador no Inventário")
+            
+            if submitted_prog:
+                if novo_prog_input.strip():
+                    if novo_prog_input.strip() not in st.session_state.programadores_cadastrados_oficina:
+                        st.session_state.programadores_cadastrados_oficina.append(novo_prog_input.strip())
+                        st.success("✅ Programador salvo com sucesso!")
+                        st.rerun() # Atualiza a tela imediatamente para aparecer no multiselect
+                    else:
+                        st.warning("⚠️ Este equipamento já consta na lista cadastrada.")
+                else:
+                    st.error("❌ Por favor, digite o nome do equipamento.")
+
     st.markdown("---")
 
-    col_pg_cad, col_pg_duv = st.columns([1, 1], gap="large")
-    with col_pg_cad:
-        st.markdown("### 🛠️ Cadastro de Programadores")
-        prog_disp = ["K-Tag / Kess", "VVDI Prog / Key Tool Plus", "Orange 5", "UPA-USB", "Flex", "DFOX", "I/O Terminal"]
-        prog_sel = st.multiselect("Selecione seus Programadores:", prog_disp, default=["K-Tag / Kess", "VVDI Prog / Key Tool Plus"])
-        if st.button("💾 Salvar Programadores", width="stretch"):
-            conn = sqlite3.connect('diagnosticos.db')
-            c = conn.cursor()
-            c.execute('UPDATE usuarios SET programadores_cadastrados = ? WHERE email = ?', (", ".join(prog_sel), email_usuario))
-            conn.commit()
-            conn.close()
-            st.success("✅ Programadores salvos!")
-
-    with col_pg_duv:
-        st.markdown("### 💬 Dúvidas de Bancada (Boot / MCU / Memória)")
-        mod_pg = st.text_input("Módulo / MCU / Memória:", placeholder="Ex: EDC17C69 (Tricore TC1793)")
-        duv_pg = st.text_area("Descreva a dúvida de boot/conexão:")
-        foto_pg = st.file_uploader("📸 Foto da Placa / Conexão de Boot", type=["png", "jpg", "jpeg"], key="foto_pg")
-        mic_pg = st.audio_input("🎙️ Gravar Dúvida por Áudio (Programadores)", key="mic_pg")
+    # 3. SELEÇÃO DOS PROGRAMADORES ATIVOS PARA A OPERAÇÃO
+    st.subheader("📋 Selecione seus programadores disponíveis para esta operação:")
+    programadores_selecionados = st.multiselect(
+        "Escolha o Progrador de bancada ou OBD disponíveis agora:",
+        options=st.session_state.programadores_cadastrados_oficina,
+        default=st.session_state.programadores_cadastrados_oficina[:3]
+    )
 
     st.markdown("---")
-    if st.button("🚀 Analisar Conexão de Bancada 🚀", width="stretch"):
+
+    # 4. CAMPOS DE MEMÓRIAS E PROCESSADORES (MCUs / SOICs)
+    st.subheader("🔬 Identificação do Componente Alvo de Bancada")
+    col_pg_m1, col_pg_m2 = st.columns(2)
+    with col_pg_m1:
+        alvo_mcu_mem = st.text_input("Processador MCU / Memória SOIC / Módulo:", placeholder="Ex: Tricore TC1793, EEPROM 95320, Flash 29F400, MPC5xx")
+    with col_pg_m2:
+        part_number_peca = st.text_input("Número do Componente Eletrônico / Fabricante da Peça (opcional):", placeholder="Ex: ST L9637D, Bosch 30343, Infineon...")
+
+    st.markdown("---")
+
+    # 5. LINK PARA PESQUISA DE DATASHEETS OFICIAL
+    st.markdown("""
+    <div style="background: rgba(0, 229, 255, 0.08); border: 1px solid #00E5FF; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div>
+            <h4 style="color: #00E5FF !important; margin: 0; font-size: 1rem;">🌐 Consulta Rápida de Datasheets Oficiais</h4>
+            <p style="color: #A7F3D0 !important; font-size: 0.85rem; margin: 3px 0 0 0;">Precisa do manual de pinagem e especificações elétricas do componente? Acesse a plataforma abaixo:</p>
+        </div>
+        <div>
+            <a href="https://www.alldatasheet.com/" target="_blank" style="background: linear-gradient(135deg, #00E5FF 0%, #0088FF 100%); color: #03140C !important; padding: 10px 20px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 0.9rem; box-shadow: 0 0 12px rgba(0,229,255,0.4);">ACESSAR ALLDATASHEET</a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 6. CAMPO DE DÚVIDAS DO DATASHEET & MULTIMÍDIA COMPLETA
+    st.subheader("💬 Central de Dúvidas, Análise de Datasheet & Conexões de Bancada")
+    duvida_programador_texto = st.text_area("Descreva sua dúvida técnica, problema de leitura, erro de CKS ou pinagem de Boot/BDM:", placeholder="Ex: O programador não reconhece a memória na pinagem padrão. Como ligar o pino de Reset/Boot externo?", height=100)
+
+    col_m_pg1, col_m_pg2, col_m_pg3 = st.columns(3)
+    with col_m_pg1:
+        foto_placa_prog = st.file_uploader("📸 Anexar Foto (Placa, Esquemático ou Conexão)", type=["png", "jpg", "jpeg"], key="up_foto_prog")
+    with col_m_pg2:
+        midia_extra_prog = st.file_uploader("🎥 Anexar Vídeo", type=["mp4", "mov", "avi", "mkv", "bin", "hex", "ori"], key="up_midia_prog")
+    with col_m_pg3:
+        mic_prog_gravado = st.audio_input("🎙️ Gravar Dúvida por Áudio (Microfone)", key="mic_prog_input_v2")
+
+    st.markdown("---")
+
+    # 7. BOTÃO DE EXECUÇÃO DA ANÁLISE COM A IA
+    if st.button("🤖 Analisar Viabilidade, Compatibilidade & Passo a Passo de Bancada", width="stretch"):
         status_atual_check = verificar_status_usuario(st.session_state['user_email'])
         if st.session_state['user_email'] != EMAIL_ADM and (status_atual_check["tipo"] == "expirado" or (status_atual_check["tipo"] == "teste" and status_atual_check["fichas"] <= 0)):
             st.error("⚠️ Seu período de teste de 7 dias ou suas fichas esgotaram! Assine um dos planos na aba 💳 Assinatura para continuar.")
         else:
-            if mod_pg:
-                
-                # BARRA DE CARREGAMENTO (0% A 100%) PARA PROGRAMADORES
+            if not alvo_mcu_mem and not duvida_programador_texto:
+                st.warning("⚠️ Preencha o componente/MCU alvo ou descreva sua dúvida técnica.")
+            elif not programadores_selecionados:
+                st.warning("⚠️ Selecione ao menos um programador da sua oficina acima para a análise.")
+            else:
+                # BARRA DE PROGRESSO PROFISSIONAL
                 barra_prog_pg = st.progress(0)
                 status_txt_pg = st.empty()
                 
-                status_txt_pg.markdown("💻 **[0%]** — Lendo processador/memória e conexão de bancada...")
-                barra_prog_pg.progress(25)
+                status_txt_pg.markdown("💻 **[0%]** — Cruzando inventário de gravadores com o MCU/Memória alvo...")
+                barra_prog_pg.progress(20)
                 time.sleep(0.3)
 
-                status_txt_pg.markdown("🧠 **[60%]** — Mapeando pinos de Boot/BDM com a IA...")
-                barra_prog_pg.progress(60)
+                status_txt_pg.markdown("🧠 **[50%]** — Verificando compatibilidade, protocolos de Boot/BDM e especificações do Datasheet...")
+                barra_prog_pg.progress(50)
                 time.sleep(0.3)
 
-                prompt_pg_ia = f"Módulo/MCU: {mod_pg}. Dúvida: {duv_pg}. Ferramentas: {prog_sel}."
-                c_pg = [prompt_pg_ia]
-                if mic_pg:
+                status_txt_pg.markdown("⚙️ **[85%]** — Formatando o relatório técnico com o passo a passo detalhado...")
+                barra_prog_pg.progress(85)
+                time.sleep(0.3)
+
+                progs_ativos_str = ", ".join(programadores_selecionados)
+                prompt_sistema_programadores = f"""
+                Você é um Engenheiro Sênior Especialista em Eletrônica Embarcada, Engenharia Reversa de UCEs, Bancadas de Programação e Arquivos Binários.
+                - Programadores disponíveis na oficina: {progs_ativos_str}
+                - Processador MCU / Memória / Módulo Alvo: {alvo_mcu_mem if alvo_mcu_mem else 'Não especificado'}
+                - Part Number / Silk: {part_number_peca if part_number_peca else 'Não informado'}
+                - Dúvida / Solicitação do Reparador: {duvida_programador_texto}
+
+                Instruções Obrigatórias para sua Resposta:
+                1. Analise com rigor técnico se **pelo menos um** dos programadores informados na lista ({progs_ativos_str}) possui capacidade física e de software para realizar a leitura, gravação, bypass ou boot deste componente/MCU.
+                2. Seja honesto e direto: Se nenhum dos equipamentos selecionados resolver o problema, aponte exatamente qual ferramenta correta (gravador, adaptador, pinça, nível de bancada) a oficina precisa adquirir ou utilizar para solucionar o caso.
+                3. Se for possível com algum dos programadores selecionados, forneça um **Passo a Passo Técnico e Extremamente Detalhado** (conexões de pinos, alimentação externa necessária, resistores de pull-up/pull-down, pontos de Boot/BDM/JTAG, cuidados com ESD, tensões e procedimentos de leitura).
+                4. Estruture a resposta em Markdown profissional, limpo e direto ao ponto.
+                """
+
+                contents_prog = [prompt_sistema_programadores]
+
+                if mic_prog_gravado:
                     try:
-                        mic_pg.seek(0)
-                        c_pg.append(types.Part.from_bytes(data=mic_pg.read(), mime_type="audio/wav"))
+                        mic_prog_gravado.seek(0)
+                        contents_prog.append(types.Part.from_bytes(data=mic_prog_gravado.read(), mime_type="audio/wav"))
                     except Exception: pass
-                    
-                if foto_pg:
+
+                if foto_placa_prog:
                     try:
-                        foto_pg.seek(0)
-                        img_pg_f = Image.open(foto_pg)
-                        img_pg_f.thumbnail((1280, 1280))
-                        buf_pg = io.BytesIO()
-                        img_pg_f.save(buf_pg, format="JPEG", quality=85)
-                        c_pg.append(types.Part.from_bytes(data=buf_pg.getvalue(), mime_type="image/jpeg"))
+                        foto_placa_prog.seek(0)
+                        img_fp = Image.open(foto_placa_prog)
+                        img_fp.thumbnail((1280, 1280))
+                        buf_fp = io.BytesIO()
+                        img_fp.save(buf_fp, format="JPEG", quality=85)
+                        contents_prog.append(types.Part.from_bytes(data=buf_fp.getvalue(), mime_type="image/jpeg"))
                     except Exception: pass
-                
+
+                if midia_extra_prog:
+                    try:
+                        midia_extra_prog.seek(0)
+                        mime_tipo_extra = midia_extra_prog.type if midia_extra_prog.type else "video/mp4"
+                        contents_prog.append(types.Part.from_bytes(data=midia_extra_prog.read(), mime_type=mime_tipo_extra))
+                    except Exception: pass
+
                 try:
-                    resp_pg = client.models.generate_content(model='gemini-3-flash-preview', contents=c_pg)
-                    
-                    # 100% CONCLUÍDO
+                    response_pg = client.models.generate_content(
+                        model='gemini-3-flash-preview',
+                        contents=contents_prog
+                    )
+
                     barra_prog_pg.progress(100)
                     status_txt_pg.markdown("✅ **[100%]** — Análise de Bancada Concluída com Sucesso!")
                     time.sleep(0.4)
@@ -2721,10 +2802,10 @@ with aba_programadores:
                     barra_prog_pg.empty()
                     status_txt_pg.empty()
 
-                    if resp_pg and hasattr(resp_pg, 'text') and resp_pg.text:
-                        texto_resp_pg = resp_pg.text
+                    if response_pg and hasattr(response_pg, 'text') and response_pg.text:
+                        texto_laudo_pg = response_pg.text
                         
-                        # DESCONTO DA FICHA E SALVAMENTO
+                        # Desconto de ficha para usuários de teste
                         fichas_atuais = st.session_state.get('user_fichas', 7)
                         email_atual = st.session_state.get('user_email', '')
                         
@@ -2737,38 +2818,38 @@ with aba_programadores:
 
                         salvar_diagnostico(
                             email_atual,
-                            f"Programador / MCU: {mod_pg}",
-                            "Boot / BDM / Bench",
-                            duv_pg,
-                            texto_resp_pg
+                            f"Programador / Alvo: {alvo_mcu_mem if alvo_mcu_mem else 'Bancada MCU'}",
+                            f"Part: {part_number_peca if part_number_peca else 'N/A'}",
+                            duvida_programador_texto if duvida_programador_texto else "Análise de Programadores & Datasheet",
+                            texto_laudo_pg
                         )
-                        
-                        st.markdown(texto_resp_pg)
-                        st.success("Análise de Bancada salva no Histórico!")
-                        
-                        pdf_pg = gerar_pdf_relatorio(
+
+                        st.markdown("### 📊 Laudo Técnico de Bancada & Compatibilidade:")
+                        st.markdown(texto_laudo_pg)
+                        st.success("✅ Análise salva no Histórico com sucesso!")
+
+                        # Botão para baixar em PDF
+                        pdf_pg_rel = gerar_pdf_relatorio(
                             st.session_state.oficina_nome, st.session_state.oficina_cnpj, st.session_state.oficina_tel,
-                            f"Módulo/MCU: {mod_pg}",
-                            "Boot / BDM / Bench",
-                            duv_pg,
-                            texto_resp_pg,
+                            f"Alvo: {alvo_mcu_mem if alvo_mcu_mem else 'Componente / MCU'}",
+                            f"Part Number: {part_number_peca if part_number_peca else 'N/A'}",
+                            duvida_programador_texto if duvida_programador_texto else "Suporte de Programadores",
+                            texto_laudo_pg,
                             titulo_pdf="LAUDO TÉCNICO - PROGRAMADORES & BANCADA"
                         )
                         st.download_button(
-                            label="📥 BAIXAR ESTE LAUDO DE BANCADA EM PDF",
-                            data=pdf_pg,
-                            file_name=f"Laudo_Bancada_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                            label="📥 BAIXAR ESTE RELATÓRIO DE BANCADA EM PDF",
+                            data=pdf_pg_rel,
+                            file_name=f"Laudo_Programadores_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                             mime="application/pdf",
                             width="stretch"
                         )
                     else:
-                        st.error("⚠️ Nenhuma resposta gerada pelo sistema.")
-                except Exception as err_pg:
+                        st.error("⚠️ Nenhuma resposta gerada pela IA.")
+                except Exception as e:
                     barra_prog_pg.empty()
                     status_txt_pg.empty()
-                    st.error(f"Erro na requisição: {err_pg}")
-            else:
-                st.warning("⚠️ Informe o módulo, MCU ou memória para analisar a conexão.")
+                    st.error(f"Erro na requisição: {e}")
 
 # =========================================================
 # ABA ⚙️ SUPORTE PROGRAMAÇÃO (COM BARRA 0-100% E PDF NAS DÚVIDAS)
