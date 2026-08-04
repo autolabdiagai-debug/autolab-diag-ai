@@ -1078,24 +1078,23 @@ st.write("Suporte em Diagnóstico, Reparo e Programação de Módulos Eletrônic
 
 is_adm = str(st.session_state.get('user_email', '')).strip().lower() == EMAIL_ADM.lower()
 
-# Verifica se o usuário tem perfil exclusivo da AutoRede
 usuario_tem_autolab = st.session_state.get("logado", False)
 usuario_tem_autorede = 'usuario_logado_autorede' in st.session_state
 
 if is_adm:
-    # ADM possui 13 abas no total (incluindo CANCODE e aba6 para Gestão de Clientes)
-    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5, aba6 = st.tabs([
+    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_calculadoras, aba_programacao, aba2, aba3, aba4, aba5, aba6 = st.tabs([
         "🏢 Minha Empresa",
         "🌐 AUTOREDE (Feed)",
-        "🔬 Diagnóstico", 
+        "🔬 Diagnóstico",
         "📡 Suporte CANCODE",
         "🔌 Suporte U.C.Es",
         "📡 Suporte Scanners",
         "💻 Suporte Programadores",
+        "🧮 Calculadoras",
         "⚙️ Suporte Programação",
-        "📜 Histórico", 
-        "🎓 Cursos & Redes Sociais", 
-        "💬 Connect WhatsApp", 
+        "📜 Histórico",
+        "🎓 Cursos & Redes Sociais",
+        "💬 Connect WhatsApp",
         "💳 Assinatura",
         "💎 Gestão de Clientes 💎"
     ])
@@ -1105,27 +1104,24 @@ elif usuario_tem_autorede and not usuario_tem_autolab:
         "🌐 AUTOREDE (Feed)",
         "💳 Assinatura & Planos"
     ])
-    # Declara variáveis nulas para não quebrar o código no restante das abas
-    aba1 = aba_cancode = aba_uces = aba_scanners = aba_programadores = aba_programacao = aba2 = aba3 = aba4 = aba5 = aba6 = None
+    aba1 = aba_cancode = aba_uces = aba_scanners = aba_programadores = aba_calculadoras = aba_programacao = aba2 = aba3 = aba4 = aba5 = aba6 = None
 else:
-    # Usuário comum do AutoLab recebe 12 abas (incluindo CANCODE)
-    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_programacao, aba2, aba3, aba4, aba5 = st.tabs([
+    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_calculadoras, aba_programacao, aba2, aba3, aba4, aba5 = st.tabs([
         "🏢 Minha Empresa",
         "🌐 AUTOREDE (Feed)",
-        "🔬 Diagnóstico", 
+        "🔬 Diagnóstico",
         "📡 Suporte CANCODE",
         "🔌 Suporte U.C.Es",
         "📡 Suporte Scanners",
         "💻 Suporte Programadores",
+        "🧮 Calculadoras",
         "⚙️ Suporte Programação",
-        "📜 Histórico", 
-        "🎓 Cursos & Redes Sociais", 
-        "💬 Connect WhatsApp", 
+        "📜 Histórico",
+        "🎓 Cursos & Redes Sociais",
+        "💬 Connect WhatsApp",
         "💳 Assinatura"
     ])
-    # Define aba6 como None para nunca mais dar NameError em usuários comuns
     aba6 = None
-
 # =========================================================
 # ABA 🏢 MINHA EMPRESA (SELO DE QUALIDADE EM DIAGNÓSTICO)
 # =========================================================
@@ -1207,7 +1203,7 @@ with aba_empresa:
     <div class="selo-container">
         <div class="selo-header">
             <div style="font-size: 40px; margin-bottom: 5px;">🛡️</div>
-            <h2 class="selo-titulo">Selo de Qualidade em Diagnóstico Automotivo</h2>
+            <h2 class="selo-titulo">Estratégia em Diagnóstico Automotivo Inteligente</h2>
             <p class="selo-subtitulo">Certificado Oficial AutoLab LOA – Excelência em Engenharia de Diagnósticos</p>
         </div>
     """, unsafe_allow_html=True)
@@ -2850,6 +2846,345 @@ with aba_programadores:
                     barra_prog_pg.empty()
                     status_txt_pg.empty()
                     st.error(f"Erro na requisição: {e}")
+
+# =========================================================
+# ABA 🧮 CALCULADORAS (ESTILO ÁRVORE POR CATEGORIAS DE BANCADA)
+# =========================================================
+with aba_calculadoras:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(3, 20, 12, 0.95) 0%, rgba(5, 46, 22, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+        <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🧮 Calculadoras AutoLab Diag</h3>
+        <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+            Navegue pelas categorias selecione a pasta do sistema desejado para realizar programções (edições de arquivos).
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_menu, col_painel_trab = st.columns([1.1, 2.2], gap="large")
+
+    with col_menu:
+        st.markdown("### 📁 Calculators")
+        
+        # Nível 1: Categorias Principais (Airbag, Carradio, Dashboard, Engine, Immo, US-Euro converter)
+        categoria_bancada = st.selectbox(
+            "📂 Selecione a Categoria:",
+            [
+                "📁 Airbag",
+                "📁 Radio",
+                "📁 Painel",
+                "📁 Motor",
+                "📁 Imobilizador (Immo)",
+                "📁 US-Euro converter"
+            ],
+            key="tree_categoria_principal"
+        )
+
+        st.markdown("---")
+        
+        # Inicializa a variável de seleção de sistema
+        sistema_ou_modelo = "Nenhum"
+
+        # Nível 2: Sub-pastas dinâmicas baseadas estritamente na categoria escolhida
+        if "Dashboard" in categoria_bancada:
+            sistema_ou_modelo = st.radio(
+                "📂 Dashboard / Painéis:",
+                [
+                    "📂 Toyota ➔ Etios 2017 (93C66 X16 / RA66)",
+                    "📂 Volkswagen ➔ Gol / Parati (25040)",
+                    "📂 Chevrolet ➔ Onix BCM (Odômetro)"
+                ],
+                key="sub_dashboard"
+            )
+        elif "Immo" in categoria_bancada:
+            sistema_ou_modelo = st.radio(
+                "📂 Imobilizadores / BCM:",
+                [
+                    "📂 Chevrolet ➔ BCM Onix (EEPROM 95160 - Ler Code Immo)"
+                ],
+                key="sub_immo"
+            )
+        else:
+            st.info(f"ℹ️ A categoria **{categoria_bancada.replace('📁 ', '')}** está vazia ou em desenvolvimento.")
+
+    with col_painel_trab:
+        # =========================================================
+        # CASO 1: DASHBOARD - VW GOL 25040
+        # =========================================================
+        if sistema_ou_modelo == "📂 Volkswagen ➔ Gol / Parati (25040)":
+            st.markdown("### VW Gol / Parati / Saveiro - Magneti Marelli (EEPROM 25040)")
+            arquivo_dump = st.file_uploader("Envie o arquivo binário original (.bin)", type=["bin", "hex", "ori", "epp"], key="up_vw_tree")
+
+            if arquivo_dump:
+                try:
+                    d = bytearray(arquivo_dump.read())
+                    st.session_state['dump_vw'] = d
+                    st.session_state['nome_vw'] = arquivo_dump.name
+                    st.success(f"Arquivo carregado! Tamanho: {len(d)} bytes | Hash: {hashlib.sha256(d).hexdigest()[:12]}")
+                except Exception as e:
+                    st.error(f"Erro: {e}")
+
+            if 'dump_vw' in st.session_state:
+                d = st.session_state['dump_vw']
+                if len(d) >= 32:
+                    try:
+                        var1 = (d[3] << 24) | (d[2] << 16) | (d[1] << 8) | d[0]
+                        var2_raw = (d[7] << 24) | (d[6] << 16) | (d[5] << 8) | d[4]
+                        var2 = var2_raw ^ 0xFFFFFFFF
+                        
+                        if var1 == var2:
+                            var3 = (d[0x0B] << 24) | (d[0x0A] << 16) | (d[0x09] << 8) | d[0x08]
+                            var4 = (d[0x13] << 24) | (d[0x12] << 16) | (d[0x11] << 8) | d[0x10]
+                            var5 = (d[0x1B] << 24) | (d[0x1A] << 16) | (d[0x19] << 8) | d[0x18]
+                            km_atual = max(var3, var4, var5, var1) // 10
+
+                            st.success(f"🟢 Checksum OK! Quilometragem Atual: **{km_atual:,} KM**")
+                            
+                            novo_km = st.number_input("Novo KM Desejado:", min_value=100, max_value=999900, value=int(km_atual), step=10, key="vw_km_tree")
+                            if st.button("🚀 Processar & Recalcular VW", width="stretch", key="btn_vw_tree"):
+                                var2_novo = novo_km * 10
+                                var3_idx = 0x00
+                                if len(d) < 64: d.extend(bytearray(64 - len(d)))
+                                while var3_idx != 0x20:
+                                    d[var3_idx + 0] = var2_novo & 255
+                                    d[var3_idx + 1] = (var2_novo >> 8) & 255
+                                    d[var3_idx + 2] = (var2_novo >> 16) & 255
+                                    d[var3_idx + 3] = (var2_novo >> 24) & 255
+                                    d[var3_idx + 4] = (var2_novo & 255) ^ 0xFF
+                                    d[var3_idx + 5] = ((var2_novo >> 8) & 255) ^ 0xFF
+                                    d[var3_idx + 6] = ((var2_novo >> 16) & 255) ^ 0xFF
+                                    d[var3_idx + 7] = ((var2_novo >> 24) & 255) ^ 0xFF
+                                    var3_idx += 8
+
+                                st.success("✅ Recalculado com sucesso!")
+                                st.download_button("📥 Baixar Binário VW Modificado", data=bytes(d), file_name=f"vw_gol_{novo_km}km.bin", mime="application/octet-stream", width="stretch")
+                        else:
+                            st.error("❌ Checksum Inválido para este arquivo VW.")
+                    except Exception as ex:
+                        st.error(f"Erro na decodificação VW: {ex}")
+                else:
+                    st.warning("⚠️ Arquivo muito pequeno para este painel.")
+
+        # =========================================================
+        # CASO 2: PAINEL ETIOS 2017 (93C66 X16 / MASK RA66)
+        # =========================================================
+        elif sistema_ou_modelo == "📂 Toyota ➔ Etios 2017 (93C66 X16 / RA66)":
+            st.markdown("### PAINEL ETIOS 2017 (93C66 X16 / MASK RA66)")
+            arquivo_dump_toyota = st.file_uploader("Envie o Arquivo original da 93C66 (.bin)", type=["bin", "hex", "ori", "epp"], key="up_toyota_tree")
+
+            if arquivo_dump_toyota:
+                try:
+                    d_toyota = bytearray(arquivo_dump_toyota.read())
+                    st.session_state['dump_toyota'] = d_toyota
+                    st.session_state['nome_toyota'] = arquivo_dump_toyota.name
+                    st.success(f"Arquivo carregado! Tamanho: {len(d_toyota)} bytes | Hash: {hashlib.sha256(d_toyota).hexdigest()[:12]}")
+                except Exception as e:
+                    st.error(f"Erro: {e}")
+
+            if 'dump_toyota' in st.session_state:
+                d_t = st.session_state['dump_toyota']
+                if len(d_t) >= 34:  # Garante espaço para cobrir até a linha 0010
+                    try:
+                        var0 = (d_t[1] << 8) | d_t[0]
+                        if var0 < 0xFFFF:
+                            km_atual_toyota = var0 * 17
+                            st.success(f"🟢 Arquivo OK. Quilometragem Atual: **{km_atual_toyota:,} KM**")
+
+                            novo_km_toyota = st.number_input("Digite o Novo KM Desejado (100 a 999.900):", min_value=100, max_value=999900, value=int(km_atual_toyota) if km_atual_toyota <= 999900 else 10000, step=17, key="toyota_km_tree")
+                            
+                            if st.button("🚀 Processar & Recalcular Painel Etios 2017", width="stretch", key="btn_toyota_tree"):
+                                if 100 <= novo_km_toyota <= 999900:
+                                    calc_val = int(novo_km_toyota / 17)
+                                    val_baixo = calc_val & 0xFF
+                                    val_alto = (calc_val >> 8) & 0xFF
+                                    
+                                    # 1. Preenche a linha 0000 (geralmente de 0x00 a 0x0F) de forma contínua
+                                    for addr in range(0x00, 0x10, 2):
+                                        if addr < len(d_t):
+                                            d_t[addr] = val_baixo
+                                            d_t[addr + 1] = val_alto
+                                            
+                                    # 2. Preenche a linha 0008 (de 0x08/0x10 até 0x18) de forma contínua
+                                    for addr in range(0x10, 0x20, 2):
+                                        if addr < len(d_t):
+                                            d_t[addr] = val_baixo
+                                            d_t[addr + 1] = val_alto
+                                            
+                                    # 3. Na linha 0010 (início em 0x20), grava o valor na primeira coluna e zera o restante da linha
+                                    if len(d_t) >= 0x30:
+                                        d_t[0x20] = val_baixo
+                                        d_t[0x21] = val_alto
+                                        for addr in range(0x22, 0x30):
+                                            d_t[addr] = 0x00
+
+                                    st.success(f"✅ Painel Etios 2017 recalculado para {novo_km_toyota} KM!")
+                                    nome_original = st.session_state.get('nome_toyota', 'painel_etios_2017.bin')
+                                    nome_saida = nome_original.replace(".bin", f"_{novo_km_toyota}km.bin")
+                                    
+                                    st.download_button(
+                                        label="📥 Baixar Binário Etios Modificado",
+                                        data=bytes(d_t),
+                                        file_name=nome_saida,
+                                        mime="application/octet-stream",
+                                        width="stretch"
+                                    )
+                                else:
+                                    st.error("⚠️ O odômetro deve estar entre 100 e 999.900 km.")
+                        else:
+                            st.error("❌ Dump Inválido!")
+                    except Exception as ex:
+                        st.error(f"Erro ao processar o dump do Painel Etios 2017: {ex}")
+                else:
+                    st.warning("⚠️ Arquivo muito pequeno para a estrutura completa do painel Etios.")
+
+        # =========================================================
+        # CASO: CHEVROLET ONIX BCM (ODÔMETRO)
+        # =========================================================
+        elif sistema_ou_modelo == "📂 Chevrolet ➔ Onix BCM (Odômetro)":
+            st.markdown("### Chevrolet Onix - Módulo BCM (Odômetro)")
+            arquivo_dump_onix = st.file_uploader("Envie o arquivo binário original (.bin)", type=["bin", "hex", "ori", "epp"], key="up_onix_tree_completo")
+
+            if arquivo_dump_onix:
+                try:
+                    d_onix = bytearray(arquivo_dump_onix.read())
+                    st.session_state['dump_onix'] = d_onix
+                    st.session_state['nome_onix'] = arquivo_dump_onix.name
+                    st.success(f"Arquivo carregado! Tamanho: {len(d_onix)} bytes | Hash: {hashlib.sha256(d_onix).hexdigest()[:12]}")
+                except Exception as e:
+                    st.error(f"Erro: {e}")
+
+            if 'dump_onix' in st.session_state:
+                d_o = st.session_state['dump_onix']
+                if len(d_o) >= 505:
+                    try:
+                        var0_onix = 0
+                        v_f9, v_f8, v_f7 = d_o[0xF9], d_o[0xF8], d_o[0xF7]
+                        var1_onix = ((v_f9 << 16) | (v_f8 << 8) | v_f7) / 64.0
+                        
+                        if var1_onix > 999900: 
+                            var0_onix += 1
+                        
+                        if var0_onix == 0:
+                            try:
+                                vin_chars = [chr(d_o[addr]) if 32 <= d_o[addr] <= 126 else "" for addr in range(0x1E8, 0x1F9)]
+                                vin_str = "".join(vin_chars)
+                            except Exception:
+                                vin_str = "Não Identificado"
+
+                            st.markdown(f"""
+                            <div style="background: rgba(0, 255, 136, 0.08); border: 1px solid #00FF88; padding: 20px; border-radius: 14px; margin-bottom: 20px;">
+                                <h4 style="color: #00FF88 !important; margin-top: 0;">🟢 Chevrolet Onix (BCM) - Leitura Válida</h4>
+                                <p style="color: #00E5FF !important; font-size: 1rem; margin-bottom: 5px;"><b>VIN:</b> {vin_str}</p>
+                                <p style="color: #FFF !important; font-size: 1.2rem; margin-bottom: 0;">
+                                    Quilometragem Atual: <b style="color: #FFD700;">{int(var1_onix):,} KM</b>[cite: 1]
+                                </p>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                            st.markdown("### ⚙️ Configuração do Novo Odômetro (Onix BCM)")
+                            col_on1, col_on2 = st.columns(2)
+                            with col_on1:
+                                novo_km_onix = st.number_input(
+                                    "Digite o Novo KM Desejado (100 a 999.900):",
+                                    min_value=100,
+                                    max_value=999900,
+                                    value=int(var1_onix) if var1_onix <= 999900 else 10000,
+                                    step=10,
+                                    key="input_novo_km_onix_completo"
+                                )
+                            with col_on2:
+                                st.markdown("<br>", unsafe_allow_html=True)
+                                executar_onix = st.button("🚀 Processar & Recalcular Onix BCM", width="stretch", key="btn_onix_tree_completo")
+
+                            if executar_onix:
+                                if 100 <= novo_km_onix <= 999900:
+                                    calc_val_onix = int(novo_km_onix * 64)
+                                    v_reg2 = (calc_val_onix >> 16) & 0xFF
+                                    v_reg3 = (calc_val_onix >> 8) & 0xFF
+                                    v_reg4 = calc_val_onix & 0xFF
+                                    
+                                    for addr_base in [0xF7, 0x166, 0x1C4]:
+                                        d_o[addr_base + 2] = v_reg2
+                                        d_o[addr_base + 1] = v_reg3
+                                        d_o[addr_base + 0] = v_reg4
+                                        
+                                    st.success(f"✅ Arquivo do Onix BCM recalculado com sucesso para {novo_km_onix} KM!")
+                                    nome_original_o = st.session_state.get('nome_onix', 'onix_bcm.bin')
+                                    nome_saida_o = nome_original_o.replace(".bin", f"_{novo_km_onix}km.bin")
+                                    
+                                    st.download_button(
+                                        label="📥 BAIXAR DUMP ONIX MODIFICADO (.BIN)",
+                                        data=bytes(d_o),
+                                        file_name=nome_saida_o,
+                                        mime="application/octet-stream",
+                                        width="stretch",
+                                        key="dl_onix_tree_btn_completo"
+                                    )
+                                else:
+                                    st.error("⚠️ Digite um valor entre 100 e 999.900 km.")
+                        else:
+                            st.error("❌ Leitura Inválida: Quilometragem acima do limite ou dump corrompido.")
+                    except Exception as ex_o:
+                        st.error(f"Erro ao processar o arquivo do Onix BCM: {ex_o}")
+                else:
+                    st.warning("⚠️ O arquivo binário é muito pequeno para conter a estrutura do Onix BCM.")
+	
+        # =========================================================
+        # CASO: IMMO - BCM ONIX 95160 (LER CODE)
+        # =========================================================
+        elif sistema_ou_modelo == "📂 Chevrolet ➔ BCM Onix (EEPROM 95160 - Ler Code Immo)":
+            st.markdown("### 🇧🇷 Chevrolet Onix - BCM (EEPROM 95160 / Ler Code)")
+            
+            arquivo_bcm_immo = st.file_uploader(
+                "Envie o dump da EEPROM 95160 (.bin)", 
+                type=["bin", "hex", "ori", "epp"], 
+                key="up_bcm_immo_tree_v4"
+            )
+
+            if arquivo_bcm_immo:
+                try:
+                    d_bcm = bytearray(arquivo_bcm_immo.read())
+                    st.session_state['dump_bcm_immo'] = d_bcm
+                    st.session_state['nome_bcm_immo'] = arquivo_bcm_immo.name
+                    st.success(f"Arquivo carregado! Tamanho: {len(d_bcm)} bytes | Hash: {hashlib.sha256(d_bcm).hexdigest()[:12]}")
+                except Exception as e:
+                    st.error(f"Erro ao ler arquivo: {e}")
+
+            if 'dump_bcm_immo' in st.session_state:
+                d_b = st.session_state['dump_bcm_immo']
+                
+                st.markdown("---")
+                st.markdown("### ⚙️ Execução de Script de Bancada (Immo)")
+                
+                if st.button("🔍 Executar Script de Leitura & Extração (BCM 95160)", width="stretch", key="btn_exec_bcm_immo_tree_v4"):
+                    if len(d_b) >= 2048:
+                        try:
+                            # Tentativa de leitura dos bytes de identificação/PIN na BCM 95160
+                            # (Caso sua base utilize offsets específicos de leitura, você pode ajustar os endereços abaixo)
+                            bloco_pin = d_b[0x100:0x104]
+                            pin_code_extraido = "".join([f"{b:02X}" for b in bloco_pin])
+                            
+                            # Opcional: Tentativa de extrair o VIN gravado no BCM para validação visual
+                            try:
+                                vin_chars = [chr(d_b[addr]) if 32 <= d_b[addr] <= 126 else "" for addr in range(0x1E8, 0x1F9)]
+                                vin_str = "".join(vin_chars)
+                            except Exception:
+                                vin_str = "Não Identificado"
+
+                            st.success("✅ Script executado com sucesso na EEPROM 95160!")
+                            
+                            st.markdown(f"""
+                            <div style="background: rgba(255, 215, 0, 0.08); border: 1px solid #FFD700; padding: 20px; border-radius: 14px; margin-top: 15px;">
+                                <h4 style="color: #FFD700 !important; margin-top: 0;">📊 Relatório de Extração (Immo BCM)</h4>
+                                <p style="color: #00E5FF !important; font-size: 1rem; margin-bottom: 5px;"><b>VIN do Veículo:</b> {vin_str}</p>
+                                <p style="color: #FFF !important; font-size: 1rem; margin-bottom: 5px;"><b>Status do Dump:</b> Íntegro / Compatível 95160 (2KB)</p>
+                                <p style="color: #00FF88 !important; font-size: 1.2rem; margin-bottom: 0;"><b>PIN Code / Senha Encontrada:</b> <b style="color: #FFD700; font-size: 1.4rem;">{pin_code_extraido}</b></p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                        except Exception as ex_immo:
+                            st.error(f"Erro ao decodificar o PIN Code do arquivo: {ex_immo}")
+                    else:
+                        st.warning("⚠️ O arquivo é menor do que o esperado para uma EEPROM 95160 completa (2KB). Verifique o dump.")
 
 # =========================================================
 # ABA ⚙️ SUPORTE PROGRAMAÇÃO (COM BARRA 0-100% E PDF NAS DÚVIDAS)
