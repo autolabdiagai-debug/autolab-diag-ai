@@ -1122,6 +1122,238 @@ else:
     aba6 = None
 
 # =========================================================
+# ABA 🌐 AUTOREDE (REDE SOCIAL AUTOMOTIVA ESTILO INSTAGRAM)
+# =========================================================
+with aba_autorede_feed:
+    st.markdown("""
+    <style>
+        /* Força fundo branco e texto preto na caixa fechada do selectbox */
+        div[data-baseweb="select"] > div {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }
+        
+        /* Força texto preto nos itens selecionados e no texto visível */
+        div[data-baseweb="select"] span, div[data-baseweb="select"] div {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+        }
+
+        /* Força texto preto na lista suspensa (dropdown) de opções */
+        ul[data-baseweb="menu"] li {
+            color: #000000 !important;
+            background-color: #FFFFFF !important;
+        }
+
+        /* Campos de texto e área de texto com fundo branco e letras pretas */
+        input[type="text"], textarea {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# 1. CRIAÇÃO E ATUALIZAÇÃO SEGURA DAS TABELAS NO BANCO DE DADOS
+    with sqlite3.connect('diagnosticos.db') as conn_ar:
+        c_ar = conn_ar.cursor()
+        
+        # Cria a tabela de posts V2 se não existir
+        c_ar.execute('''
+            CREATE TABLE IF NOT EXISTS autorede_posts_v2 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                autor_nome TEXT,
+                autor_email TEXT,
+                texto TEXT,
+                tipo_midia TEXT,
+                caminho_midia BLOB,
+                data_post TEXT,
+                curtidas INTEGER DEFAULT 0,
+                estrelas INTEGER DEFAULT 0,
+                diamantes INTEGER DEFAULT 0
+            )
+        ''')
+        
+        # Cria a tabela de comentários se não existir
+        c_ar.execute('''
+            CREATE TABLE IF NOT EXISTS autorede_comentarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                post_id INTEGER,
+                autor_nome TEXT,
+                comentario TEXT,
+                data_comentario TEXT
+            )
+        ''')
+        
+        # Garante com segurança que a coluna 'autor_nome' exista
+        try:
+            c_ar.execute("ALTER TABLE autorede_comentarios ADD COLUMN autor_nome TEXT;")
+        except Exception:
+            pass
+            
+        conn_ar.commit()
+
+    # 2. SEÇÃO DE NOVA PUBLICAÇÃO
+    with st.expander("➕ Criar Nova Publicação na AutoRede", expanded=False):
+        with st.form("form_criar_post_autorede"):
+            st.markdown("### 📸 O que você quer compartilhar com a rede hoje?")
+            texto_post = st.text_area("Legenda / Relato Técnico:", placeholder="Descreva sua dica de reparo, oscilograma, dúvida de bancada ou solução...")
+            
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                tipo_post_midia = st.selectbox("Tipo de Mídia Anexada:", ["Apenas Texto", "Foto / Imagem", "Vídeo", "Áudio de Bancada"])
+            with col_p2:
+                arquivo_midia_post = st.file_uploader("Anexar Arquivo Mídia", type=["jpg", "jpeg", "png", "mp4", "mov", "avi", "wav", "mp3", "ogg"])
+            
+            enviar_post_btn = st.form_submit_button("🚀 Publicar na AutoRede")
+            
+            if enviar_post_btn:
+                nome_atual = st.session_state.get('user_nome', 'Usuário AutoRede')
+                email_atual = st.session_state.get('user_email', 'sem_email@autolab.com')
+                data_agora = datetime.now().strftime("%d/%m/%Y %H:%M")
+                
+                bin_midia = None
+                if arquivo_midia_post:
+                    bin_midia = arquivo_midia_post.read()
+                
+                if texto_post.strip() or bin_midia:
+                    conn_p = sqlite3.connect('diagnosticos.db')
+                    cp = conn_p.cursor()
+                    cp.execute('''
+                        INSERT INTO autorede_posts_v2 (autor_nome, autor_email, texto, tipo_midia, caminho_midia, data_post)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (nome_atual, email_atual, texto_post, tipo_post_midia, bin_midia, data_agora))
+                    conn_p.commit()
+                    conn_p.close()
+                    st.success("✅ Publicação realizada com sucesso na AutoRede!")
+                    st.rerun()
+                else:
+                    st.warning("⚠️ Escreva um texto ou anexe uma mídia para publicar.")
+
+    st.markdown("---")
+    st.markdown("### 📱 Feed de Publicações da Comunidade")
+
+    # 3. CARREGAR E EXIBIR AS PUBLICAÇÕES DO FEED
+    conn_f = sqlite3.connect('diagnosticos.db')
+    posts_df = pd.read_sql_query("SELECT * FROM autorede_posts_v2 ORDER BY id DESC", conn_f)
+    conn_f.close()
+
+    if posts_df.empty:
+        st.info("ℹ️ Nenhuma publicação na AutoRede ainda. Seja o primeiro a compartilhar um diagnóstico ou dica técnica!")
+    else:
+        for _, row in posts_df.iterrows():
+            post_id = row['id']
+            autor = row['autor_nome']
+            data_p = row['data_post']
+            texto = row['texto']
+            tipo_m = row['tipo_midia']
+            blob_m = row['caminho_midia']
+            curtidas = row['curtidas']
+            estrelas = row['estrelas']
+            diamantes = row['diamantes']
+
+            st.markdown(f"""
+            <div style="background: rgba(5, 46, 22, 0.6); border: 1px solid #00FF88; border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #065F46; padding-bottom: 8px; margin-bottom: 12px;">
+                    <div>
+                        <span style="font-size: 1.1rem; font-weight: 800; color: #FFD700;">👤 {autor}</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.8rem; color: #A7F3D0;">🕒 {data_p}</span>
+                    </div>
+                </div>
+                <p style="color: #FFF !important; font-size: 1rem; line-height: 1.5; margin-bottom: 15px;">{texto}</p>
+            """, unsafe_allow_html=True)
+
+            if blob_m is not None and len(blob_m) > 0:
+                midia_io = io.BytesIO(blob_m)
+                if "Foto" in tipo_m or "Imagem" in tipo_m:
+                    try:
+                        img_exib = Image.open(midia_io)
+                        st.image(img_exib, caption="Mídia da Publicação", width=500)
+                    except Exception:
+                        st.error("Erro ao carregar imagem.")
+                elif "Vídeo" in tipo_m:
+                    st.video(midia_io)
+                elif "Áudio" in tipo_m:
+                    st.audio(midia_io, format="audio/mp3")
+
+            col_b1, col_b2, col_b3, col_b4 = st.columns(4)
+            
+            with col_b1:
+                if st.button(f"❤️ Curtir ({curtidas})", key=f"like_{post_id}"):
+                    conn_up = sqlite3.connect('diagnosticos.db')
+                    cu = conn_up.cursor()
+                    cu.execute('UPDATE autorede_posts_v2 SET curtidas = curtidas + 1 WHERE id = ?', (post_id,))
+                    conn_up.commit()
+                    conn_up.close()
+                    st.rerun()
+                    
+            with col_b2:
+                if st.button(f"⭐ Estrela ({estrelas})", key=f"star_{post_id}"):
+                    conn_up = sqlite3.connect('diagnosticos.db')
+                    cu = conn_up.cursor()
+                    cu.execute('UPDATE autorede_posts_v2 SET estrelas = estrelas + 1 WHERE id = ?', (post_id,))
+                    conn_up.commit()
+                    conn_up.close()
+                    st.rerun()
+                    
+            with col_b3:
+                if st.button(f"💎 Diamante ({diamantes})", key=f"diam_{post_id}"):
+                    conn_up = sqlite3.connect('diagnosticos.db')
+                    cu = conn_up.cursor()
+                    cu.execute('UPDATE autorede_posts_v2 SET diamantes = diamantes + 1 WHERE id = ?', (post_id,))
+                    conn_up.commit()
+                    conn_up.close()
+                    st.rerun()
+
+            with col_b4:
+                st.markdown("<div style='text-align: right; padding-top: 6px; color: #00FF88; font-size: 0.85rem;'><b>Engajamento Ativo</b></div>", unsafe_allow_html=True)
+
+            st.markdown("---")
+            st.markdown("💬 **Comentários da Comunidade:**")
+            
+            conn_com = sqlite3.connect('diagnosticos.db')
+            comentarios_df = pd.read_sql_query("SELECT autor_nome, comentario, data_comentario FROM autorede_comentarios WHERE post_id = ? ORDER BY id ASC", conn_com, params=(post_id,))
+            conn_com.close()
+
+            if not comentarios_df.empty:
+                for _, com_row in comentarios_df.iterrows():
+                    st.markdown(f"""
+                    <div style="background: rgba(3, 20, 12, 0.4); border-left: 3px solid #FFD700; padding: 6px 10px; border-radius: 4px; margin-bottom: 6px; font-size: 0.9rem;">
+                        <b style="color: #FFD700;">{com_row['autor_nome']}</b> <span style="color: #888; font-size: 0.75rem;">({com_row['data_comentario']})</span>:<br>
+                        <span style="color: #FFF;">{com_row['comentario']}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.caption("Nenhum comentário ainda. Seja o primeiro a comentar!")
+
+            form_key_com = f"form_comentario_{post_id}"
+            with st.form(key=form_key_com):
+                texto_comentario = st.text_input("Escreva um comentário técnico:", key=f"input_com_{post_id}")
+                enviar_com_btn = st.form_submit_button("Comentar")
+                
+                if enviar_com_btn:
+                    if texto_comentario.strip():
+                        autor_c = st.session_state.get('user_nome', 'Técnico AutoLab')
+                        data_c = datetime.now().strftime("%d/%m/%Y %H:%M")
+                        
+                        conn_ic = sqlite3.connect('diagnosticos.db')
+                        cic = conn_ic.cursor()
+                        cic.execute('''
+                            INSERT INTO autorede_comentarios (post_id, autor_nome, comentario, data_comentario)
+                            VALUES (?, ?, ?, ?)
+                        ''', (post_id, autor_c, texto_comentario, data_c))
+                        conn_ic.commit()
+                        conn_ic.close()
+                        st.success("Comentário adicionado!")
+                        st.rerun()
+                    else:
+                        st.warning("Digite um texto para comentar.")
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+# =========================================================
 # ABA 🚛 DIESEL (COM A PASTA / SUB-ABA ARLA DIAG)
 # =========================================================
 with aba_diesel:
