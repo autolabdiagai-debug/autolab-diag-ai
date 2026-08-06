@@ -22,8 +22,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import pandas as pd
 import streamlit as st
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
 import streamlit as str_lit
 
 
