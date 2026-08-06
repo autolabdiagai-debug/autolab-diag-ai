@@ -1764,7 +1764,7 @@ with aba_empresa:
     with col_painel3:
         st.markdown(f"""
         <div class="metric-card-neon">
-            <div style="color: #00E5FF; font-size: 14px; font-weight: 700;">🌟 PADRÃO TÉCNICO</div>
+            <div style="color: #00E5FF; font-size: 14px; font-weight: 700;">🎓 NÍVEL TÉCNICO</div>
             <div style="color: #FFD700; font-size: 1.5rem; font-weight: 900; margin-top: 8px;">Especialista</div>
         </div>
         """, unsafe_allow_html=True)
@@ -2721,6 +2721,19 @@ with aba_uces:
 
     st.markdown("---")
 
+# 5. CLICK AQUI PARA PESQUISA DA FOLHA DE DADOS DOS COMPONENTES, MEMÓRIAS E PROCESSADORES.
+    st.markdown("""
+    <div style="background: rgba(0, 229, 255, 0.08); border: 1px solid #00E5FF; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div>
+            <h4 style="color: #00E5FF !important; margin: 0; font-size: 1rem;">🌐 Consulta Rápida de Datasheets Oficiais</h4>
+            <p style="color: #A7F3D0 !important; font-size: 0.85rem; margin: 3px 0 0 0;">Precisa do manual de pinagem e especificações elétricas do componente? Click no Batão Azul:</p>
+        </div>
+        <div>
+            <a href="https://www.alldatasheet.com/" target="_blank" style="background: linear-gradient(135deg, #00E5FF 0%, #0088FF 100%); color: #03140C !important; padding: 10px 20px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 0.9rem; box-shadow: 0 0 12px rgba(0,229,255,0.4);">ACESSAR ALLDATASHEET</a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     if st.button("🧠 EXECUTAR ANÁLISE COMPLETA CONSOLIDADA E GERAR REPORT U.C.E 🚀", width="stretch"):
         status_atual_check = verificar_status_usuario(st.session_state['user_email'])
         if st.session_state['user_email'] != EMAIL_ADM and (status_atual_check["tipo"] == "expirado" or (status_atual_check["tipo"] == "teste" and status_atual_check["fichas"] <= 0)):
@@ -3195,12 +3208,12 @@ with aba_programadores:
 
     st.markdown("---")
 
-    # 5. LINK PARA PESQUISA DE DATASHEETS OFICIAL
+    # 5. CLICK AQUI PARA PESQUISA DA FOLHA DE DADOS DOS COMPONENTES, MEMÓRIAS E PROCESSADORES.
     st.markdown("""
     <div style="background: rgba(0, 229, 255, 0.08); border: 1px solid #00E5FF; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
         <div>
             <h4 style="color: #00E5FF !important; margin: 0; font-size: 1rem;">🌐 Consulta Rápida de Datasheets Oficiais</h4>
-            <p style="color: #A7F3D0 !important; font-size: 0.85rem; margin: 3px 0 0 0;">Precisa do manual de pinagem e especificações elétricas do componente? Acesse a plataforma abaixo:</p>
+            <p style="color: #A7F3D0 !important; font-size: 0.85rem; margin: 3px 0 0 0;">Precisa do manual de pinagem e especificações elétricas do componente? Click no Batão Azul:</p>
         </div>
         <div>
             <a href="https://www.alldatasheet.com/" target="_blank" style="background: linear-gradient(135deg, #00E5FF 0%, #0088FF 100%); color: #03140C !important; padding: 10px 20px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 0.9rem; box-shadow: 0 0 12px rgba(0,229,255,0.4);">ACESSAR ALLDATASHEET</a>
@@ -3382,31 +3395,37 @@ with aba_calculadoras:
                 "📁 Remape (Arla/Pot/Egr/Dpf/Dtc)",
                 "📁 Sincronismo UCEs"
             ],
-            key="tree_categoria_principal_v7"
+            key="tree_categoria_principal_v14"
         )
 
         st.markdown("---")
         sistema_ou_modelo = "Nenhum"
 
         # Nível 2: Sub-pastas dinâmicas
-        if "Painel Carros" in categoria_bancada or "Dashboard" in categoria_bancada:
+        if "Airbag" in categoria_bancada:
+            sistema_ou_modelo = "Pasta_Vazia_Airbag"
+        elif "Radio" in categoria_bancada:
+            sistema_ou_modelo = "Pasta_Vazia_Radio"
+        elif "Painel Carros" in categoria_bancada or "Dashboard" in categoria_bancada:
             sistema_ou_modelo = st.radio(
                 "📂 Dashboard / Painéis Carros:",
                 [
-                    "📂 Toyota ➔ Etios 2017 (93C66 X16 / RA66)",
                     "📂 Volkswagen ➔ Gol / Parati (25040)",
+                    "📂 Toyota ➔ Etios 2017 (93C66 X16 / RA66)",
                     "📂 Chevrolet ➔ Onix BCM (Odômetro)"
                 ],
-                key="sub_dashboard_v7"
+                key="sub_dashboard_v14"
             )
         elif "Painel Motos" in categoria_bancada:
             sistema_ou_modelo = st.radio(
                 "📂 Painéis Motos:",
                 [
-                    "📂 Honda ➔ Bros (EEPROM 24C04)"
+                    "📁 Painel Motos (Aguardando Novos Procedimentos)"
                 ],
-                key="sub_painel_motos_v7"
+                key="sub_painel_motos_v14"
             )
+        elif "Motor" in categoria_bancada:
+            sistema_ou_modelo = "Pasta_Vazia_Motor"
         elif "Immo" in categoria_bancada:
             sistema_ou_modelo = st.radio(
                 "📂 Imobilizadores / Decode:",
@@ -3415,7 +3434,7 @@ with aba_calculadoras:
                     "📂 Volkswagen ➔ -Decode- VW: ME 17.5.20 e ME 17.5.24",
                     "📂 Volkswagen ➔ -Decode- VW: EDC17CP20 e EDC17C54"
                 ],
-                key="sub_immo_v7"
+                key="sub_immo_v14"
             )
         elif "Sincronismo UCEs" in categoria_bancada:
             sistema_ou_modelo = st.radio(
@@ -3423,18 +3442,65 @@ with aba_calculadoras:
                 [
                     "📂 Audi / VW ➔ Audi A3 (Sincronismo e Bancada)"
                 ],
-                key="sub_sincro_v7"
+                key="sub_sincro_v14"
             )
         elif "Remape" in categoria_bancada:
             sistema_ou_modelo = "Remape_Solutions"
         else:
-            st.info(f"ℹ️ A categoria **{categoria_bancada.replace('📁 ', '')}** está vazia ou em desenvolvimento.")
+            sistema_ou_modelo = "Pasta_Vazia_Geral"
 
     with col_painel_trab:
         # =========================================================
+        # MÓDULOS VAZIOS / EM DESENVOLVIMENTO (ESTILO PADRÃO)
+        # =========================================================
+        if sistema_ou_modelo == "Pasta_Vazia_Airbag":
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(15, 30, 20, 0.95) 0%, rgba(20, 60, 30, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🛡️ Módulo Airbag (Crash Data)</h3>
+                <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+                    Reparo, limpeza de crash data e gerenciamento de centrais de airbag.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.info("💡 Esta categoria está em desenvolvimento ativo. Novos softwares e calculadoras serão disponibilizados em breve.")
+
+        elif sistema_ou_modelo == "Pasta_Vazia_Radio":
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(15, 30, 20, 0.95) 0%, rgba(20, 60, 30, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">📻 Decodificação de Rádios e Multimídias</h3>
+                <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+                    Recuperação de códigos e desbloqueio de centrais multimídia e som original de fábrica.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.info("💡 Esta categoria está em desenvolvimento ativo. Novos softwares e calculadoras serão disponibilizados em breve.")
+
+        elif sistema_ou_modelo == "Pasta_Vazia_Motor":
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(15, 30, 20, 0.95) 0%, rgba(20, 60, 30, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">⚙️ Gerenciamento de Motor (ECU)</h3>
+                <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+                    Ajustes de parâmetros, clonagens e calibrações específicas de centrais de injeção.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.info("💡 Esta categoria está em desenvolvimento ativo. Novos softwares e calculadoras serão disponibilizados em breve.")
+
+        elif sistema_ou_modelo == "Pasta_Vazia_Geral":
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(15, 30, 20, 0.95) 0%, rgba(20, 60, 30, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">📁 AutoLab Diag - Ferramentas de Bancada</h3>
+                <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+                    Ambiente de engenharia reversa e modificação de arquivos de bancada automotiva.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.info("💡 Esta categoria está em desenvolvimento ativo. Novos softwares e calculadoras serão disponibilizados em breve.")
+
+        # =========================================================
         # MÓDULO: REMAPE / OFF (EGR / DPF / DTC OFF + ANÁLISE IA)
         # =========================================================
-        if sistema_ou_modelo == "Remape_Solutions":
+        elif sistema_ou_modelo == "Remape_Solutions":
             st.markdown("""
             <div style="background: linear-gradient(135deg, rgba(30, 15, 10, 0.95) 0%, rgba(60, 25, 10, 0.9) 100%); border: 2px solid #FF8C00; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(255, 140, 0, 0.3); margin-bottom: 20px;">
                 <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">⚡ Remape & Solutions (POWER/ EGR / DPF / DTC)</h3>
@@ -3461,9 +3527,6 @@ with aba_calculadoras:
                     dump_remap = bytearray(arquivo_remape.read())
                     tamanho_remap = len(dump_remap)
 
-                    # =========================================================
-                    # ANÁLISE DE IA: DECIFRAÇÃO DE METADADOS DA CENTRAL
-                    # =========================================================
                     conteudo_texto = dump_remap.decode('latin-1', errors='ignore')
                     
                     hw_detectado = "U7M88_HR" if "U7M88_HR" in conteudo_texto else "Não Identificado"
@@ -3499,9 +3562,6 @@ with aba_calculadoras:
                     else:
                         st.success("🟢 Validação Concluída: O arquivo pertence ao veículo correto e está pronto para modificação.")
 
-                    # =========================================================
-                    # RENDERIZAÇÃO 3D INTERATIVA DO MAPA DE INJEÇÃO
-                    # =========================================================
                     st.markdown("---")
                     st.markdown("### 🌐 Visualização 3D da Topografia do Mapa")
 
@@ -3583,83 +3643,18 @@ with aba_calculadoras:
                 st.info("💡 Envie o arquivo binário original para ativar a decodificação da IA, o modelo 3D e aplicar o script EGR/DPF/DTC Off.")
 
         # =========================================================
-        # MÓDULO: HONDA BROS (EEPROM 24C04 - PAINEL MOTOS)
+        # MÓDULO: PAINEL MOTOS (VAZIO / AGUARDANDO)
         # =========================================================
-        elif sistema_ou_modelo == "📂 Honda ➔ Bros (EEPROM 24C04)":
+        elif sistema_ou_modelo == "📁 Painel Motos (Aguardando Novos Procedimentos)":
             st.markdown("""
             <div style="background: linear-gradient(135deg, rgba(15, 30, 20, 0.95) 0%, rgba(20, 60, 30, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
-                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🏍️ Honda Bros - Painel (EEPROM 24C04)</h3>
+                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🏍️ Painel Motos</h3>
                 <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
-                    Leitura, decodificação e ajuste de quilometragem para painéis Honda Bros com memória 24C04.
+                    Selecione ou adicione novos procedimentos de painéis de motocicletas nesta pasta conforme necessário.
                 </p>
             </div>
             """, unsafe_allow_html=True)
-
-            arquivo_bros = st.file_uploader(
-                "Envie o arquivo original da EEPROM 24C04 (.bin / .hex)",
-                type=["bin", "hex", "ori", "epp"],
-                key="up_honda_bros_24c04_unique_key"
-            )
-
-            if arquivo_bros:
-                try:
-                    dump_bros = bytearray(arquivo_bros.read())
-                    tamanho_bros = len(dump_bros)
-                    
-                    st.markdown(f"**Tamanho Lido:** `{tamanho_bros} Bytes`")
-                    st.markdown(f"**Hash SHA-256:** `{hashlib.sha256(dump_bros).hexdigest()[:16]}`")
-
-                    if tamanho_bros < 512:
-                        st.warning("⚠️ Atenção: O arquivo possui tamanho inferior aos 512 bytes esperados para uma EEPROM 24C04 completa.")
-                    else:
-                        val_bruto_1 = int.from_bytes(dump_bros[0:2], byteorder='little')
-                        km_atual_calculado = val_bruto_1 * 25
-
-                        st.markdown(f"""
-                        <div style="background: rgba(0, 255, 136, 0.08); border: 1px solid #00FF88; padding: 20px; border-radius: 14px; margin-bottom: 20px;">
-                            <h4 style="color: #00FF88 !important; margin-top: 0;">🟢 Leitura de Bancada Concluída</h4>
-                            <p style="color: #00E5FF !important; font-size: 1rem; margin-bottom: 5px;"><b>Valor Hexadecimal Lido (Addr 00-01):</b> <code>{dump_bros[0]:02X} {dump_bros[1]:02X}</code></p>
-                            <p style="color: #FFF !important; font-size: 1.2rem; margin-bottom: 0;">
-                                Quilometragem Atual no Arquivo: <b style="color: #FFD700; font-size: 1.4rem;">{km_atual_calculado:,} KM</b>
-                            </p>
-                        </div>
-                        """, unsafe_allow_html=True)
-
-                        novo_km_bros = st.number_input(
-                            "Digite o Novo KM Desejado:",
-                            min_value=0,
-                            max_value=999999,
-                            value=int(km_atual_calculado) if km_atual_calculado <= 999999 else 10000,
-                            step=25,
-                            key="input_novo_km_bros_unique"
-                        )
-
-                        if st.button("🚀 Processar & Recalcular Honda Bros", use_container_width=True, key="btn_exec_bros_unique"):
-                            fator_calc = int(novo_km_bros // 25)
-                            val_baixo = fator_calc & 0xFF
-                            val_alto = (fator_calc >> 8) & 0xFF
-
-                            for addr in range(0x00, 0x20, 2):
-                                if addr + 1 < len(dump_bros):
-                                    dump_bros[addr] = val_baixo
-                                    dump_bros[addr + 1] = val_alto
-
-                            st.success(f"✅ Painel Honda Bros recalculado com sucesso para {novo_km_bros} KM!")
-                            
-                            nome_orig = arquivo_bros.name.replace(".bin", f"_{novo_km_bros}km.bin")
-                            st.download_button(
-                                label="📥 Baixar Dump Honda Bros Modificado (.BIN)",
-                                data=bytes(dump_bros),
-                                file_name=nome_orig,
-                                mime="application/octet-stream",
-                                use_container_width=True,
-                                key="dl_btn_bros_mod_unique"
-                            )
-
-                except Exception as ex_bros:
-                    st.error(f"❌ Erro ao processar o dump da Honda Bros: {ex_bros}")
-            else:
-                st.info("💡 Envie um arquivo binário (.bin/.hex) da EEPROM 24C04 para visualizar o KM atual e iniciar o projeto.")
+            st.info("💡 Pasta de painéis de motos limpa e pronta para receber novos arquivos de bancada.")
 
         # =========================================================
         # MÓDULO: AUDI A3 / PAINÉIS & EEPROM (SINCRONISMO UCES)
@@ -3968,7 +3963,7 @@ with aba_calculadoras:
                         st.error(f"Erro ao processar o arquivo da ECU: {ex_24}")
 
         # =========================================================
-        # CASO: DASHBOARD - VW GOL 25040
+        # CASO: DASHBOARD - VW GOL / PARATI (25040)
         # =========================================================
         elif sistema_ou_modelo == "📂 Volkswagen ➔ Gol / Parati (25040)":
             st.markdown("### VW Gol / Parati / Saveiro - Magneti Marelli (EEPROM 25040)")
@@ -4086,12 +4081,8 @@ with aba_calculadoras:
                                     )
                                 else:
                                     st.error("⚠️ O odômetro deve estar entre 100 e 999.900 km.")
-                        else:
-                            st.error("❌ Dump Inválido!")
                     except Exception as ex:
                         st.error(f"Erro ao processar o dump do Painel Etios 2017: {ex}")
-                else:
-                    st.warning("⚠️ Arquivo muito pequeno para a estrutura completa do painel Etios.")
 
         # =========================================================
         # CASO: CHEVROLET ONIX BCM (ODÔMETRO)
@@ -4137,7 +4128,6 @@ with aba_calculadoras:
                             </div>
                             """, unsafe_allow_html=True)
 
-                            st.markdown("### ⚙️ Configuração do Novo Odômetro (Onix BCM)")
                             col_on1, col_on2 = st.columns(2)
                             with col_on1:
                                 novo_km_onix = st.number_input(
@@ -4178,13 +4168,9 @@ with aba_calculadoras:
                                     )
                                 else:
                                     st.error("⚠️ Digite um valor entre 100 e 999.900 km.")
-                        else:
-                            st.error("❌ Leitura Inválida: Quilometragem acima do limite ou dump corrompido.")
                     except Exception as ex_o:
                         st.error(f"Erro ao processar o arquivo do Onix BCM: {ex_o}")
-                else:
-                    st.warning("⚠️ O arquivo binário é muito pequeno para conter a estrutura do Onix BCM.")
-    
+
         # =========================================================
         # CASO: IMMO - BCM ONIX 95160 (LER CODE)
         # =========================================================
@@ -4244,21 +4230,21 @@ with aba_calculadoras:
 # ABA ⚙️ SUPORTE PROGRAMAÇÃO (COM BARRA 0-100% E PDF NAS DÚVIDAS)
 # =========================================================
 with aba_programacao:
-    st.subheader("⚙️ Suporte Avançado de Programação & Arquivos Binários")
-    st.write("Calculadora científica/programador estilo Windows, Editor HEX com visualizador Buffer 16 colunas, Leitor de CKS & ASCII Inteligente via IA, e Comparador de Arquivos.")
+    st.subheader("⚙️ Suporte Avançado em Programação de Módulos em Geral")
+    st.write("Área Reservada a Programadores Automotivo (Engenharia Reversa de Arquivos BIN/HEX).")
     st.markdown("---")
 
     tab_calc, tab_hex, tab_cks, tab_comp, tab_duv_prog = st.tabs([
-        "🧮 Calculadora Computador", 
-        "📝 Editor HEX & Buffer 16xN", 
-        "🔍 CKS & Extração ASCII (IA)", 
+        "🧮 Calculadoras Online", 
+        "📝 Editor & Buffer Base Hexa 16", 
+        "🔍 Extração Inteligente ASCII", 
         "📊 Comparador de Arquivos", 
         "💬 Dúvidas sobre Arquivos"
     ])
 
     with tab_calc:
-        st.markdown("### 🧮 Calculadora Profissional (Estilo Windows)")
-        st.caption("Você pode clicar nos botões do mouse ou digitar diretamente do visor com o teclado do computador:")
+        st.markdown("### 🧮 Calculadoras Online")
+        st.caption("Vamos Utilizar aqui modelos de Calculadoras Online com ótimas funções de Programação:")
 
         if 'calc_input' not in st.session_state:
             st.session_state['calc_input'] = "0"
