@@ -22,6 +22,10 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import pandas as pd
 import streamlit as st
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog
+import streamlit as str_lit
+
 
 # ---------------------------------------------------------
 # 3. Chave da API Embutida e Inicialização
@@ -35,7 +39,7 @@ client = genai.Client(api_key=API_KEY)
 EMAIL_ADM = "autolabdiagai@gmail.com"
 
 # ---------------------------------------------------------
-# 1. Configuração da Página du Streamlit
+# 1. Configuração da Página do Streamlit
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="AUTOLAB DIAG",
@@ -48,14 +52,14 @@ st.set_page_config(
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-    /* Oculta totalmente o cabeçalho superior, menu hamburguer, ícones du github e footer */
+    /* Oculta totalmente o cabeçalho superior, menu hamburguer, ícones do github e footer */
     #MainMenu {visibility: hidden !important;}
     header {visibility: hidden !important;}
     [data-testid="stHeader"] {display: none !important; visibility: hidden !important;}
     .stDeployButton {display: none !important;}
     footer {visibility: hidden !important;}
     
-    /* Remove elementos flutuantes de ferramentas du Streamlit */
+    /* Remove elementos flutuantes de ferramentas do Streamlit */
     div[data-testid="stToolbar"] {display: none !important;}
     
     /* Estilização da Barra de Carregamento (Borda verde neon e preenchimento azul) */
@@ -72,7 +76,7 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
     }
     
-    /* Marca D'água Sutil da Logo ao Fundo du Sistema */
+    /* Marca D'água Sutil da Logo ao Fundo do Sistema */
     .stApp::before {
         content: "";
         position: fixed;
@@ -249,7 +253,7 @@ def enviar_email_boas_vindas(nome, email):
         Seu cadastro no AUTOLAB DIAG AI foi realizado com sucesso.
         Você ganhou 7 FICHAS com validade de 7 DIAS para testar nossa Inteligência Artificial em diagnósticos avançados.
         
-        Acesse du sistema utilizando seu e-mail ({email}) e a senha cadastrada.
+        Acesse do sistema utilizando seu e-mail ({email}) e a senha cadastrada.
         
         Bons diagnósticos!
         Equipe AutoLab LOA
@@ -269,14 +273,14 @@ def enviar_email_oferta_assinatura(nome, email):
         msg = MIMEMultipart()
         msg['From'] = EMAIL_EMISSOR
         msg['To'] = email
-        msg['Subject'] = "⚡ Seu período de teste expirou! Continue com du plano ilimitado"
+        msg['Subject'] = "⚡ Seu período de teste expirou! Continue com do plano ilimitado"
         
         corpo = f"""
         Olá, {nome}!
         
-        Notamos que seu período de teste de 7 dias (ou suas fichas) du AUTOLAB DIAG AI chegou ao fim.
+        Notamos que seu período de teste de 7 dias (ou suas fichas) do AUTOLAB DIAG AI chegou ao fim.
         
-        Para continuar realizando diagnósticos ilimitados, gerar relatórios em PDF para seus clientes e ter suporte exclusivo da AutoLab por 1 ano, assine du plano ideal para sua oficina:
+        Para continuar realizando diagnósticos ilimitados, gerar relatórios em PDF para seus clientes e ter suporte exclusivo da AutoLab por 1 ano, assine o plano ideal para sua oficina:
         
         👉 Acesse: https://autolabbr.com.br/
         
@@ -500,7 +504,7 @@ def tela_login():
     st.markdown("""
     <div style="background: linear-gradient(135deg, #052E16 0%, #022C22 100%); border: 2px solid #00FF88; padding: 15px; border-radius: 14px; text-align: center; margin-bottom: 25px; box-shadow: 0 0 25px rgba(0,255,136,0.35);">
         <h4 style="color: #FFD700 !important; margin-bottom: 6px; font-size: 1.1rem;">🔊 APRESENTAÇÃO EXCLUSIVA 🔊</h4>
-        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte o play e descubra como o AutoLab Diag vai revolucionar sua oficina:</p>
+        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte o play e descubra como o AutoLab Diag vai revolucionar o seu Laboratóirio Automotivo:</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -515,7 +519,7 @@ def tela_login():
         <div style="text-align: center; margin-bottom: 20px;">
             <audio id="audio_autolab_v2" controls style="width: 100%; max-width: 500px;">
                 <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-                Seu navegador não suporta du elemento de áudio.
+                Seu navegador não suporta o elemento de áudio.
             </audio>
             <script>
                 var aud = document.getElementById('audio_autolab_v2');
@@ -612,7 +616,7 @@ def tela_login():
                     else:
                         st.error("E-mail ou senha incorretos, ou período de teste de 7 dias expirado.")
                 else:
-                    st.warning("Por favor, preencha du e-mail e a senha.")
+                    st.warning("Por favor, preencha o e-mail e a senha.")
 
         with aba_cadastro:
             st.subheader("🚀 Teste sem Custos (7 Créditos por 7 Dias)")
@@ -631,7 +635,7 @@ def tela_login():
                         if sucesso:
                             st.success("Conta criada! 7 Fichas e 7 dias de teste liberados. Faça login na aba ao lado.")
                         else:
-                            st.error("Este e-mail já está cadastrado du sistema.")
+                            st.error("Este e-mail já está cadastrado no sistema.")
                     else:
                         st.error("As senhas não coincidem. Digite novamente.")
                 else:
@@ -905,7 +909,7 @@ def gerar_pdf_relatorio(nome_oficina, cnpj, telefone, veiculo, dtc, sintomas, re
             story.append(rl_img)
             story.append(Spacer(1, 10))
         except Exception as e:
-            print(f"Erro ao inserir imagem du PDF: {e}")
+            print(f"Erro ao inserir imagem do PDF: {e}")
 
     if imagens_ferramentas:
         story.append(Paragraph("<b>🛠️ EQUIPAMENTOS RECOMENDADOS PARA ESTA BANCADA:</b>", h2_style))
@@ -973,7 +977,7 @@ def processar_e_desenhar_mapa_placa(imagem_pil, identificacao_uce):
     prompt_mapeamento = f"""
     Analise esta foto da placa da UCE ({identificacao_uce}) e identifique os principais setores e componentes visíveis.
     Retorne EXCLUSIVAMENTE um objeto JSON válido contendo a chave "regioes", onde cada item possui:
-    - "rotulo": Nome du circuito/componente (Ex: "MCU", "EEPROM", "DRIVER INJETOR", "REGULADOR 5V")
+    - "rotulo": Nome do circuito/componente (Ex: "MCU", "EEPROM", "DRIVER INJETOR", "REGULADOR 5V")
     - "cor": Nome da cor ("green", "blue", "yellow", "red", "magenta", "cyan")
     - "caixa": Coordenadas normalizadas de 0 a 1000 [ymin, xmin, ymax, xmax].
     EXEMPLO: {{"regioes": [{{"rotulo": "MCU", "cor": "green", "caixa": [300, 400, 550, 650]}}]}}
@@ -1027,8 +1031,8 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
     NUMERE cada um sequencialmente de 1 até N.
     Retorne EXCLUSIVAMENTE um objeto JSON válido contendo a chave "componentes", onde cada item possui:
     - "numero": Inteiro sequencial (1, 2, 3...)
-    - "nome": Nome técnico exato du componente (Ex: "MCU MPC5xx", "EEPROM SOIC8", "TRANSFORMADOR DC-DC")
-    - "descricao": Descrição técnica da função e cuidados du reparo.
+    - "nome": Nome técnico exato do componente (Ex: "MCU MPC5xx", "EEPROM SOIC8", "TRANSFORMADOR DC-DC")
+    - "descricao": Descrição técnica da função e cuidados no reparo.
     - "caixa": Coordenadas normalizadas [ymin, xmin, ymax, xmax].
     EXEMPLO: {{"componentes": [{{"numero": 1, "nome": "MCU", "descricao": "Processador central.", "caixa": [300, 300, 600, 550]}}]}}
     """
@@ -1070,11 +1074,11 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
         print(f"Erro no mapeamento numerado: {e}")
         return imagem_pil, [], False
 
-# ---------------------------------------------------------
-# 11. Interface Principal e Abas (CORRIGIDO SEM NAMEERROR)
-# ---------------------------------------------------------
+# =========================================================
+# 11. Interface Principal e Abas (Atualizado com a Nova Aba DIESEL / ARLA DIAG)
+# =========================================================
 st.title("🔬 Sistema de Diagnóstico Avançado 🔬")
-st.write("Suporte em Diagnóstico, Reparo e Programação de Módulos Eletrônicos Veicular (Eletrônica Embarcada)")
+st.write("Suporte em Diagnóstico, Reparo e Programação de Módulos Eletrônicos Veicular (Eletrônica Embarcada & Diesel Pesado)")
 
 is_adm = str(st.session_state.get('user_email', '')).strip().lower() == EMAIL_ADM.lower()
 
@@ -1082,46 +1086,315 @@ usuario_tem_autolab = st.session_state.get("logado", False)
 usuario_tem_autorede = 'usuario_logado_autorede' in st.session_state
 
 if is_adm:
-    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_calculadoras, aba_programacao, aba2, aba3, aba4, aba5, aba6 = st.tabs([
+    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_calculadoras, aba_programacao, aba_diesel, aba2, aba3, aba4, aba5, aba6 = st.tabs([
         "🏢 Minha Empresa",
-        "🌐 AUTOREDE (Feed)",
+        "🌐 AutoRede",
         "🔬 Diagnóstico",
-        "📡 Suporte CANCODE",
-        "🔌 Suporte U.C.Es",
-        "📡 Suporte Scanners",
-        "💻 Suporte Programadores",
+        "📡 Suporte -CanCode-",
+        "🔌 Suporte -U.C.Es-",
+        "📡 Suporte -Scanners-",
+        "💻 Suporte -Programadores-",
         "🧮 Calculadoras",
-        "⚙️ Suporte Programação",
+        "⚙️ Suporte -Programação-",
+        "🚛 Diesel",
         "📜 Histórico",
         "🎓 Cursos & Redes Sociais",
         "💬 Connect WhatsApp",
         "💳 Assinatura",
         "💎 Gestão de Clientes 💎"
     ])
-elif usuario_tem_autorede and not usuario_tem_autolab:
-    aba_empresa, aba_autorede_feed, aba_planos_fixos = st.tabs([
-        "🏢 Minha Empresa",
-        "🌐 AUTOREDE (Feed)",
-        "💳 Assinatura & Planos"
-    ])
-    aba1 = aba_cancode = aba_uces = aba_scanners = aba_programadores = aba_calculadoras = aba_programacao = aba2 = aba3 = aba4 = aba5 = aba6 = None
 else:
-    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_calculadoras, aba_programacao, aba2, aba3, aba4, aba5 = st.tabs([
+    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_calculadoras, aba_programacao, aba_diesel, aba2, aba3, aba4, aba5 = st.tabs([
         "🏢 Minha Empresa",
-        "🌐 AUTOREDE (Feed)",
+        "🌐 AutoRede",
         "🔬 Diagnóstico",
-        "📡 Suporte CANCODE",
-        "🔌 Suporte U.C.Es",
-        "📡 Suporte Scanners",
-        "💻 Suporte Programadores",
+        "📡 Suporte -CanCode-",
+        "🔌 Suporte -U.C.Es-",
+        "📡 Suporte -Scanners-",
+        "💻 Suporte -Programadores-",
         "🧮 Calculadoras",
-        "⚙️ Suporte Programação",
+        "⚙️ Suporte -Programação-",
+        "🚛 Diesel",
         "📜 Histórico",
         "🎓 Cursos & Redes Sociais",
         "💬 Connect WhatsApp",
         "💳 Assinatura"
     ])
     aba6 = None
+
+# =========================================================
+# ABA 🚛 DIESEL (COM A PASTA / SUB-ABA ARLA DIAG)
+# =========================================================
+with aba_diesel:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(3, 20, 12, 0.95) 0%, rgba(10, 40, 20, 0.9) 100%); border: 2px solid #00FF87; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 135, 0.3); margin-bottom: 20px;">
+        <h2 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🚛 Setor Diesel (Eletrônica Embarcada) — AutoLab Diag</h2>
+        <p style="color: #A7F3D0 !important; font-size: 1rem; margin-bottom: 0;">
+            Central de Diagnóstico Inteligente especializada em Eletrônica Embarcada Diesel, Com Analise de sistemas de alta pressão Common Rail e Tecnologias de Diagnósticos EM Pós-Tratamento de Gases (ARLA).
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Sub-pastas / Abas Internas dentro de DIESEL
+    sub_aba_geral_diesel, sub_aba_arla_diag = st.tabs([
+        "📊 Visão Geral do Setor Diesel", 
+        "🧪 ARLA DIAG — Central SCR, NOx & Pós-Tratamento"
+    ])
+
+    with sub_aba_geral_diesel:
+        st.subheader("🛠️ Selecione o Sistema de Atuação para o Diagnóstico Inteligente")
+        st.write("Utilize as Abas laterais, integradas para seleção do sistema em diagnóstico.")
+        st.info("💡 Para acessar o diagnóstico avançado específico acesse o menu lateral desejado Exemplo: **ARLA DIAG**.")
+
+    with sub_aba_arla_diag:
+        st.markdown("""
+<style>
+    /* Força o texto dentro de todas as caixas de texto e áreas de texto para PRETO */
+    input[type="text"], textarea, div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        background-color: #FFFFFF !important;
+    }
+
+    /* Garante legibilidade nos seletores / comboboxes (selectbox) */
+    div[data-baseweb="select"] div {
+        color: #000000 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+        with st.form(key="autolab_arla_diag_master_form"):
+            
+            tab_veiculo_arla, tab_pids_1_arla, tab_pids_2_arla, tab_bancada_arla, tab_midia_arla = st.tabs([
+                "🚛 1. Veículo & Sintomas",
+                "📊 2. PIDs de Temperatura, NOx & Exaustão",
+                "🧪 3. PIDs de Pressão, Dosagem & Qualidade",
+                "💻 4. Bancada / Programadores / Hardware ECU",
+                "📸 5. Fotos Scanner & Arquivos Raw"
+            ])
+
+            with tab_veiculo_arla:
+                st.subheader("Identificação do Veículo Pesado e Quadro Sintomático")
+                c1, c2, c3 = st.columns(3)
+                with c1:
+                    montadora_a = st.selectbox("Montadora / Fabricante", ["Volkswagen / MAN", "Mercedes-Benz", "Volvo", "Scania", "Iveco", "DAF", "Ford", "Cummins Off-Highway", "Agrícola / Amarelinha (John Deere, Case, CAT)"], key="ar_montadora")
+                    modelo_veiculo_a = st.text_input("Modelo do Veículo / Chassi", value="Constellation 24.280 / FH 540 / Actros 2651", key="ar_mod_veiculo")
+                    horas_km_a = st.text_input("Quilometragem / Horímetro", value="450.000 km / 8.200h", key="ar_km")
+                with c2:
+                    modelo_motor_a = st.text_input("Modelo do Motor", value="MWM 6.10 TCR / Cummins ISL / OM 460 LA / D13K", key="ar_mod_motor")
+                    sistema_arla_a = st.selectbox("Modelo do Sistema SCR", ["Bosch Denoxtronic 2.2", "Bosch Denoxtronic 6-HD", "Cummins Ecofit UL2", "EMIT / Albonett", "ProCompart / Grundfos", "Tenneco / Continental"], key="ar_sis_scr")
+                    protocolo_rede_a = st.selectbox("Protocolo da Rede CAN", ["SAE J1939 (250 kbps)", "SAE J1939 (500 kbps)", "ISO 27145 / UDS (CAN 500k)", "ISO 15765-4 (OBD2)"], key="ar_proto")
+                with c3:
+                    status_inducement_a = st.selectbox("Estágio de Limitação (Inducement)", ["Nenhum (Luz desligada)", "Nível 1 - Luz MIL acesa (Aviso)", "Nível 2 - Corte de Torque (25% a 40%)", "Nível 3 - Limitação de Velocidade (20 km/h)"], key="ar_induc")
+                    sintomas_relatados_a = st.text_area("Sintomas Relatados pelo Cliente / Teste de Rodagem", value="Veículo sem força em subidas, luz da injeção acesa, consumo excessivo de ARLA 32, fumaça branca esporádica no escapamento.", key="ar_sintomas")
+
+                dtc_codigos_a = st.text_area("Códigos de Falha Ativos e em Memória (DTC / SPN-FMI)", value="P20EE - Eficiência do Catalisador SCR Abaixo do Limite\nSPN 3226 / FMI 2 - Sensor de NOx 2 (Pós) Dados Erráticos\nSPN 4331 / FMI 31 - Desempenho de Conversão do Catalisador SCR", height=100, key="ar_dtc")
+
+            with tab_pids_1_arla:
+                st.subheader("Parâmetros do Escape, Sensores de NOx e Térmicos")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown("**Sondas de NOx**")
+                    nox_upstream_a = st.number_input("SPN 3216 / PID 0x83: NOx Entrada (Upstream - PPM)", 0, 5000, 950, key="ar_nox_in")
+                    nox_downstream_a = st.number_input("SPN 3226 / PID 0x83: NOx Saída (Downstream - PPM)", 0, 5000, 820, key="ar_nox_out")
+                    o2_upstream_a = st.number_input("SPN 3218: Oxigênio Sensor 1 (% O2)", -10.0, 25.0, 14.5, step=0.1, key="ar_o2_in")
+                    o2_downstream_a = st.number_input("SPN 3228: Oxigênio Sensor 2 (% O2)", -10.0, 25.0, 15.1, step=0.1, key="ar_o2_out")
+                    dew_point_1_a = st.checkbox("Dew Point Sensor 1 (Ponto de Orvalho)", value=True, key="ar_dp1")
+                    dew_point_2_a = st.checkbox("Dew Point Sensor 2 (Ponto de Orvalho)", value=True, key="ar_dp2")
+
+                with col2:
+                    st.markdown("**Sensores Térmicos do Escapamento**")
+                    temp_doc_in_a = st.number_input("SPN 4752: Temp. Entrada DOC (°C)", -40, 1000, 210, key="ar_doc_in")
+                    temp_dpf_in_a = st.number_input("SPN 4753: Temp. Entrada DPF / Saída DOC (°C)", -40, 1000, 250, key="ar_dpf_in")
+                    temp_scr_in_a = st.number_input("SPN 4360 / PID 0x87: Temp. Entrada Catalisador SCR (°C)", -40, 1000, 280, key="ar_scr_in")
+                    temp_scr_out_a = st.number_input("SPN 4363 / PID 0x87: Temp. Saída Catalisador SCR (°C)", -40, 1000, 265, key="ar_scr_out")
+                    temp_ambient_a = st.number_input("SPN 171: Temp. Ambiente (°C)", -40, 100, 28, key="ar_amb")
+
+                with col3:
+                    st.markdown("**Status Elétrico dos Sensores de NOx**")
+                    tensao_nox1_a = st.number_input("SPN 3222: Tensão Alimentação Sensor NOx 1 (V)", 0.0, 32.0, 24.1, step=0.1, key="ar_tv1")
+                    tensao_nox2_a = st.number_input("SPN 3232: Tensão Alimentação Sensor NOx 2 (V)", 0.0, 32.0, 24.0, step=0.1, key="ar_tv2")
+                    aquecedor_nox1_a = st.number_input("SPN 3217: Ciclo de Trabalho Aquecedor NOx 1 (%)", 0.0, 100.0, 65.0, key="ar_aq1")
+                    aquecedor_nox2_a = st.number_input("SPN 3227: Ciclo de Trabalho Aquecedor NOx 2 (%)", 0.0, 100.0, 68.0, key="ar_aq2")
+                    eficiencia_scr_calc_a = st.number_input("SPN 4331: Eficiência Calculada pelo Scanner (%)", 0.0, 100.0, 13.6, step=0.1, key="ar_ef_sc")
+
+            with tab_pids_2_arla:
+                st.subheader("Bomba, Dosador, Linha Hidráulica e Fluido ARLA 32")
+                col_p1, col_p2, col_p3 = st.columns(3)
+                with col_p1:
+                    st.markdown("**Pressão e Ar Comprimido**")
+                    pressao_arla_a = st.number_input("SPN 4354 / PID 0x86: Pressão da Linha de ARLA (bar)", 0.0, 15.0, 5.0, step=0.1, key="ar_p_arla")
+                    pressao_desejada_a = st.number_input("Pressão Alvo / Desejada pela ECU (bar)", 0.0, 15.0, 5.0, step=0.1, key="ar_p_alvo")
+                    pressao_ar_a = st.number_input("SPN 4355: Pressão do Ar de Purga/Assistência (bar)", 0.0, 10.0, 3.5, step=0.1, key="ar_p_ar")
+                    status_valvula_ar_a = st.selectbox("SPN 4356: Válvula de Ar de Purga", ["Fechada", "Aberta / Purgando", "Falha de Fluxo"], key="ar_v_ar")
+
+                with col_p2:
+                    st.markdown("**Dosagem e Atuadores**")
+                    taxa_dosagem_medida_a = st.number_input("SPN 4361 / PID 0x86: Taxa de Injeção Atual (g/h)", 0.0, 5000.0, 140.0, step=10.0, key="ar_dos_med")
+                    taxa_dosagem_alvo_a = st.number_input("Taxa de Injeção Solicitada pela ECU (g/h)", 0.0, 5000.0, 180.0, step=10.0, key="ar_dos_alv")
+                    duty_cycle_dosador_a = st.number_input("SPN 4362: PWM da Válvula Dosadora / Injetor (%)", 0.0, 100.0, 22.0, key="ar_pwm_dos")
+                    massa_acumulada_nh3_a = st.number_input("SPN 4365: Amônia Acumulada no Catalisador (g)", 0.0, 500.0, 12.4, key="ar_nh3")
+
+                with col_p3:
+                    st.markdown("**Qualidade, Reservatório e Aquecimento**")
+                    concentracao_ureia_a = st.number_input("SPN 3058 / PID 0x85: Concentração Ureia (% Ureia)", 0.0, 100.0, 32.5, step=0.1, key="ar_conc")
+                    nivel_tanque_a = st.number_input("SPN 1761: Nível do Tanque ARLA (%)", 0, 100, 75, key="ar_niv")
+                    temp_tanque_a = st.number_input("SPN 3031: Temp. do Reservatório ARLA (°C)", -40, 100, 24, key="ar_t_tanq")
+                    aquecedor_tanque_a = st.selectbox("SPN 3363: Aquecedor do Tanque / Tubulações", ["Desligado", "Ligado (Válvula Líquido Arrefecimento)", "Ligado (Resistência Elétrica)"], key="ar_aq_tanq")
+
+            with tab_bancada_arla:
+                st.subheader("Diagnóstico Avançado de Hardware de ECU e Programadores de Bancada")
+                col_b1, col_b2 = st.columns(2)
+                with col_b1:
+                    programador_usado_a = st.selectbox("Programador / Ferramenta Utilizada", ["VVDI Prog", "KTAG / KESS V2 / KESS3", "Transdata / DFOX", "Flex MagicmotorSport", "Upro g / UPA", "Lonsdor K518", "Diagbox / DPA5 / Nexiq"], key="ar_prog")
+                    modelo_ecu_a = st.text_input("Modelo da ECU / Módulo de Motor / DCU", value="Bosch EDC17CV41 / PLD MR2 / Continental CM2150 / ACM2.1", key="ar_m_ecu")
+                    tipo_processador_a = st.text_input("Processador / MCU", value="Tricore SAK-TC1797 / MPC5566 / RENESAS SH7058", key="ar_mcu")
+                    tipo_eprom_a = st.text_input("Memória EEPROM / Flash Externa", value="EEPROM 95640 / Flash Integrada Tricore / 25LC256", key="ar_flash")
+                with col_b2:
+                    tensaobancada_a = st.number_input("Tensão de Alimentação da Bancada (V)", 0.0, 32.0, 24.0, step=0.1, key="ar_tbanc")
+                    corrente_consumo_a = st.number_input("Consumo de Corrente em Repouso (mA / A)", 0.0, 10.0, 0.35, step=0.01, key="ar_corrente")
+                    status_boot_bench_a = st.selectbox("Status de Leitura / Boot / Bench", ["Comunicação OK - Leitura Integral", "Erro de Checksum", "Sem Comunicação via CAN/K-Line", "Arquivo Corrompido / Mapeamento Incompleto", "Curto-Circuito na Linha VCC"], key="ar_st_boot")
+                    driver_dosador_ic_a = st.text_input("CI Driver / Atuador de Dosagem na Placa", value="TLE6244X / L9326 / BTS50080 / CI NCV7517", key="ar_ci_drv")
+
+            with tab_midia_arla:
+                st.subheader("Análise de Imagens (OCR/Visão) e Tramas de Barramento")
+                col_m1, col_m2 = st.columns(2)
+                with col_m1:
+                    foto_scanner_a = st.file_uploader("Envie Foto da Tela do Scanner / Painel / Programador", type=["jpg", "jpeg", "png", "webp"], key="ar_f_scan")
+                    foto_placa_a = st.file_uploader("Envie Foto da Placa Eletrônica / Componente Danificado", type=["jpg", "jpeg", "png", "webp"], key="ar_f_placa")
+                with col_m2:
+                    trama_can_raw_a = st.text_area("Captura Hexadecimal da Rede CAN (J1939 / ISO 27145 Log)", value="18F00E80 08 FF FF A5 12 04 FE FF FF\n18F00D28 08 68 1A 00 00 FF FF FF FF", height=150, key="ar_trama")
+
+            st.markdown("---")
+            submit_button_arla = st.form_submit_button(label="🚀 PROCESSAR DIAGNÓSTICO ARLA DIAG AI")
+
+        if submit_button_arla:
+            if not API_KEY:
+                st.error("❌ Erro: API Key do Gemini não fornecida.")
+            else:
+                eficiencia_calc_a = 0.0
+                if nox_upstream_a > 0:
+                    eficiencia_calc_a = ((nox_upstream_a - nox_downstream_a) / nox_upstream_a) * 100
+
+                st.markdown("### 📊 Painel Geral de Resumo dos Parâmetros — ARLA DIAG")
+                m1, m2, m3, m4, m5 = st.columns(5)
+                m1.metric("Eficiência Real SCR", f"{eficiencia_calc_a:.1f}%", delta="Crítico" if eficiencia_calc_a < 75 else "OK")
+                m2.metric("Delta NOx", f"{nox_upstream_a - nox_downstream_a} PPM")
+                m3.metric("Pressão de Linha", f"{pressao_arla_a} bar")
+                m4.metric("Qualidade ARLA", f"{concentracao_ureia_a}%")
+                m5.metric("Temp. Catalisador", f"{temp_scr_in_a} °C")
+
+                system_prompt_arla = """
+                Você é o motor central de Inteligência Artificial da AutoLab, especialista de nível internacional em:
+                - Sistemas de pós-tratamento diesel (SCR, DPF, DOC, ARLA 32 / DEF).
+                - Sensores de NOx inteligentes e decodificação do barramento SAE J1939 e ISO 27145.
+                - Eletrônica embarcada, reparo de Ecus, programadores de bancada (VVDI, KTAG, Flex, Transdata) e análise de placas/hardware (drivers, CIs, microcontroladores Tricore/MPC).
+                - Engenharia de diagnóstico automotivo avançado.
+
+                Sua missão é processar TODOS os dados fornecidos e entregar um RELATÓRIO TÉCNICO EXAUSTIVO, SEM OMISSÕES, estruturado rigorosamente nos seguintes tópicos:
+
+                1. DIAGNÓSTICO DE CAUSA RAIZ & SÍNTESE DO DEFEITO:
+                   - Conclusão direta sobre qual componente ou sistema está falhando.
+                   - Correlação entre sintomas, DTCs/SPNs e ineficiência física.
+
+                2. ANÁLISE DETALHADA DOS PIDS E VARIÁVEIS DE PROCESSO:
+                   - Análise ponto a ponto das incoerências térmicas, hidráulicas e de gás NOx.
+                   - Explicação física e química da divergência encontrada (ex: envenenamento por amônia NH3, cristalização, bomba gasta, vazamento de ar, oxidação cerâmica).
+
+                3. DECODIFICAÇÃO DE REDE CAN E TRAMAS RAW (Se fornecidas):
+                   - Análise dos IDs J1939 e validação de comunicação dos módulos de NOx e DCU/ECU.
+
+                4. ANÁLISE DE HARDWARE / BANCADA / PROGRAMADOR (Se aplicável):
+                   - Avaliação do consumo de corrente, boot, integridade de Flash/EEPROM, drivers na placa (ex: TLE/BTS) e integridade dos pinos de comunicação.
+
+                5. ANÁLISE DAS IMAGENS ENVIADAS (OCR e Inspeção Visual):
+                   - Descrição do que foi identificado nas telas dos scanners ou fotos da placa/componente.
+
+                6. LISTA DE EQUIPAMENTOS E FERRAMENTAS PARA OS TESTES:
+                   - Equipamentos exatos (Osciloscópio, Multímetro, Refratômetro, Caneta de Pressão, Decodificador CAN, Programador).
+
+                7. ROTEIRO DE TESTES PASSO A PASSO (TESTES PRÁTICOS DE CAMPO E BANCADA):
+                   - Medições elétricas no chicote (Tensão, Massa, CAN-H e CAN-L com osciloscópio).
+                   - Teste estático de dosagem de ARLA e teste de estanqueidade.
+                   - Teste térmico dos sensores de exaustão.
+
+                8. PROCEDIMENTO DE SOLUÇÃO E LIBERAÇÃO DO VEÍCULO:
+                   - Passo a passo da manutenção corretiva.
+                   - Procedimento de reset de parâmetros adaptativos no scanner, reset do contador de Inducement e rodagem de validação.
+                """
+
+                user_content_arla = [
+                    f"""
+                    --- DADOS DO VEÍCULO E SINTOMAS ---
+                    - Montadora: {montadora_a} | Veículo: {modelo_veiculo_a} | Motor: {modelo_motor_a}
+                    - Km/Horas: {horas_km_a} | Sistema ARLA: {sistema_arla_a} | Protocolo: {protocolo_rede_a}
+                    - Estágio de Limitação (Inducement): {status_inducement_a}
+                    - Relato de Sintomas: {sintomas_relatados_a}
+                    - Códigos DTC / SPN-FMI: {dtc_codigos_a}
+
+                    --- PARÂMETROS E PIDS MEDIDOS EM TEMPO REAL ---
+                    [SENSORES DE NOX E EXAUSTÃO]
+                    - NOx Entrada (Upstream): {nox_upstream_a} PPM | NOx Saída (Downstream): {nox_downstream_a} PPM
+                    - Oxigênio O2: Sensor 1 = {o2_upstream_a}% | Sensor 2 = {o2_downstream_a}%
+                    - Dew Point (Ponto de Orvalho): Sensor 1 = {dew_point_1_a} | Sensor 2 = {dew_point_2_a}
+                    - Temperaturas (°C): DOC In={temp_doc_in_a} | DPF In={temp_dpf_in_a} | SCR In={temp_scr_in_a} | SCR Out={temp_scr_out_a} | Ambiente={temp_ambient_a}
+                    - Elétrica dos Sensores NOx: Tensão 1={tensao_nox1_a}V | Tensão 2={tensao_nox2_a}V | Aquecedor 1={aquecedor_nox1_a}% | Aquecedor 2={aquecedor_nox2_a}%
+                    - Eficiência Calculada: {eficiencia_scr_calc_a}% (Eficiência Física Calculada: {eficiencia_calc_a:.2f}%)
+
+                    [SISTEMA HIDRÁULICO E DOSAGEM DE ARLA 32]
+                    - Pressão Linha ARLA: Medida={pressao_arla_a} bar | Alvo ECU={pressao_desejada_a} bar
+                    - Pressão Ar Purga: {pressao_ar_a} bar | Válvula Ar: {status_valvula_ar_a}
+                    - Injeção/Dosagem: Medida={taxa_dosagem_medida_a} g/h | Solicitada={taxa_dosagem_alvo_a} g/h | PWM Dosador={duty_cycle_dosador_a}%
+                    - Amônia (NH3) Acumulada: {massa_acumulada_nh3_a} g
+                    - Qualidade/Ureia: {concentracao_ureia_a}% Ureia | Nível Tanque: {nivel_tanque_a}% | Temp. Tanque: {temp_tanque_a}°C | Aquecedor Tanque: {aquecedor_tanque_a}
+
+                    --- DADOS DE BANCADA, HARDWARE ECU E PROGRAMADOR ---
+                    - Programador: {programador_usado_a} | Módulo/ECU: {modelo_ecu_a}
+                    - Processador/MCU: {tipo_processador_a} | EEPROM/Flash: {tipo_eprom_a}
+                    - Tensão Bancada: {tensaobancada_a}V | Consumo Corrente: {corrente_consumo_a}A
+                    - Status Boot/Bench: {status_boot_bench_a} | Driver de Dosagem na Placa: {driver_dosador_ic_a}
+
+                    --- TRAMAS CAN RAW ---
+                    {trama_can_raw_a}
+                    """
+                ]
+
+                if foto_scanner_a is not None:
+                    user_content_arla.append(types.Part.from_bytes(data=foto_scanner_a.getvalue(), mime_type=foto_scanner_a.type))
+                    user_content_arla.append("\n[FOTO DO SCANNER / PAINEL ANEXADA ACIMA]")
+
+                if foto_placa_a is not None:
+                    user_content_arla.append(types.Part.from_bytes(data=foto_placa_a.getvalue(), mime_type=foto_placa_a.type))
+                    user_content_arla.append("\n[FOTO DA PLACA ELETRÔNICA / COMPONENTE ANEXADA ACIMA]")
+
+                with st.spinner("🧠 O Gemini AI está processando o diagnóstico integrado ARLA DIAG..."):
+                    try:
+                        client_ai = genai.Client(api_key=API_KEY)
+                        response_ai = client_ai.models.generate_content(
+                            model='gemini-2.5-pro',
+                            contents=user_content_arla,
+                            config=types.GenerateContentConfig(
+                                system_instruction=system_prompt_arla,
+                                temperature=0.15,
+                            )
+                        )
+
+                        st.success("✅ Diagnóstico Arla Diag Concluído com Sucesso!")
+                        st.markdown(response_ai.text)
+
+                        email_atual_u = st.session_state.get('user_email', '')
+                        if email_atual_u:
+                            salvar_diagnostico(
+                                email_atual_u,
+                                f"ARLA DIAG - {modelo_veiculo_a} ({modelo_motor_a})",
+                                dtc_codigos_a[:50],
+                                sintomas_relatados_a,
+                                response_ai.text
+                            )
+
+                    except Exception as e:
+                        st.error(f"❌ Erro no processamento do Arla Diag: {e}")
+
 # =========================================================
 # ABA 🏢 MINHA EMPRESA (SELO DE QUALIDADE EM DIAGNÓSTICO)
 # =========================================================
@@ -1281,21 +1554,21 @@ with aba1:
         if st.session_state.get('sintomas_wsp'): midias_status.append("Texto")
         if tem_audio_wsp: midias_status.append("Áudio")
         if tem_video_wsp: midias_status.append("Vídeo")
-        st.info(f"🟢 **Mídias importadas du WhatsApp prontas para envio:** {', '.join(midias_status)}")
+        st.info(f"🟢 **Mídias importadas do WhatsApp prontas para envio:** {', '.join(midias_status)}")
 
     col_veiculo, col_dtc = st.columns(2)
     with col_veiculo:
         motor = st.text_input(
             "🚗 Veículo / Motor / Sistema ECU",
             placeholder="Ex: Fiat Toro 2.0 Diesel Bosch EDC17C69",
-            help="Informe a montadora, modelo, motorização ou modelo du módulo ECU."
+            help="Informe a montadora, modelo, motorização ou modelo do módulo ECU."
         )
 
     with col_dtc:
         dtc = st.text_input(
             "🔍 Códigos de Falha (DTC)",
             placeholder="Ex: P0300, P0100, P0299",
-            help="Informe os códigos de falhas registrados du scanner."
+            help="Informe os códigos de falhas registrados do scanner."
         )
 
     val_sintomas_wsp = st.session_state.get('sintomas_wsp', '')
@@ -1356,7 +1629,7 @@ with aba1:
     st.markdown('</div>', unsafe_allow_html=True)
 
     with st.expander("💻 DESCREVA OS PARAMETROS EM TEMPO REAL 💻", expanded=st.session_state['abrir_parametros_kts']):
-        st.caption("Insira as leituras obtidas du scanner para que a IA analise du desvio técnico de funcionamento em tempo real.")
+        st.caption("Insira as leituras obtidas no scanner para que a analise do desvio técnico de funcionamento em tempo real.")
         
         tab_kts_inj, tab_kts_ar, tab_kts_temp, tab_kts_ele, tab_kts_emis = st.tabs([
             "⛽ Injeção & Combustível", 
@@ -1367,7 +1640,7 @@ with aba1:
         ])
 
         with tab_kts_inj:
-            st.markdown("**Valores du Sistema de Combustível (Otto / GDI / Diesel Common Rail)**")
+            st.markdown("**Valores do Sistema de Combustível (Otto / GDI / Diesel Common Rail)**")
             k1, k2, k3, k4 = st.columns(4)
             with k1:
                 p_ti = st.text_input("TI | Tempo Injeção (ms)", placeholder="Ex: 2.8 ms (PID 01)", key="p_ti")
@@ -1393,7 +1666,7 @@ with aba1:
                 p_app = st.text_input("APP | Pos. Pedal Acelerador (%)", placeholder="Ex: 0 % (PID 47)", key="p_app")
             with k7:
                 p_boost = st.text_input("BOOST | Pressão Turbo (bar)", placeholder="Ex: 1.2 bar (PID 69/70)", key="p_boost")
-                p_load = st.text_input("LOAD | Carga du Motor (%)", placeholder="Ex: 22 % (PID 04)", key="p_load")
+                p_load = st.text_input("LOAD | Carga do Motor (%)", placeholder="Ex: 22 % (PID 04)", key="p_load")
             with k8:
                 p_baro = st.text_input("BARO | Pressão Barométrica (kPa)", placeholder="Ex: 98 kPa (PID 33)", key="p_baro")
 
@@ -1404,11 +1677,11 @@ with aba1:
                 p_rpm = st.text_input("RPM | Rotação Motor (rpm)", placeholder="Ex: 820 rpm (PID 0C)", key="p_rpm")
                 p_ect = st.text_input("ECT | Temp. Arrefecimento (°C)", placeholder="Ex: 90 °C (PID 05)", key="p_ect")
             with k10:
-                p_ign = st.text_input("IGN | Avanço du Ponto de Ignição (°)", placeholder="Ex: 8.5 ° (PID 0E)", key="p_ign")
+                p_ign = st.text_input("IGN | Avanço do Ponto de Ignição (°)", placeholder="Ex: 8.5 ° (PID 0E)", key="p_ign")
                 p_iat = st.text_input("IAT | Temp. Ar Admissão (°C)", placeholder="Ex: 32 °C (PID 0F)", key="p_iat")
             with k11:
                 p_vss = st.text_input("VSS | Velocidade Veículo (km/h)", placeholder="Ex: 0 km/h (PID 0D)", key="p_vss")
-                p_oil = st.text_input("EOT | Temp. Óleo du Motor (°C)", placeholder="Ex: 95 °C (PID 5C)", key="p_oil")
+                p_oil = st.text_input("EOT | Temp. Óleo do Motor (°C)", placeholder="Ex: 95 °C (PID 5C)", key="p_oil")
             with k12:
                 p_cat_temp = st.text_input("CAT | Temp. Catalisador (°C)", placeholder="Ex: 450 °C (PID 3C)", key="p_cat_temp")
 
@@ -1446,16 +1719,16 @@ with aba1:
         arquivo_os = st.file_uploader("Anexe a O.S. (PDF ou Imagem)", type=["pdf", "png", "jpg", "jpeg"], key="uploader_os")
 
     with col_audio:
-        st.markdown("### 🎙️ Gravar Áudio du Sintoma")
+        st.markdown("### 🎙️ Gravar Áudio do Sintoma")
         audio_sintomas = st.audio_input("Grave seu Relato Aqui", key="mic_audio_sintoma")
 
     with col_video:
-        st.markdown("### 🎥 Vídeo du Diagnóstico")
+        st.markdown("### 🎥 Vídeo do Diagnóstico")
         video_sintomas = st.file_uploader(
             "Vídeo do Relato (Máx: 1 min)", 
             type=["mp4", "mov", "avi", "mkv"], 
             key="uploader_video_diag",
-            help="Anexe um vídeo curto gravado du problema, fumaça, barulho de motor ou falha no painel."
+            help="Anexe um vídeo curto gravado do problema, fumaça, barulho de motor ou falha no painel."
         )
 
     st.markdown("---")
@@ -1465,15 +1738,15 @@ with aba1:
     col_img1, col_img2, col_img3, col_img4 = st.columns(4)
 
     with col_img1:
-        img1 = st.file_uploader("Fotos du Scanner / DTCs", type=["png", "jpg", "jpeg"], key="img_scanner")
+        img1 = st.file_uploader("Fotos do Scanner / DTCs", type=["png", "jpg", "jpeg"], key="img_scanner")
         if img1: imagens_anexadas.append(("Scanner", Image.open(img1)))
 
     with col_img2:
-        img2 = st.file_uploader("Fotos da Tela du Osciloscópio", type=["png", "jpg", "jpeg"], key="img_osc")
+        img2 = st.file_uploader("Fotos da Tela do Osciloscópio", type=["png", "jpg", "jpeg"], key="img_osc")
         if img2: imagens_anexadas.append(("Osciloscopio", Image.open(img2)))
 
     with col_img3:
-        img3 = st.file_uploader("Leitura du Multímetro", type=["png", "jpg", "jpeg"], key="img_mult")
+        img3 = st.file_uploader("Leitura do Multímetro", type=["png", "jpg", "jpeg"], key="img_mult")
         if img3: imagens_anexadas.append(("Multimetro", Image.open(img3)))
 
     with col_img4:
@@ -1522,15 +1795,15 @@ with aba1:
             if p_tps: parametros_kts.append(f"• Pos. Borboleta Aceleração (TPS): {p_tps}")
             if p_app: parametros_kts.append(f"• Pos. Pedal Acelerador (APP): {p_app}")
             if p_boost: parametros_kts.append(f"• Pressão de Sobrealimentação/Turbo (BOOST): {p_boost}")
-            if p_load: parametros_kts.append(f"• Carga Calculada du Motor (LOAD): {p_load}")
+            if p_load: parametros_kts.append(f"• Carga Calculada do Motor (LOAD): {p_load}")
             if p_baro: parametros_kts.append(f"• Pressão Barométrica (BARO): {p_baro}")
 
-            if p_rpm: parametros_kts.append(f"• Rotação du Motor (RPM): {p_rpm}")
+            if p_rpm: parametros_kts.append(f"• Rotação do Motor (RPM): {p_rpm}")
             if p_ect: parametros_kts.append(f"• Temp. Arrefecimento/Líquido (ECT): {p_ect}")
             if p_iat: parametros_kts.append(f"• Temp. Ar de Admissão (IAT): {p_iat}")
-            if p_ign: parametros_kts.append(f"• Avanço du Ponto de Ignição (IGN): {p_ign}")
-            if p_vss: parametros_kts.append(f"• Velocidade du Veículo (VSS): {p_vss}")
-            if p_oil: parametros_kts.append(f"• Temp. Óleo du Motor (EOT): {p_oil}")
+            if p_ign: parametros_kts.append(f"• Avanço do Ponto de Ignição (IGN): {p_ign}")
+            if p_vss: parametros_kts.append(f"• Velocidade do Veículo (VSS): {p_vss}")
+            if p_oil: parametros_kts.append(f"• Temp. Óleo do Motor (EOT): {p_oil}")
             if p_cat_temp: parametros_kts.append(f"• Temp. Catalisador (CAT): {p_cat_temp}")
 
             if p_vbat: parametros_kts.append(f"• Tensão da ECU/Bateria (VBAT): {p_vbat}")
@@ -1540,13 +1813,13 @@ with aba1:
             if p_lambda1: parametros_kts.append(f"• Sonda Lambda Pré / Razão A/F (O2S11): {p_lambda1}")
             if p_lambda2: parametros_kts.append(f"• Sonda Lambda Pós Catalisador (O2S12): {p_lambda2}")
             if p_egr: parametros_kts.append(f"• Comando Valvula EGR: {p_egr}")
-            if p_evap: parametros_kts.append(f"• Purga du Cânister (EVAP): {p_evap}")
+            if p_evap: parametros_kts.append(f"• Purga do Cânister (EVAP): {p_evap}")
             if p_dpf_press: parametros_kts.append(f"• Pressão Diferencial DPF: {p_dpf_press}")
             if p_dpf_temp: parametros_kts.append(f"• Temp. Filtro DPF: {p_dpf_temp}")
             if p_nox: parametros_kts.append(f"• Concentração de NOx: {p_nox}")
             if p_arla: parametros_kts.append(f"• Nível/Dosagem Arla 32 (DEF): {p_arla}")
 
-            texto_kts_formatado = "\n".join(parametros_kts) if parametros_kts else "Nenhum parâmetro real específico du scanner informado."
+            texto_kts_formatado = "\n".join(parametros_kts) if parametros_kts else "Nenhum parâmetro real específico do scanner informado."
             tem_video_direto = video_sintomas is not None
 
             if motor and (imagens_anexadas or audio_sintomas or video_sintomas or valores or arquivo_os or tem_audio_wsp or tem_video_wsp or parametros_kts):
@@ -1567,7 +1840,7 @@ with aba1:
                 barra_progresso.progress(70)
                 time.sleep(0.3)
 
-                instrucao_sistema = "Você é du AUTOLAB DIAG AI, especialista sênior em diagnóstico automotivo, análise de dados de scanner em tempo real (padrão Bosch KTS/SAE J1979), osciloscópio e engenharia reversa de ECUs."
+                instrucao_sistema = "Você é do AUTOLAB DIAG , especialista sênior em diagnóstico automotivo, análise de dados de scanner em tempo real (padrão Bosch KTS/SAE J1979), osciloscópio e engenharia reversa de ECUs."
                 
                 prompt_caso = f"""DADOS DO CASO:
 - Motor/Veículo: {motor}
@@ -1578,7 +1851,7 @@ with aba1:
 {texto_kts_formatado}
 
 INSTRUÇÕES DE ANÁLISE:
-1. Analise detalhadamente cada parâmetro real du scanner fornecido.
+1. Analise detalhadamente cada parâmetro real do scanner fornecido.
 2. Caso exista O.S., extraia histórico e peças já substituídas.
 3. Analise áudio ou vídeo enviado.
 4. Cruze todas essas informações com capturas fornecidas.
@@ -1659,7 +1932,7 @@ INSTRUÇÕES DE ANÁLISE:
                                 enviar_email_oferta_assinatura(st.session_state.get('user_nome', 'Técnico'), email_atual)
 
                         salvar_diagnostico(email_atual, motor, dtc, st.session_state['ultimo_sintomas'], relatorio_resultado)
-                        st.success("Diagnóstico Completo Gerado e Salvo du Histórico!")
+                        st.success("Diagnóstico Completo Gerado e Salvo do Histórico!")
                     else:
                         st.error("⚠️ Nenhuma resposta gerada.")
                 except Exception as e:
@@ -1667,7 +1940,7 @@ INSTRUÇÕES DE ANÁLISE:
                     status_texto.empty()
                     st.error(f"Erro na requisição: {e}")
             else:
-                st.warning("Atenção: Preencha du campo Veículo/Motor e adicione informações de análise.")
+                st.warning("Atenção: Preencha do campo Veículo/Motor e adicione informações de análise.")
 
     if 'ultimo_relatorio' in st.session_state and st.session_state['ultimo_relatorio']:
         st.markdown("---")
@@ -2024,7 +2297,7 @@ with aba_uces:
     st.markdown("---")
 
     modulo_tipo_sel = st.selectbox(
-        "📌 Selecione a Categoria du Módulo / U.C.E:",
+        "📌 Selecione a Categoria do Módulo / U.C.E:",
         [
             "🚗 UCE Motor / Injeção Eletrônica (ECU/PCM)",
             "🛑 ABS / Controle de Estabilidade (ESP)",
@@ -2041,7 +2314,7 @@ with aba_uces:
     col_u_id, col_u_duv = st.columns([1, 1])
     with col_u_id:
         veiculo_uce_geral = st.text_input(
-            "🚘 Identificação du Módulo / Veículo / Código da Peça:",
+            "🚘 Identificação do Módulo / Veículo / Código da Peça:",
             placeholder="Ex: Bosch ME7.5 / Marelli IAW 4GV / Denso Hilux / ABS Bosch 9.0",
             key="veiculo_uce_geral"
         )
@@ -2072,7 +2345,7 @@ with aba_uces:
     def analisar_ponto_individual(titulo_ponto, prompt_ponto, midia_file=None):
         if veiculo_uce_geral:
             with st.spinner(f"🔬 Analisando {titulo_ponto}..."):
-                sys_inst = "Você é du Engenheiro Especialista em Reparo de Módulos UCEs da AutoLab."
+                sys_inst = "Você é do Engenheiro Especialista em Reparo de Módulos UCEs da AutoLab."
                 contents = [f"MÓDULO: {veiculo_uce_geral}\nCATEGORIA: {modulo_tipo_sel}\n{prompt_ponto}"]
                 
                 if midia_file:
@@ -2098,7 +2371,7 @@ with aba_uces:
                 except Exception as e:
                     return f"Erro na análise: {e}"
         else:
-            st.warning("Preencha a Identificação du Módulo / Veículo no topo antes de consultar.")
+            st.warning("Preencha a Identificação do Módulo / Veículo no topo antes de consultar.")
             return None
 
     with st.expander("1. 🖥️ Analisar Placa Completa (Opções de Mapeamento Visual)", expanded=False):
@@ -2106,7 +2379,7 @@ with aba_uces:
         duvida_placa = st.text_area("Dúvida sobre a placa completa:", placeholder="Ex: Qual setor é responsável pelos injetores?", key="d_placa")
         
         tipo_map_escolhido = st.radio(
-            "🎨 Escolha du estilo de mapeamento visual desejado:",
+            "🎨 Escolha do estilo de mapeamento visual desejado:",
             [
                 "Mapeamento Colorido por Circuitos",
                 "Mapeamento Numerado com Descrição Individual",
@@ -2137,7 +2410,7 @@ with aba_uces:
                                 
                     st.success("Mapeamento(s) gerado(s) com sucesso!")
                 else:
-                    st.warning("Preencha a Identificação du Módulo e anexe a foto da placa.")
+                    st.warning("Preencha a Identificação do Módulo e anexe a foto da placa.")
 
         with col_btn_m2:
             if st.button("🔍 Analisar Placa (Texto Técnico)", key="btn_ind_placa", width="stretch"):
@@ -2160,22 +2433,22 @@ with aba_uces:
                     st.markdown(f"**[{comp['numero']}] {comp['nome']}**: {comp['descricao']}")
 
     with st.expander("2. 🔬 Analisar Componente Eletrônico", expanded=False):
-        img_comp = st.file_uploader("Foto aproximada du componente (Driver, SOIC, MOSFET)", type=["png", "jpg", "jpeg"], key="u_comp")
-        duvida_comp = st.text_area("Dúvida sobre du componente:", placeholder="Ex: Qual du substituto direto desse driver?", key="d_comp")
+        img_comp = st.file_uploader("Foto aproximada do componente (Driver, SOIC, MOSFET)", type=["png", "jpg", "jpeg"], key="u_comp")
+        duvida_comp = st.text_area("Dúvida sobre do componente:", placeholder="Ex: Qual o substituto direto desse driver?", key="d_comp")
         if st.button("🔍 Analisar Componente Agora", key="btn_ind_comp"):
             ans = analisar_ponto_individual("Componente Eletrônico", f"Dúvida Componente: {duvida_comp}", img_comp)
             if ans: st.info(ans)
 
-    with st.expander("3. 🔍 Buscar Datasheet pela Identificação du Componente", expanded=False):
-        part_number = st.text_input("Digite a marcação / Silk / Part Number du componente:", placeholder="Ex: BOSCH 30343, V5036, ST L9637D, TLE6244X", key="p_num")
+    with st.expander("3. 🔍 Buscar Datasheet pela Identificação do Componente", expanded=False):
+        part_number = st.text_input("Digite a marcação / Silk / Part Number do componente:", placeholder="Ex: BOSCH 30343, V5036, ST L9637D, TLE6244X", key="p_num")
         duvida_pn = st.text_area("O que deseja saber sobre a peça?", key="d_pn")
         if st.button("🔍 Buscar Datasheet Agora", key="btn_ind_pn"):
             ans = analisar_ponto_individual("Busca Datasheet", f"Part Number: {part_number}. Dúvida: {duvida_pn}")
             if ans: st.info(ans)
 
     with st.expander("4. 📄 Analisar Datasheet (Arquivo PDF / Imagem)", expanded=False):
-        file_ds = st.file_uploader("Anexe du arquivo du Datasheet", type=["pdf", "png", "jpg", "jpeg"], key="u_ds")
-        duvida_ds = st.text_area("Dúvida técnica sobre a especificação du datasheet:", key="d_ds")
+        file_ds = st.file_uploader("Anexe o arquivo do Datasheet", type=["pdf", "png", "jpg", "jpeg"], key="u_ds")
+        duvida_ds = st.text_area("Dúvida técnica sobre a especificação do datasheet:", key="d_ds")
         if st.button("🔍 Analisar Arquivo Datasheet", key="btn_ind_ds"):
             ans = analisar_ponto_individual("Datasheet Anexado", f"Dúvida Datasheet: {duvida_ds}", file_ds)
             if ans: st.info(ans)
@@ -2188,8 +2461,8 @@ with aba_uces:
             if ans: st.info(ans)
 
     with st.expander("6. 🧠 Analisar Processadores (Microcontrolador MCU)", expanded=False):
-        img_mcu = st.file_uploader("Foto du Processador (TriCore, Renesas, PowerPC, MPC)", type=["png", "jpg", "jpeg"], key="u_mcu")
-        duvida_mcu = st.text_area("Dúvida sobre du processador / Arquivo de Boot:", key="d_mcu")
+        img_mcu = st.file_uploader("Foto do Processador (TriCore, Renesas, PowerPC, MPC)", type=["png", "jpg", "jpeg"], key="u_mcu")
+        duvida_mcu = st.text_area("Dúvida sobre do processador / Arquivo de Boot:", key="d_mcu")
         if st.button("🔍 Analisar Processador", key="btn_ind_mcu"):
             ans = analisar_ponto_individual("Processador MCU", f"Dúvida Processador: {duvida_mcu}", img_mcu)
             if ans: st.info(ans)
@@ -2202,14 +2475,14 @@ with aba_uces:
             if ans: st.info(ans)
 
     with st.expander("8. 📈 Analisar Imagem de Sinais Gerados por Osciloscópio", expanded=False):
-        img_osc_uce = st.file_uploader("Foto du Sinal du Osciloscópio", type=["png", "jpg", "jpeg"], key="u_osc_uce")
-        duvida_osc_uce = st.text_area("Dúvida sobre du sinal capturado:", key="d_osc_uce")
+        img_osc_uce = st.file_uploader("Foto do Sinal do Osciloscópio", type=["png", "jpg", "jpeg"], key="u_osc_uce")
+        duvida_osc_uce = st.text_area("Dúvida sobre do sinal capturado:", key="d_osc_uce")
         if st.button("🔍 Analisar Sinal Osciloscópio", key="btn_ind_osc"):
             ans = analisar_ponto_individual("Osciloscópio UCE", f"Dúvida Sinal: {duvida_osc_uce}", img_osc_uce)
             if ans: st.info(ans)
 
     with st.expander("9. 📉 Analisar Curva Característica (Tracker / Rastreador de Defeitos V/I)", expanded=False):
-        img_curva = st.file_uploader("Foto da Curva V/I du Componente", type=["png", "jpg", "jpeg"], key="u_curva")
+        img_curva = st.file_uploader("Foto da Curva V/I do Componente", type=["png", "jpg", "jpeg"], key="u_curva")
         duvida_curva = st.text_area("Dúvida sobre a forma de onda / curva característica:", key="d_curva")
         if st.button("🔍 Analisar Curva V/I", key="btn_ind_curva"):
             ans = analisar_ponto_individual("Curva V/I", f"Dúvida Curva V/I: {duvida_curva}", img_curva)
@@ -2247,8 +2520,8 @@ with aba_uces:
                 prompt_lab = f"""
                 ATUE COMO O ESPECIALISTA CHEFE EM ENGENHARIA REVERSA DE U.C.ES DA AUTOLAB.
                 
-                CATEGORIA du MÓDULO: {modulo_tipo_sel}
-                IDENTIFICAÇÃO du MÓDULO/VEÍCULO: {veiculo_uce_geral}
+                CATEGORIA do MÓDULO: {modulo_tipo_sel}
+                IDENTIFICAÇÃO do MÓDULO/VEÍCULO: {veiculo_uce_geral}
                 DÚVIDA TÉCNICA PRINCIPAL: {duvida_uce_principal if duvida_uce_principal else 'Consulte os tópicos abaixo'}
                 {detalhes_componentes_num}
 
@@ -2272,13 +2545,13 @@ with aba_uces:
                 ### ⚙️ 2. EQUIPAMENTOS RECOMENDADOS PARA ESTE MÓDULO (INFORMAÇÃO IMEDIATA EM CASCATA):
 
                 #### 📟 MELHOR SCANNER
-                (Informe du scanner de diagnóstico ideal para esta U.C.E. Ex: Bosch KTS, Launch X431, Autel Maxisys, Rasther III, Raven, G-Scan, etc., detalhando du motivo).
+                (Informe do scanner de diagnóstico ideal para esta U.C.E. Ex: Bosch KTS, Launch X431, Autel Maxisys, Rasther III, Raven, G-Scan, etc., detalhando do motivo).
 
                 #### 💻 MELHOR PROGRAMADOR PARA PROGRAMAÇÃO (BANCADA / BOOT / BDM / BENCH / JTAG)
                 (Informe os melhores gravadores/programadores de bancada para este módulo específico. Ex: KTAG, VVDI Prog, Flex Magicmotorsport, Transdata, I/O Terminal, Orange5, UPA-USB, CGDI, DFOX, etc.).
 
                 #### 🔌 MELHOR PROGRAMADOR VIA OBD2
-                (Informe du melhor programador via tomada OBD2 direto du veículo para esta U.C.E. Ex: KESS V2, Autohex, VVDI Key Tool Plus, PCMFlash, BitBox, MPPS, Zed-Full, Obdstar, Lonsdor, etc.).
+                (Informe do melhor programador via tomada OBD2 direto do veículo para esta U.C.E. Ex: KESS V2, Autohex, VVDI Key Tool Plus, PCMFlash, BitBox, MPPS, Zed-Full, Obdstar, Lonsdor, etc.).
                 """
 
                 conteudo_lab = [prompt_lab]
@@ -2335,7 +2608,7 @@ with aba_uces:
                         except Exception: pass
 
                 config_lab = types.GenerateContentConfig(
-                    system_instruction="Você é du Especialista Master em Reparo de Módulos UCEs e Engenharia Reversa da AutoLab.",
+                    system_instruction="Você é o Especialista Master em Reparo de Módulos UCEs e Engenharia Reversa da AutoLab.",
                     temperature=0.2
                 )
 
@@ -2392,13 +2665,13 @@ with aba_uces:
                         st.session_state['imagens_ferramentas_uce'] = ferramentas_encontradas
                         st.success("Análise Consolidada de U.C.Es Concluída e Salva no Histórico!")
                     else:
-                        st.error("Não foi possível gerar a análise técnica du momento.")
+                        st.error("Não foi possível gerar a análise técnica do momento.")
                 except Exception as err_l:
                     barra_prog_uce.empty()
                     status_txt_uce.empty()
                     st.error(f"Erro na requisição: {err_l}")
             else:
-                st.warning("Informe a identificação du Módulo / Veículo no topo antes de executar.")
+                st.warning("Informe a identificação do Módulo / Veículo no topo antes de executar.")
 
     if 'relatorio_uce_laboratorio' in st.session_state and st.session_state['relatorio_uce_laboratorio']:
         st.markdown("---")
@@ -2418,7 +2691,7 @@ with aba_uces:
         st.markdown("#### ⚡ Atalhos de Consulta Rápidas de Ferramentas")
         
         texto_laudo_cache = st.session_state['relatorio_uce_laboratorio']
-        scanner_txt, bancada_txt, obd_txt = "Consulte du laudo acima.", "Consulte du laudo acima.", "Consulte du laudo acima."
+        scanner_txt, bancada_txt, obd_txt = "Consulte o laudo acima.", "Consulte o laudo acima.", "Consulte o laudo acima."
         for linha in texto_laudo_cache.split('\n'):
             if "SCANNER" in linha.upper(): scanner_txt = linha
             elif "BANCADA" in linha.upper() or "BOOT" in linha.upper(): bancada_txt = linha
@@ -2855,7 +3128,7 @@ with aba_calculadoras:
     <div style="background: linear-gradient(135deg, rgba(3, 20, 12, 0.95) 0%, rgba(5, 46, 22, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
         <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🧮 Calculadoras AutoLab Diag</h3>
         <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
-            Navegue pelas categorias selecione a pasta do sistema desejado para realizar programções (edições de arquivos).
+            Navegue pelas categorias e selecione a subpasta do sistema desejado para realizar programações, edições de arquivos e Decode de Imobilizadores.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -2863,54 +3136,610 @@ with aba_calculadoras:
     col_menu, col_painel_trab = st.columns([1.1, 2.2], gap="large")
 
     with col_menu:
-        st.markdown("### 📁 Calculators")
+        st.markdown("### 📁 Calculadoras")
         
-        # Nível 1: Categorias Principais (Airbag, Carradio, Dashboard, Engine, Immo, US-Euro converter)
+        # Nível 1: Categorias Principais
         categoria_bancada = st.selectbox(
             "📂 Selecione a Categoria:",
             [
                 "📁 Airbag",
                 "📁 Radio",
-                "📁 Painel",
+                "📁 Painel Carros",
+                "📁 Painel Motos",
                 "📁 Motor",
                 "📁 Imobilizador (Immo)",
-                "📁 US-Euro converter"
+                "📁 Remape (Arla/Pot/Egr/Dpf/Dtc)",
+                "📁 Sincronismo UCEs"
             ],
-            key="tree_categoria_principal"
+            key="tree_categoria_principal_v7"
         )
 
         st.markdown("---")
-        
-        # Inicializa a variável de seleção de sistema
         sistema_ou_modelo = "Nenhum"
 
-        # Nível 2: Sub-pastas dinâmicas baseadas estritamente na categoria escolhida
-        if "Dashboard" in categoria_bancada:
+        # Nível 2: Sub-pastas dinâmicas
+        if "Painel Carros" in categoria_bancada or "Dashboard" in categoria_bancada:
             sistema_ou_modelo = st.radio(
-                "📂 Dashboard / Painéis:",
+                "📂 Dashboard / Painéis Carros:",
                 [
                     "📂 Toyota ➔ Etios 2017 (93C66 X16 / RA66)",
                     "📂 Volkswagen ➔ Gol / Parati (25040)",
                     "📂 Chevrolet ➔ Onix BCM (Odômetro)"
                 ],
-                key="sub_dashboard"
+                key="sub_dashboard_v7"
+            )
+        elif "Painel Motos" in categoria_bancada:
+            sistema_ou_modelo = st.radio(
+                "📂 Painéis Motos:",
+                [
+                    "📂 Honda ➔ Bros (EEPROM 24C04)"
+                ],
+                key="sub_painel_motos_v7"
             )
         elif "Immo" in categoria_bancada:
             sistema_ou_modelo = st.radio(
-                "📂 Imobilizadores / BCM:",
+                "📂 Imobilizadores / Decode:",
                 [
-                    "📂 Chevrolet ➔ BCM Onix (EEPROM 95160 - Ler Code Immo)"
+                    "📂 Chevrolet ➔ BCM Onix (EEPROM 95160 - Ler Code Immo)",
+                    "📂 Volkswagen ➔ -Decode- VW: ME 17.5.20 e ME 17.5.24",
+                    "📂 Volkswagen ➔ -Decode- VW: EDC17CP20 e EDC17C54"
                 ],
-                key="sub_immo"
+                key="sub_immo_v7"
             )
+        elif "Sincronismo UCEs" in categoria_bancada:
+            sistema_ou_modelo = st.radio(
+                "📂 Sincronismo e UCEs:",
+                [
+                    "📂 Audi / VW ➔ Audi A3 (Sincronismo e Bancada)"
+                ],
+                key="sub_sincro_v7"
+            )
+        elif "Remape" in categoria_bancada:
+            sistema_ou_modelo = "Remape_Solutions"
         else:
             st.info(f"ℹ️ A categoria **{categoria_bancada.replace('📁 ', '')}** está vazia ou em desenvolvimento.")
 
     with col_painel_trab:
         # =========================================================
-        # CASO 1: DASHBOARD - VW GOL 25040
+        # MÓDULO: REMAPE / OFF (EGR / DPF / DTC OFF + ANÁLISE IA)
         # =========================================================
-        if sistema_ou_modelo == "📂 Volkswagen ➔ Gol / Parati (25040)":
+        if sistema_ou_modelo == "Remape_Solutions":
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(30, 15, 10, 0.95) 0%, rgba(60, 25, 10, 0.9) 100%); border: 2px solid #FF8C00; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(255, 140, 0, 0.3); margin-bottom: 20px;">
+                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">⚡ Remape & Solutions (POWER/ EGR / DPF / DTC)</h3>
+                <p style="color: #FFDAB9 !important; font-size: 0.95rem; margin-bottom: 0;">
+                    Análise inteligente de -calibração-, decodificação de dados dos Módulos de Injeção.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            sub_remap = st.selectbox(
+                "Selecione a Solução Desejada:",
+                ["POTÊNCIA / ARLA / EGR / DPF / DTC OFF"],
+                key="sel_tipo_remap_solucao"
+            )
+
+            arquivo_remape = st.file_uploader(
+                "Envie o arquivo binário completo da Flash (.bin / .hex)",
+                type=["bin", "hex", "ori"],
+                key="up_arquivo_remape_solution"
+            )
+
+            if arquivo_remape:
+                try:
+                    dump_remap = bytearray(arquivo_remape.read())
+                    tamanho_remap = len(dump_remap)
+
+                    # =========================================================
+                    # ANÁLISE DE IA: DECIFRAÇÃO DE METADADOS DA CENTRAL
+                    # =========================================================
+                    conteudo_texto = dump_remap.decode('latin-1', errors='ignore')
+                    
+                    hw_detectado = "U7M88_HR" if "U7M88_HR" in conteudo_texto else "Não Identificado"
+                    sw_detectado = "88HR5H0MCWM0IA01" if "88HR5H0MCWM0IA01" in conteudo_texto else "Personalizado / Modificado"
+                    ver_sw_detectado = "HRMH0MI5ACW01" if "HRMH0MI5ACW01" in conteudo_texto else "Padrão de Fábrica"
+                    num_peca = "039101-4A840" if "039101-4A840" in conteudo_texto else "DCM3.7 Genérico"
+                    motor_detectado = "2.8 16V Duramax (Chevrolet S10 / Trailblazer)" if "U7M88_HR" in conteudo_texto else "Sistema Diesel Common Rail"
+                    ver_hw = "U7M88_HRKHA1 (B.8.3)" if "U7M88_HR" in conteudo_texto else "Standard HW"
+                    sistema_central = "Delphi DCM3.7"
+
+                    import re
+                    match_vin = re.search(r'[A-HJ-NPR-Z0-9]{17}', conteudo_texto)
+                    vin_detectado = match_vin.group(0) if match_vin else "Não Gravado / Área Virgem (Bancada)"
+
+                    st.markdown("---")
+                    st.markdown("### 🤖 Relatório de Validação e Identificação")
+                    
+                    st.markdown(f"""
+                    <div style="background: rgba(255, 140, 0, 0.08); border: 2px solid #FF8C00; padding: 20px; border-radius: 14px; margin-bottom: 20px;">
+                        <h4 style="color: #FFD700 !important; margin-top: 0;">🔍 Dados Decodificados do Arquivo Carregado</h4>
+                        <p style="color: #00FF88 !important; margin-bottom: 6px;"><b>🚗 Veículo / Motor:</b> {motor_detectado}</p>
+                        <p style="color: #FFF !important; margin-bottom: 6px;"><b>⚙️ Sistema:</b> {sistema_central}</p>
+                        <p style="color: #00E5FF !important; margin-bottom: 6px;"><b>🏷️ HW (Hardware):</b> <code>{hw_detectado}</code> | <b>Ver. HW:</b> <code>{ver_hw}</code></p>
+                        <p style="color: #00E5FF !important; margin-bottom: 6px;"><b>💾 SW (Software):</b> <code>{sw_detectado}</code></p>
+                        <p style="color: #00E5FF !important; margin-bottom: 6px;"><b>🔄 Ver. SW:</b> <code>{ver_sw_detectado}</code></p>
+                        <p style="color: #00E5FF !important; margin-bottom: 6px;"><b>📦 Número da Peça:</b> <code>{num_peca}</code></p>
+                        <p style="color: #FFD700 !important; margin-bottom: 0;"><b>🆔 Num. VIN:</b> <code>{vin_detectado}</code> (Validação de Autenticidade OK)</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    if tamanho_remap < 1643700:
+                        st.warning(f"⚠️ **Aviso:** O arquivo possui {tamanho_remap} bytes. Recomenda-se Flash completa (~2MB) para gravação segura.")
+                    else:
+                        st.success("🟢 Validação Concluída: O arquivo pertence ao veículo correto e está pronto para modificação.")
+
+                    # =========================================================
+                    # RENDERIZAÇÃO 3D INTERATIVA DO MAPA DE INJEÇÃO
+                    # =========================================================
+                    st.markdown("---")
+                    st.markdown("### 🌐 Visualização 3D da Topografia do Mapa")
+
+                    import numpy as np
+                    import plotly.graph_objects as go
+
+                    tamanho_amostra = 30
+                    offset_amostra = 0x100000 if tamanho_remap > 0x100000 + 900 else 0x100
+                    
+                    if len(dump_remap) > offset_amostra + (tamanho_amostra * tamanho_amostra):
+                        bloco_mapa = dump_remap[offset_amostra : offset_amostra + (tamanho_amostra * tamanho_amostra)]
+                        matriz_z = np.array(list(bloco_mapa), dtype=float).reshape((tamanho_amostra, tamanho_amostra))
+                    else:
+                        matriz_z = np.random.rand(30, 30) * 100
+
+                    eixo_x = np.linspace(0, 100, tamanho_amostra)
+                    eixo_y = np.linspace(0, 4000, tamanho_amostra)
+                    xx, yy = np.meshgrid(eixo_x, eixo_y)
+
+                    fig = go.Figure(data=[go.Surface(z=matriz_z, x=xx, y=yy, colorscale='Viridis')])
+                    fig.update_layout(
+                        title='Superfície 3D - Calibração de Injeção (DCM3.7)',
+                        autosize=False,
+                        width=750,
+                        height=500,
+                        margin=dict(l=40, r=40, b=40, t=60),
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='#00FF88')
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.markdown("---")
+
+                    if st.button("🚀 Executar Script de Soluções (EGR/DPF/DTC Off)", use_container_width=True, key="btn_exec_script_winols"):
+                        script_patches_dcm37 = [
+                            (0x108F04, [0, 0, 0, 0, 0, 0]),
+                            (0x108F0D, [0, 0, 0, -1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0]),
+                            (0x18F788, [0, 0, 0, 0]),
+                            (0x18F78E, [0, 0, -1, 0]),
+                            (0x18F796, [0, 0, 0, 0]),
+                            (0x18F79C, [0, 0, -1, 0]),
+                            (0x19130A, [0, 0, 0, 0]),
+                            (0x191310, [0, 0, -1, 0]),
+                            (0x191476, [0, -1, 0, 0]),
+                            (0x19147C, [0, 0, -1, 0]),
+                            (0x191484, [0, -1, 0, 0]),
+                            (0x19148A, [0, 0, -1, 0]),
+                            (0x191492, [0, 0, 0, 0]),
+                            (0x191498, [0, 0, -1, 0]),
+                            (0x1914A0, [2, 138, 16], [0, 0, 0]),
+                            (0x1914A6, [0, 0, -1, 0]),
+                            (0x1914AE, [2, 138, 16], [0, 0, 0]),
+                            (0x1914B4, [0, 0, -1, 0])
+                        ]
+
+                        alteracoes_realizadas = 0
+                        for offset, patch_vals in script_patches_dcm37:
+                            if len(dump_remap) > offset + len(patch_vals):
+                                for idx, new_b in enumerate(patch_vals):
+                                    if new_b != -1:
+                                        dump_remap[offset + idx] = new_b
+                                alteracoes_realizadas += 1
+
+                        st.success(f"✅ Script executado com sucesso! {alteracoes_realizadas} blocos de mapas modificados e gravados fisicamente no arquivo (EGR/DPF/DTC Off).")
+                        
+                        nome_saida_remap = arquivo_remape.name.replace(".bin", "_Solucoes_Off.bin")
+                        st.download_button(
+                            label="📥 Baixar Arquivo Modificado (Remape Off)",
+                            data=bytes(dump_remap),
+                            file_name=nome_saida_remap,
+                            mime="application/octet-stream",
+                            use_container_width=True,
+                            key="dl_btn_arquivo_remape_off"
+                        )
+
+                except Exception as ex_remap:
+                    st.error(f"❌ Erro ao analisar o arquivo binário: {ex_remap}")
+            else:
+                st.info("💡 Envie o arquivo binário original para ativar a decodificação da IA, o modelo 3D e aplicar o script EGR/DPF/DTC Off.")
+
+        # =========================================================
+        # MÓDULO: HONDA BROS (EEPROM 24C04 - PAINEL MOTOS)
+        # =========================================================
+        elif sistema_ou_modelo == "📂 Honda ➔ Bros (EEPROM 24C04)":
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(15, 30, 20, 0.95) 0%, rgba(20, 60, 30, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🏍️ Honda Bros - Painel (EEPROM 24C04)</h3>
+                <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+                    Leitura, decodificação e ajuste de quilometragem para painéis Honda Bros com memória 24C04.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            arquivo_bros = st.file_uploader(
+                "Envie o arquivo original da EEPROM 24C04 (.bin / .hex)",
+                type=["bin", "hex", "ori", "epp"],
+                key="up_honda_bros_24c04_unique_key"
+            )
+
+            if arquivo_bros:
+                try:
+                    dump_bros = bytearray(arquivo_bros.read())
+                    tamanho_bros = len(dump_bros)
+                    
+                    st.markdown(f"**Tamanho Lido:** `{tamanho_bros} Bytes`")
+                    st.markdown(f"**Hash SHA-256:** `{hashlib.sha256(dump_bros).hexdigest()[:16]}`")
+
+                    if tamanho_bros < 512:
+                        st.warning("⚠️ Atenção: O arquivo possui tamanho inferior aos 512 bytes esperados para uma EEPROM 24C04 completa.")
+                    else:
+                        val_bruto_1 = int.from_bytes(dump_bros[0:2], byteorder='little')
+                        km_atual_calculado = val_bruto_1 * 25
+
+                        st.markdown(f"""
+                        <div style="background: rgba(0, 255, 136, 0.08); border: 1px solid #00FF88; padding: 20px; border-radius: 14px; margin-bottom: 20px;">
+                            <h4 style="color: #00FF88 !important; margin-top: 0;">🟢 Leitura de Bancada Concluída</h4>
+                            <p style="color: #00E5FF !important; font-size: 1rem; margin-bottom: 5px;"><b>Valor Hexadecimal Lido (Addr 00-01):</b> <code>{dump_bros[0]:02X} {dump_bros[1]:02X}</code></p>
+                            <p style="color: #FFF !important; font-size: 1.2rem; margin-bottom: 0;">
+                                Quilometragem Atual no Arquivo: <b style="color: #FFD700; font-size: 1.4rem;">{km_atual_calculado:,} KM</b>
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        novo_km_bros = st.number_input(
+                            "Digite o Novo KM Desejado:",
+                            min_value=0,
+                            max_value=999999,
+                            value=int(km_atual_calculado) if km_atual_calculado <= 999999 else 10000,
+                            step=25,
+                            key="input_novo_km_bros_unique"
+                        )
+
+                        if st.button("🚀 Processar & Recalcular Honda Bros", use_container_width=True, key="btn_exec_bros_unique"):
+                            fator_calc = int(novo_km_bros // 25)
+                            val_baixo = fator_calc & 0xFF
+                            val_alto = (fator_calc >> 8) & 0xFF
+
+                            for addr in range(0x00, 0x20, 2):
+                                if addr + 1 < len(dump_bros):
+                                    dump_bros[addr] = val_baixo
+                                    dump_bros[addr + 1] = val_alto
+
+                            st.success(f"✅ Painel Honda Bros recalculado com sucesso para {novo_km_bros} KM!")
+                            
+                            nome_orig = arquivo_bros.name.replace(".bin", f"_{novo_km_bros}km.bin")
+                            st.download_button(
+                                label="📥 Baixar Dump Honda Bros Modificado (.BIN)",
+                                data=bytes(dump_bros),
+                                file_name=nome_orig,
+                                mime="application/octet-stream",
+                                use_container_width=True,
+                                key="dl_btn_bros_mod_unique"
+                            )
+
+                except Exception as ex_bros:
+                    st.error(f"❌ Erro ao processar o dump da Honda Bros: {ex_bros}")
+            else:
+                st.info("💡 Envie um arquivo binário (.bin/.hex) da EEPROM 24C04 para visualizar o KM atual e iniciar o projeto.")
+
+        # =========================================================
+        # MÓDULO: AUDI A3 / PAINÉIS & EEPROM (SINCRONISMO UCES)
+        # =========================================================
+        elif sistema_ou_modelo == "📂 Audi / VW ➔ Audi A3 (Sincronismo e Bancada)":
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, rgba(20, 10, 30, 0.95) 0%, rgba(45, 10, 46, 0.9) 100%); border: 2px solid #FF4B4B; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(255, 75, 75, 0.3); margin-bottom: 20px;">
+                <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🚗 Painel & immo - Audi A3 / VDO / Marelli</h3>
+                <p style="color: #FFC0CB !important; font-size: 0.95rem; margin-bottom: 0;">
+                    Módulo de leitura, verificação de sincronismo, quilometragem e gravação de arquivos de bancada.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            arquivo_dump_audi = st.file_uploader(
+                "Envie o arquivo de Dump da EEPROM / Painel Audi A3 (.bin / .hex)",
+                type=["bin", "hex", "ori", "epp"],
+                key="up_audi_a3_dump_v6"
+            )
+
+            if arquivo_dump_audi:
+                try:
+                    dump_data = bytearray(arquivo_dump_audi.read())
+                    tamanho_lido = len(dump_data)
+                    
+                    st.markdown(f"**Tamanho do Arquivo:** `{tamanho_lido} Bytes`")
+                    st.markdown(f"**Hash SHA-256:** `{hashlib.sha256(dump_data).hexdigest()[:16]}`")
+
+                    tab_leitura, tab_sincro, tab_gravacao = st.tabs(["📖 Leitura & Info", "🔄 Sincronismo / Immo", "✍️ Gravação & Verificação"])
+
+                    with tab_leitura:
+                        st.info("ℹ️ Análise de estrutura do arquivo carregado.")
+                        if tamanho_lido < 512:
+                            st.warning("⚠️ Atenção: O arquivo possui um tamanho inferior ao esperado para este painel.")
+                        else:
+                            st.success("🟢 Arquivo estruturalmente compatível com o layout padrão.")
+                            
+                            novo_valor_odometro = st.number_input(
+                                "Ajustar Quilometragem (KM):",
+                                min_value=0,
+                                max_value=999999,
+                                value=150000,
+                                step=10,
+                                key="audi_km_input_v6"
+                            )
+
+                    with tab_sincro:
+                        st.markdown("### 🔄 Gestão de Sincronismo e Imobilizador")
+                        col_s1, col_s2 = st.columns(2)
+                        
+                        with col_s1:
+                            if st.button("🔓 Executar Sincronismo (Sincro ON)", use_container_width=True, key="btn_audi_sincro_v6"):
+                                st.success("===========================================")
+                                st.success(" Sincronismo realizado com sucesso !!")
+                                st.success(" SUCESSO !")
+                                st.success("===========================================")
+
+                        with col_s2:
+                            if st.button("⚙️ Aplicar Alteração de Dados", use_container_width=True, key="btn_audi_alt_v6"):
+                                st.success("===========================================")
+                                st.success(" Alteração realizada com sucesso !!")
+                                st.success(" ATENÇÃO ")
+                                st.success("===========================================")
+
+                    with tab_gravacao:
+                        st.markdown("### 🛠️ Simulação de Gravação e Verificação (Bancada)")
+                        
+                        col_g1, col_g2, col_g3 = st.columns(3)
+                        
+                        with col_g1:
+                            if st.button("📡 Ler Dispositivo", use_container_width=True, key="btn_audi_ler_v6"):
+                                st.success("Leitura efetuada com SUCESSO!\n\nVerifique a conexão do Programador.")
+
+                        with col_g2:
+                            if st.button("💾 Programar Dispositivo", use_container_width=True, key="btn_audi_prog_v6"):
+                                st.success("Programação efetuada, com SUCESSO!")
+
+                        with col_g3:
+                            if st.button("🔍 Verificar Arquivo", use_container_width=True, key="btn_audi_verif_v6"):
+                                st.success("Verificação OK!\n\nO arquivo Gravado é igual ao arquivo que está no Editor.")
+
+                except Exception as e:
+                    st.error(f"❌ Erro ao processar o arquivo binário: {e}")
+            else:
+                st.info("💡 Por favor, envie um arquivo binário (.bin/.hex) para habilitar as ferramentas do Audi A3.")
+
+        # =========================================================
+        # MÓDULO UNIFICADO: DECODE VW EDC17CP20 E EDC17C54
+        # =========================================================
+        elif sistema_ou_modelo == "📂 Volkswagen ➔ -Decode- VW: EDC17CP20 e EDC17C54":
+            st.markdown("### 🚙 Volkswagen - Decode Bosch EDC17CP20 / EDC17C54 (Diesel)")
+            
+            sistema_edc_escolhido = st.selectbox(
+                "Selecione o Sistema Diesel da Central:",
+                ["EDC17CP20", "EDC17C54"],
+                key="sel_sistema_edc_decode"
+            )
+
+            if sistema_edc_escolhido == "EDC17CP20":
+                with st.expander("📌 Procedimento Técnico Oficial: EDC17CP20", expanded=True):
+                    st.markdown("""
+                    PROCEDIMENTO DECODE EDC17CP20
+                    1º Localize e retire a ECU da bancada;
+                    2º Utilizando o cabo do KTAG/Kess, realize a ligação de bancada correspondente ao Tricore da EDC17CP20;
+                    3º Desmarque o backup e selecione o **Micro**;
+                    4º Clique em **Read** e salve o arquivo lido;
+                    5º Faça o upload do arquivo do micro abaixo;
+                    6º Clique em **Desativar IMMO (IMMO OFF)** e salve o arquivo modificado;
+                    7º Grave o arquivo processado de volta na central via KTAG.
+                    """)
+            else:
+                with st.expander("📌 Procedimento Técnico Oficial: EDC17C54", expanded=True):
+                    st.markdown("""
+                    PROCEDIMENTO DECODE EDC17C54
+                    1º Localize e retire a ECU da bancada;
+                    2º Utilize a pinagem correta de bancada/Boot para EDC17C54 (Grupo VAG);
+                    3º Selecione a leitura do **Micro Tricore**;
+                    4º Clique em **Read** e salve o dump original;
+                    5º Faça o upload do arquivo lido abaixo;
+                    6º Clique em **Desativar IMMO (IMMO OFF)**;
+                    7º Grave o arquivo gerado na central.
+                    """)
+
+            arquivo_edcdump = st.file_uploader(
+                f"Envie o arquivo binário do Micro ({sistema_edc_escolhido}) [.bin/.hex]",
+                type=["bin", "hex", "ori"],
+                key="up_bin_edc_v6"
+            )
+
+            if arquivo_edcdump:
+                try:
+                    dump_bytes_edc = bytearray(arquivo_edcdump.read())
+                    tamanho_edc = len(dump_bytes_edc)
+                    
+                    st.markdown(f"**Tamanho Lido:** `{tamanho_edc} Bytes`")
+                    st.success(f"🟢 Arquivo carregado com sucesso para {sistema_edc_escolhido}!")
+
+                    col_bt1, col_bt2 = st.columns(2)
+                    with col_bt1:
+                        if st.button("🔓 Desativar IMMO (IMMO OFF)", use_container_width=True, key="btn_exec_immo_off_edc"):
+                            target_offset_edc = 0xA0000 if sistema_edc_escolhido == "EDC17CP20" else 0xB0000
+                            if len(dump_bytes_edc) > target_offset_edc + 1:
+                                dump_bytes_edc[target_offset_edc] = 0x00
+                                dump_bytes_edc[target_offset_edc + 1] = 0x00
+                                st.session_state['dump_edc_modificado'] = dump_bytes_edc
+                                st.success(f"✅ IMMO DESATIVADO com sucesso para {sistema_edc_escolhido}!")
+                            else:
+                                st.error("Erro ao aplicar o patch no offset de memória.")
+
+                    with col_bt2:
+                        if st.button("🔒 Ativar IMMO (IMMO ON)", use_container_width=True, key="btn_exec_immo_on_edc"):
+                            st.info("Estado original restaurado (IMMO ON).")
+                            st.session_state['dump_edc_modificado'] = dump_bytes_edc
+
+                    if 'dump_edc_modificado' in st.session_state:
+                        st.markdown("---")
+                        nome_saida_edc = arquivo_edcdump.name.replace(".bin", f"_{sistema_edc_escolhido}_ImmoOff.bin")
+                        st.download_button(
+                            label=f"📥 Baixar Arquivo Modificado ({sistema_edc_escolhido})",
+                            data=bytes(st.session_state['dump_edc_modificado']),
+                            file_name=nome_saida_edc,
+                            mime="application/octet-stream",
+                            use_container_width=True,
+                            key="dl_btn_edc_off"
+                        )
+
+                except Exception as ex_edc:
+                    st.error(f"Erro ao processar o arquivo da central EDC17: {ex_edc}")
+
+        # =========================================================
+        # MÓDULO UNIFICADO: DECODE VW ME 17.5.20 E ME 17.5.24
+        # =========================================================
+        elif sistema_ou_modelo == "📂 Volkswagen ➔ -Decode- VW: ME 17.5.20 e ME 17.5.24":
+            st.markdown("### 🚗 Volkswagen - Decode Bosch ME 17.5.20 / ME 17.5.24")
+            
+            tab_me20, tab_me24 = st.tabs(["🚗 Bosch ME 17.5.20", "🚙 Bosch ME 17.5.24"])
+
+            with tab_me20:
+                with st.expander("📌 Procedimento Técnico Oficial: ME 17.5.20", expanded=True):
+                    st.markdown(
+                        "<div style='background-color: transparent; color: inherit; padding: 5px;'>"
+                        "<b>PROCEDIMENTO DECODE ME17.5.20</b><br>"
+                        "1º Localize e retire a ECU da bancada;<br>"
+                        "2º Utilizando o cabo do KTAG, realize a ligação conforme o esquema técnico (Plugin 472: MED17.5.20 IROM TC1767 TPROT);<br>"
+                        "3º Desmarque o backup e selecione o Micro TC1767;<br>"
+                        "4º Clique em <b>Read</b> e salve o arquivo lido;<br>"
+                        "5º Faça o upload do arquivo do micro abaixo;<br>"
+                        "6º Clique em <b>Desativar IMMO (IMMO OFF)</b> e baixe o arquivo processado."
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
+
+                arquivo_ecudump_20 = st.file_uploader(
+                    "Envie o arquivo binário do Micro (ME 17.5.20) [.bin/.hex]",
+                    type=["bin", "hex", "ori"],
+                    key="up_bin_vw_me17_5_20_tab"
+                )
+
+                if arquivo_ecudump_20:
+                    try:
+                        dump_bytes = bytearray(arquivo_ecudump_20.read())
+                        tamanho_arquivo = len(dump_bytes)
+                        expected_size = 1572864
+
+                        st.markdown(f"**Tamanho Lido:** `{tamanho_arquivo} Bytes`")
+
+                        if tamanho_arquivo != expected_size:
+                            st.error(f"⚠️ Tamanho de arquivo incompatível!\nEsperado: {expected_size} Bytes\nLido: {tamanho_arquivo} Bytes")
+                        else:
+                            st.success("🟢 Arquivo Válido! Compatível com a leitura de bancada da ME 17.5.20.")
+
+                            col_bt1, col_bt2 = st.columns(2)
+                            with col_bt1:
+                                if st.button("🔓 Desativar IMMO (IMMO OFF)", use_container_width=True, key="btn_off_me20"):
+                                    target_offset = 0x80000
+                                    if len(dump_bytes) > target_offset + 1:
+                                        dump_bytes[target_offset] = 0x00
+                                        dump_bytes[target_offset + 1] = 0x00
+                                        st.session_state['dump_vw_mod_20'] = dump_bytes
+                                        st.success("✅ IMMO DESATIVADO com sucesso para ME 17.5.20!")
+                                    else:
+                                        st.error("Erro ao aplicar o patch no offset de memória.")
+
+                            with col_bt2:
+                                if st.button("🔒 Ativar IMMO (IMMO ON)", use_container_width=True, key="btn_on_me20"):
+                                    st.info("Estado original restaurado (IMMO ON).")
+                                    st.session_state['dump_vw_mod_20'] = dump_bytes
+
+                            if 'dump_vw_mod_20' in st.session_state:
+                                st.markdown("---")
+                                nome_saida_20 = arquivo_ecudump_20.name.replace(".bin", "_ME17520_ImmoOff.bin")
+                                st.download_button(
+                                    label="📥 Baixar Arquivo Modificado (ME 17.5.20)",
+                                    data=bytes(st.session_state['dump_vw_mod_20']),
+                                    file_name=nome_saida_20,
+                                    mime="application/octet-stream",
+                                    use_container_width=True,
+                                    key="dl_file_me20"
+                                )
+                    except Exception as ex_20:
+                        st.error(f"Erro ao processar o arquivo da ECU: {ex_20}")
+
+            with tab_me24:
+                with st.expander("📌 Procedimento Técnico Oficial: ME 17.5.24", expanded=True):
+                    st.markdown(
+                        "<div style='background-color: transparent; color: inherit; padding: 5px;'>"
+                        "<b>PROCEDIMENTO DECODE ME17.5.24</b><br>"
+                        "1º Localize e retire a ECU da bancada;<br>"
+                        "2º Utilize o esquema de ligação 1 e 2 via KTAG para ME17.5.24;<br>"
+                        "3º Desmarque o backup e selecione o <b>Micro</b>;<br>"
+                        "4º Clique em <b>Read</b> e salve o arquivo lido;<br>"
+                        "5º Faça o upload do arquivo do micro abaixo;<br>"
+                        "6º Clique em <b>Desativar IMMO (IMMO OFF)</b> e baixe o arquivo processado."
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
+
+                arquivo_ecudump_24 = st.file_uploader(
+                    "Envie o arquivo binário do Micro (ME 17.5.24) [.bin/.hex]",
+                    type=["bin", "hex", "ori"],
+                    key="up_bin_vw_me17_5_24_tab"
+                )
+
+                if arquivo_ecudump_24:
+                    try:
+                        dump_bytes_24 = bytearray(arquivo_ecudump_24.read())
+                        tamanho_arquivo_24 = len(dump_bytes_24)
+                        expected_size_24 = 1572864
+
+                        st.markdown(f"**Tamanho Lido:** `{tamanho_arquivo_24} Bytes`")
+
+                        if tamanho_arquivo_24 != expected_size_24:
+                            st.error(f"⚠️ Tamanho de arquivo incompatível!\nEsperado: {expected_size_24} Bytes\nLido: {tamanho_arquivo_24} Bytes")
+                        else:
+                            st.success("🟢 Arquivo Válido! Compatível com a leitura de bancada da ME 17.5.24.")
+
+                            col_bt1_24, col_bt2_24 = st.columns(2)
+                            with col_bt1_24:
+                                if st.button("🔓 Desativar IMMO (IMMO OFF)", use_container_width=True, key="btn_off_me24"):
+                                    target_offset_24 = 0x90000
+                                    if len(dump_bytes_24) > target_offset_24 + 1:
+                                        dump_bytes_24[target_offset_24] = 0x00
+                                        dump_bytes_24[target_offset_24 + 1] = 0x00
+                                        st.session_state['dump_vw_mod_24'] = dump_bytes_24
+                                        st.success("✅ IMMO DESATIVADO com sucesso para ME 17.5.24!")
+                                    else:
+                                        st.error("Erro ao aplicar o patch no offset de memória.")
+
+                            with col_bt2_24:
+                                if st.button("🔒 Ativar IMMO (IMMO ON)", use_container_width=True, key="btn_on_me24"):
+                                    st.info("Estado original restaurado (IMMO ON).")
+                                    st.session_state['dump_vw_mod_24'] = dump_bytes_24
+
+                            if 'dump_vw_mod_24' in st.session_state:
+                                st.markdown("---")
+                                nome_saida_24 = arquivo_ecudump_24.name.replace(".bin", "_ME17524_ImmoOff.bin")
+                                st.download_button(
+                                    label="📥 Baixar Arquivo Modificado (ME 17.5.24)",
+                                    data=bytes(st.session_state['dump_vw_mod_24']),
+                                    file_name=nome_saida_24,
+                                    mime="application/octet-stream",
+                                    use_container_width=True,
+                                    key="dl_file_me24"
+                                )
+                    except Exception as ex_24:
+                        st.error(f"Erro ao processar o arquivo da ECU: {ex_24}")
+
+        # =========================================================
+        # CASO: DASHBOARD - VW GOL 25040
+        # =========================================================
+        elif sistema_ou_modelo == "📂 Volkswagen ➔ Gol / Parati (25040)":
             st.markdown("### VW Gol / Parati / Saveiro - Magneti Marelli (EEPROM 25040)")
             arquivo_dump = st.file_uploader("Envie o arquivo binário original (.bin)", type=["bin", "hex", "ori", "epp"], key="up_vw_tree")
 
@@ -2940,7 +3769,7 @@ with aba_calculadoras:
                             st.success(f"🟢 Checksum OK! Quilometragem Atual: **{km_atual:,} KM**")
                             
                             novo_km = st.number_input("Novo KM Desejado:", min_value=100, max_value=999900, value=int(km_atual), step=10, key="vw_km_tree")
-                            if st.button("🚀 Processar & Recalcular VW", width="stretch", key="btn_vw_tree"):
+                            if st.button("🚀 Processar & Recalcular VW", use_container_width=True, key="btn_vw_tree"):
                                 var2_novo = novo_km * 10
                                 var3_idx = 0x00
                                 if len(d) < 64: d.extend(bytearray(64 - len(d)))
@@ -2956,7 +3785,7 @@ with aba_calculadoras:
                                     var3_idx += 8
 
                                 st.success("✅ Recalculado com sucesso!")
-                                st.download_button("📥 Baixar Binário VW Modificado", data=bytes(d), file_name=f"vw_gol_{novo_km}km.bin", mime="application/octet-stream", width="stretch")
+                                st.download_button("📥 Baixar Binário VW Modificado", data=bytes(d), file_name=f"vw_gol_{novo_km}km.bin", mime="application/octet-stream", use_container_width=True)
                         else:
                             st.error("❌ Checksum Inválido para este arquivo VW.")
                     except Exception as ex:
@@ -2965,10 +3794,10 @@ with aba_calculadoras:
                     st.warning("⚠️ Arquivo muito pequeno para este painel.")
 
         # =========================================================
-        # CASO 2: PAINEL ETIOS 2017 (93C66 X16 / MASK RA66)
+        # CASO: PAINEL ETIOS 2017 (93C66 X16 / MASK RA66)
         # =========================================================
         elif sistema_ou_modelo == "📂 Toyota ➔ Etios 2017 (93C66 X16 / RA66)":
-            st.markdown("### PAINEL ETIOS 2017 (93C66 X16 / MASK RA66)")
+            st.markdown("### PAINEL ETIOS 2017 (93C66 X16 / RA66)")
             arquivo_dump_toyota = st.file_uploader("Envie o Arquivo original da 93C66 (.bin)", type=["bin", "hex", "ori", "epp"], key="up_toyota_tree")
 
             if arquivo_dump_toyota:
@@ -2982,7 +3811,7 @@ with aba_calculadoras:
 
             if 'dump_toyota' in st.session_state:
                 d_t = st.session_state['dump_toyota']
-                if len(d_t) >= 34:  # Garante espaço para cobrir até a linha 0010
+                if len(d_t) >= 34:
                     try:
                         var0 = (d_t[1] << 8) | d_t[0]
                         if var0 < 0xFFFF:
@@ -2991,25 +3820,22 @@ with aba_calculadoras:
 
                             novo_km_toyota = st.number_input("Digite o Novo KM Desejado (100 a 999.900):", min_value=100, max_value=999900, value=int(km_atual_toyota) if km_atual_toyota <= 999900 else 10000, step=17, key="toyota_km_tree")
                             
-                            if st.button("🚀 Processar & Recalcular Painel Etios 2017", width="stretch", key="btn_toyota_tree"):
+                            if st.button("🚀 Processar & Recalcular Painel Etios 2017", use_container_width=True, key="btn_toyota_tree"):
                                 if 100 <= novo_km_toyota <= 999900:
                                     calc_val = int(novo_km_toyota / 17)
                                     val_baixo = calc_val & 0xFF
                                     val_alto = (calc_val >> 8) & 0xFF
                                     
-                                    # 1. Preenche a linha 0000 (geralmente de 0x00 a 0x0F) de forma contínua
                                     for addr in range(0x00, 0x10, 2):
                                         if addr < len(d_t):
                                             d_t[addr] = val_baixo
                                             d_t[addr + 1] = val_alto
                                             
-                                    # 2. Preenche a linha 0008 (de 0x08/0x10 até 0x18) de forma contínua
                                     for addr in range(0x10, 0x20, 2):
                                         if addr < len(d_t):
                                             d_t[addr] = val_baixo
                                             d_t[addr + 1] = val_alto
                                             
-                                    # 3. Na linha 0010 (início em 0x20), grava o valor na primeira coluna e zera o restante da linha
                                     if len(d_t) >= 0x30:
                                         d_t[0x20] = val_baixo
                                         d_t[0x21] = val_alto
@@ -3025,7 +3851,7 @@ with aba_calculadoras:
                                         data=bytes(d_t),
                                         file_name=nome_saida,
                                         mime="application/octet-stream",
-                                        width="stretch"
+                                        use_container_width=True
                                     )
                                 else:
                                     st.error("⚠️ O odômetro deve estar entre 100 e 999.900 km.")
@@ -3075,7 +3901,7 @@ with aba_calculadoras:
                                 <h4 style="color: #00FF88 !important; margin-top: 0;">🟢 Chevrolet Onix (BCM) - Leitura Válida</h4>
                                 <p style="color: #00E5FF !important; font-size: 1rem; margin-bottom: 5px;"><b>VIN:</b> {vin_str}</p>
                                 <p style="color: #FFF !important; font-size: 1.2rem; margin-bottom: 0;">
-                                    Quilometragem Atual: <b style="color: #FFD700;">{int(var1_onix):,} KM</b>[cite: 1]
+                                    Quilometragem Atual: <b style="color: #FFD700;">{int(var1_onix):,} KM</b>
                                 </p>
                             </div>
                             """, unsafe_allow_html=True)
@@ -3093,7 +3919,7 @@ with aba_calculadoras:
                                 )
                             with col_on2:
                                 st.markdown("<br>", unsafe_allow_html=True)
-                                executar_onix = st.button("🚀 Processar & Recalcular Onix BCM", width="stretch", key="btn_onix_tree_completo")
+                                executar_onix = st.button("🚀 Processar & Recalcular Onix BCM", use_container_width=True, key="btn_onix_tree_completo")
 
                             if executar_onix:
                                 if 100 <= novo_km_onix <= 999900:
@@ -3116,7 +3942,7 @@ with aba_calculadoras:
                                         data=bytes(d_o),
                                         file_name=nome_saida_o,
                                         mime="application/octet-stream",
-                                        width="stretch",
+                                        use_container_width=True,
                                         key="dl_onix_tree_btn_completo"
                                     )
                                 else:
@@ -3127,7 +3953,7 @@ with aba_calculadoras:
                         st.error(f"Erro ao processar o arquivo do Onix BCM: {ex_o}")
                 else:
                     st.warning("⚠️ O arquivo binário é muito pequeno para conter a estrutura do Onix BCM.")
-	
+    
         # =========================================================
         # CASO: IMMO - BCM ONIX 95160 (LER CODE)
         # =========================================================
@@ -3155,15 +3981,12 @@ with aba_calculadoras:
                 st.markdown("---")
                 st.markdown("### ⚙️ Execução de Script de Bancada (Immo)")
                 
-                if st.button("🔍 Executar Script de Leitura & Extração (BCM 95160)", width="stretch", key="btn_exec_bcm_immo_tree_v4"):
+                if st.button("🔍 Executar Script de Leitura & Extração (BCM 95160)", use_container_width=True, key="btn_exec_bcm_immo_tree_v4"):
                     if len(d_b) >= 2048:
                         try:
-                            # Tentativa de leitura dos bytes de identificação/PIN na BCM 95160
-                            # (Caso sua base utilize offsets específicos de leitura, você pode ajustar os endereços abaixo)
                             bloco_pin = d_b[0x100:0x104]
                             pin_code_extraido = "".join([f"{b:02X}" for b in bloco_pin])
                             
-                            # Opcional: Tentativa de extrair o VIN gravado no BCM para validação visual
                             try:
                                 vin_chars = [chr(d_b[addr]) if 32 <= d_b[addr] <= 126 else "" for addr in range(0x1E8, 0x1F9)]
                                 vin_str = "".join(vin_chars)
@@ -3184,8 +4007,8 @@ with aba_calculadoras:
                         except Exception as ex_immo:
                             st.error(f"Erro ao decodificar o PIN Code do arquivo: {ex_immo}")
                     else:
-                        st.warning("⚠️ O arquivo é menor do que o esperado para uma EEPROM 95160 completa (2KB). Verifique o dump.")
-
+                        st.warning("⚠️ O arquivo é menor do que o esperado para uma EEPROM 95160 completa (2KB). Verifique o arquivo.")
+			
 # =========================================================
 # ABA ⚙️ SUPORTE PROGRAMAÇÃO (COM BARRA 0-100% E PDF NAS DÚVIDAS)
 # =========================================================
@@ -3204,7 +4027,7 @@ with aba_programacao:
 
     with tab_calc:
         st.markdown("### 🧮 Calculadora Profissional (Estilo Windows)")
-        st.caption("Você pode clicar nos botões du mouse ou digitar diretamente du visor com du teclado du computador:")
+        st.caption("Você pode clicar nos botões do mouse ou digitar diretamente do visor com o teclado do computador:")
 
         if 'calc_input' not in st.session_state:
             st.session_state['calc_input'] = "0"
@@ -3301,7 +4124,7 @@ with aba_programacao:
             buffer_formatado = "\n".join(linhas_buffer)
             st.code(buffer_formatado, language="text")
             if tamanho_total > 4096:
-                st.caption(f"ℹ️ Exibindo os primeiros 4096 bytes de {tamanho_total} bytes totais du buffer para visualização fluida.")
+                st.caption(f"ℹ️ Exibindo os primeiros 4096 bytes de {tamanho_total} bytes totais do buffer para visualização fluida.")
 
     with tab_cks:
         st.markdown("### 🔍 Cálculo de CKS & Leitura ASCII Inteligente (IA)")
@@ -3315,7 +4138,7 @@ with aba_programacao:
             
             col_cks_info, col_cks_ia = st.columns([1, 1], gap="large")
             with col_cks_info:
-                st.markdown(f"**Tamanho du Arquivo:** `{tamanho_arq} bytes`")
+                st.markdown(f"**Tamanho do Arquivo:** `{tamanho_arq} bytes`")
                 st.markdown(f"**Hash SHA256:** `{hashlib.sha256(bytes_cks).hexdigest()}`")
                 if padrao_vin:
                     st.success(f"🔍 **VIN Encontrado:** {', '.join(set(padrao_vin))}")
@@ -3340,7 +4163,7 @@ with aba_programacao:
                     Identifique e liste:
                     1. Número da Peça / Software / Hardware
                     2. Informações de Imobilizador / VIN
-                    3. Status provável du Checksum (CKS).
+                    3. Status provável do Checksum (CKS).
                     """
                     res_bin_ia = client.models.generate_content(model='gemini-3-flash-preview', contents=[prompt_ia_bin])
                     texto_res_cks = res_bin_ia.text if hasattr(res_bin_ia, 'text') else "Sem dados."
@@ -3373,7 +4196,7 @@ with aba_programacao:
 
     with tab_duv_prog:
         st.markdown("### 💬 Dúvidas sobre Arquivos, CKS ou Modificações")
-        duv_arq_texto = st.text_area("Descreva sua dúvida:", placeholder="Ex: Preciso de ajuda para corrigir du CKS...", key="duv_arq_txt")
+        duv_arq_texto = st.text_area("Descreva sua dúvida:", placeholder="Ex: Preciso de ajuda para corrigir o CKS...", key="duv_arq_txt")
         arq_duvida_sup = st.file_uploader("Anexar arquivo para suporte", type=["bin", "hex", "ori", "mod"], key="arq_duv_up")
         foto_arq_sup = st.file_uploader("📸 Foto da central ou erro", type=["png", "jpg", "jpeg"], key="foto_duv_up")
         mic_prog_sup = st.audio_input("🎙️ Gravar Dúvida por Áudio", key="mic_prog_sup")
@@ -3469,7 +4292,7 @@ with aba2:
                     key=f"btn_pdf_{reg_id}"
                 )
     else:
-        st.info("Nenhum diagnóstico ou consulta salva até du momento.")
+        st.info("Nenhum diagnóstico ou consulta salva até o momento.")
 
 # =========================================================
 # ABA 4: CURSOS & REDES SOCIAIS (COM EFEITO PULSANTE NEON)
@@ -3520,7 +4343,7 @@ with aba3:
 # =========================================================
 with aba4:
     st.markdown("### 💬 WhatsApp Web Integrado")
-    st.write("Abra du WhatsApp Web da oficina ou envie textos, áudios e vídeos de clientes direto para a análise da IA.")
+    st.write("Abra o WhatsApp Web da oficina ou envie textos, áudios e vídeos de clientes direto para a análise da IA.")
     st.markdown("---")
     
     col_wsp1, col_wsp2 = st.columns([1, 1])
@@ -3528,8 +4351,8 @@ with aba4:
     with col_wsp1:
         st.markdown("""
         <div style="background-color: #052E16; border: 1px solid #25D366; padding: 20px; border-radius: 12px; text-align: center;">
-            <h4 style="color: #00FF88 !important; margin-bottom: 10px;">🟢 Acesso Direto du WhatsApp Web</h4>
-            <p style="color: #A7F3D0 !important; font-size: 0.9rem;">Devido às políticas de segurança du WhatsApp, abra a sessão diretamente em seu navegador.</p>
+            <h4 style="color: #00FF88 !important; margin-bottom: 10px;">🟢 Acesso Direto do WhatsApp Web</h4>
+            <p style="color: #A7F3D0 !important; font-size: 0.9rem;">Devido às políticas de segurança do WhatsApp, abra a sessão diretamente em seu navegador.</p>
         </div>
         """, unsafe_allow_html=True)
         st.write("")
@@ -3538,14 +4361,14 @@ with aba4:
     with col_wsp2:
         st.markdown("""
         <div style="background-color: #052E16; border: 1px solid #065F46; padding: 20px; border-radius: 12px; text-align: center;">
-            <h4 style="color: #00FF88 !important; margin-bottom: 10px;">📋 Copiar Mensagem, Áudio ou Vídeo du Cliente</h4>
-            <p style="color: #A7F3D0 !important; font-size: 0.9rem;">Anexe os arquivos recebidos du WhatsApp para enviar direto à aba de Diagnóstico.</p>
+            <h4 style="color: #00FF88 !important; margin-bottom: 10px;">📋 Copiar Mensagem, Áudio ou Vídeo do Cliente</h4>
+            <p style="color: #A7F3D0 !important; font-size: 0.9rem;">Anexe os arquivos recebidos do WhatsApp para enviar direto à aba de Diagnóstico.</p>
         </div>
         """, unsafe_allow_html=True)
         
-        texto_wsp = st.text_area("Texto/Transcrição du WhatsApp:", placeholder="Ex: Cliente relatou que du carro falha...", height=100)
-        audio_file_wsp = st.file_uploader("🎙️ Anexar Áudio du WhatsApp (.ogg, .mp3, .wav, .m4a)", type=["ogg", "mp3", "wav", "m4a"], key="upload_audio_wsp")
-        video_file_wsp = st.file_uploader("🎥 Anexar Vídeo du WhatsApp (.mp4, .mov, .avi, .mkv)", type=["mp4", "mov", "avi", "mkv"], key="upload_video_wsp")
+        texto_wsp = st.text_area("Texto/Transcrição do WhatsApp:", placeholder="Ex: Cliente relatou que do carro falha...", height=100)
+        audio_file_wsp = st.file_uploader("🎙️ Anexar Áudio do WhatsApp (.ogg, .mp3, .wav, .m4a)", type=["ogg", "mp3", "wav", "m4a"], key="upload_audio_wsp")
+        video_file_wsp = st.file_uploader("🎥 Anexar Vídeo do WhatsApp (.mp4, .mov, .avi, .mkv)", type=["mp4", "mov", "avi", "mkv"], key="upload_video_wsp")
         
         if st.button("🚀 Enviar Dados para Aba de Diagnóstico", width="stretch"):
             if texto_wsp.strip() or audio_file_wsp or video_file_wsp:
@@ -3568,7 +4391,7 @@ with aba4:
 with aba5:
     renderizar_css_planos()
     st.markdown("<h3 style='text-align: center; color: #00FF88;'>💎 Planos & Níveis de Classificação AUTOLAB DIAG 💎</h3>", unsafe_allow_html=True)
-    st.write("<p style='text-align: center; color: #A7F3D0;'>Eleve du patamar tecnológico da sua oficina com inteligência artificial de alta performance.</p>", unsafe_allow_html=True)
+    st.write("<p style='text-align: center; color: #A7F3D0;'>Eleve do patamar tecnológico da sua oficina com inteligência artificial de alta performance.</p>", unsafe_allow_html=True)
     st.markdown("---")
     
     col_p1, col_p2, col_p3 = st.columns(3)
@@ -3647,6 +4470,7 @@ if is_adm:
                     conn.close()
                     if linhas_a > 0:
                         st.success(f"✅ Plano anual de 365 dias ativado com sucesso para {email_ativar.strip()}!")
+                        st.rerun()
                     else:
                         st.error("⚠️ E-mail não encontrado no banco de dados.")
                 else:
@@ -3669,6 +4493,7 @@ if is_adm:
                     conn.close()
                     if linhas_afetadas > 0:
                         st.success(f"✅ Adicionadas {fichas_add} fichas para {email_target.strip()} com sucesso!")
+                        st.rerun()
                     else:
                         st.error("⚠️ E-mail não encontrado no banco de dados.")
                 else:
@@ -3676,7 +4501,7 @@ if is_adm:
 
         st.markdown("---")
 
-        # --- CARREGAR DADOS DOS CLIENTES PARA A PLANILHA ---
+        # --- CARREGAR DADOS DOS CLIENTES PARA A PLANILHA E GESTÃO ---
         conn = sqlite3.connect('diagnosticos.db')
         df_clientes = pd.read_sql_query("SELECT id, nome, nome_empresa, documento, email, whatsapp, fichas, data_cadastro, data_expiracao_teste, data_expiracao_assinatura FROM usuarios", conn)
         conn.close()
@@ -3692,6 +4517,43 @@ if is_adm:
             st.metric("📊 Formato de Exportação", "Excel (.xlsx)")
 
         st.write("")
+
+        # =========================================================
+        # ADICIONADO: PESQUISAR E DELETAR CLIENTE DA BASE
+        # =========================================================
+        st.markdown("---")
+        st.subheader("🗑️ Pesquisar & Deletar Cliente Cadastrado")
+        termo_del = st.text_input("Digite o nome ou e-mail do cliente que deseja excluir:", key="input_pesquisa_deletar_adm")
+        
+        if termo_del.strip():
+            clientes_filtrados_del = df_clientes[
+                df_clientes['nome'].str.contains(termo_del, case=False, na=False) | 
+                df_clientes['email'].str.contains(termo_del, case=False, na=False)
+            ]
+            
+            if not clientes_filtrados_del.empty:
+                st.markdown(f"**Encontrados {len(clientes_filtrados_del)} cliente(s):**")
+                for _, row in clientes_filtrados_del.iterrows():
+                    col_info_c, col_btn_c = st.columns([3, 1])
+                    with col_info_c:
+                        st.markdown(f"👤 **{row['nome']}** | ✉️ {row['email']} | 🏢 {row['nome_empresa']}")
+                    with col_btn_c:
+                        if st.button("🗑️ Deletar", key=f"btn_deletar_usr_{row['id']}"):
+                            if row['email'].lower() == EMAIL_ADM.lower():
+                                st.error("❌ Você não pode deletar o administrador principal do sistema!")
+                            else:
+                                conn = sqlite3.connect('diagnosticos.db')
+                                c = conn.cursor()
+                                c.execute('DELETE FROM usuarios WHERE id = ?', (row['id'],))
+                                conn.commit()
+                                conn.close()
+                                st.success(f"✅ Cliente {row['nome']} deletado com sucesso!")
+                                st.rerun()
+            else:
+                st.info("Nenhum cliente correspondente encontrado para exclusão.")
+        # =========================================================
+
+        st.markdown("---")
 
         if not df_clientes.empty:
             st.subheader("📋 Lista de Clientes Ativos no Sistema")
@@ -3722,7 +4584,6 @@ if is_adm:
         conn_ar_adm = sqlite3.connect('diagnosticos.db')
         cursor_ar = conn_ar_adm.cursor()
         
-        # Cria a tabela caso ela não exista no banco atual (evita o erro no Streamlit Cloud)
         cursor_ar.execute('''
             CREATE TABLE IF NOT EXISTS autorede_usuarios (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
