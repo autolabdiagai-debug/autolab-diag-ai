@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import io
 import re
 import html
@@ -22,6 +23,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 import pandas as pd
 import streamlit as st
+import tkinter as tk
+from tkinter import ttk, messagebox, filedialog
 import streamlit as str_lit
 
 
@@ -40,7 +43,7 @@ EMAIL_ADM = "autolabdiagai@gmail.com"
 # 1. Configuração da Página do Streamlit
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="AUTOLAB DIAG",
+    page_title="[AUTOLAB DIAG]",
     page_icon="🧠",
     layout="wide"
 )
@@ -214,16 +217,16 @@ def init_db():
     
     data_atual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     data_futura_1ano = (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
-    senha_adm_hash = hash_senha("autolab2026")
+    senha_adm_hash = hash_senha("autolab174235")
     
     c.execute('SELECT id FROM usuarios WHERE email = ?', (EMAIL_ADM,))
     if not c.fetchone():
         c.execute('''
             INSERT INTO usuarios (nome, email, whatsapp, senha, fichas, data_cadastro, data_expiracao_teste, data_expiracao_assinatura, documento, nome_empresa)
             VALUES (?, ?, ?, ?, 7, ?, ?, ?, ?, ?)
-        ''', ("Administrador AutoLab", EMAIL_ADM, "(00) 00000-0000", senha_adm_hash, data_atual, data_futura_1ano, data_futura_1ano, "00.000.000/0001-00", "AUTOLAB DIAGNÓSTICOS"))
+        ''', ("Administrador AutoLab", EMAIL_ADM, "(48) 99199-5934", senha_adm_hash, data_atual, data_futura_1ano, data_futura_1ano, "47.355.335.0001-96", "AUTOLAB LOA"))
     else:
-        c.execute('UPDATE usuarios SET fichas = 7, senha = ?, data_expiracao_assinatura = ?, documento = ?, nome_empresa = ? WHERE email = ?', (senha_adm_hash, data_futura_1ano, "00.000.000/0001-00", "AUTOLAB DIAGNÓSTICOS", EMAIL_ADM))
+        c.execute('UPDATE usuarios SET fichas = 7, senha = ?, data_expiracao_assinatura = ?, documento = ?, nome_empresa = ? WHERE email = ?', (senha_adm_hash, data_futura_1ano, "47.355.335.0001-96", "AUTOLAB LOA", EMAIL_ADM))
         
     conn.commit()
     conn.close()
@@ -243,7 +246,7 @@ def enviar_email_boas_vindas(nome, email):
         msg = MIMEMultipart()
         msg['From'] = EMAIL_EMISSOR
         msg['To'] = email
-        msg['Subject'] = "🧠 Seja Bem-vindo ao AUTOLAB DIAG AI - 7 Dias de Teste Liberados!"
+        msg['Subject'] = "🧠 Seja Bem-vindo ao AUTOLAB DIAG - 7 Dias de Teste Liberados!"
         
         corpo = f"""
         Olá, {nome}!
@@ -276,7 +279,7 @@ def enviar_email_oferta_assinatura(nome, email):
         corpo = f"""
         Olá, {nome}!
         
-        Notamos que seu período de teste de 7 dias (ou suas fichas) do AUTOLAB DIAG AI chegou ao fim.
+        Notamos que seu período de teste de 7 dias (ou suas fichas) do AUTOLAB DIAG chegou ao fim.
         
         Para continuar realizando diagnósticos ilimitados, gerar relatórios em PDF para seus clientes e ter suporte exclusivo da AutoLab por 1 ano, assine o plano ideal para sua oficina:
         
@@ -502,7 +505,7 @@ def tela_login():
     st.markdown("""
     <div style="background: linear-gradient(135deg, #052E16 0%, #022C22 100%); border: 2px solid #00FF88; padding: 15px; border-radius: 14px; text-align: center; margin-bottom: 25px; box-shadow: 0 0 25px rgba(0,255,136,0.35);">
         <h4 style="color: #FFD700 !important; margin-bottom: 6px; font-size: 1.1rem;">🔊 APRESENTAÇÃO EXCLUSIVA 🔊</h4>
-        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;">Aperte o play e descubra como o AutoLab Diag vai revolucionar o seu Laboratóirio Automotivo:</p>
+        <p style="color: #A7F3D0 !important; font-size: 0.9rem; margin-bottom: 12px;"> >Aperte o play e descubra como o AutoLab Diag vai revolucionar o seu Laboratóirio Automotivo:</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -540,7 +543,7 @@ def tela_login():
                 ⚡ Imagine um Assistente à sua disposição 24 horas por dia fazendo Diagnósticos complexos em tempo recorde! ⚡
             </h3>
             <p style="color: #A7F3D0 !important; font-size: 0.95rem; line-height: 1.5; margin-bottom: 12px;">
-                Agora sua oficina não precisa mais pagar treinamentos avançados para todos os mecânicos, com o AUTOLAB DIAG AI você faz diagnósticos Complexos em Tempo recorde, basta Alimentar o sistema com os Sintomas e Paramêtros dos Veículos através de textos, áudios, fotos e videos que o AUTOLAB DIAG faz o diagnóstico e entrega um passo a passo completo e detalhado com relatório técnico para que seus Mecânicos, Chaveiros E Eletricistas façam os testes conforme a instrução do Diagnóstico Inteligente gerado.
+                Agora sua oficina não precisa mais pagar treinamentos avançados para todos os mecânicos, com o AUTOLAB DIAG você faz diagnósticos Complexos em Tempo recorde, basta Alimentar o sistema com os Sintomas e Paramêtros dos Veículos através de textos, áudios, fotos e videos que o AUTOLAB DIAG faz o diagnóstico e entrega um passo a passo completo e detalhado com relatório técnico para que seus Mecânicos, Chaveiros E Eletricistas façam os testes conforme a instrução do Diagnóstico Inteligente gerado.
             </p>
             <p style="color: #FFD700 !important; font-size: 0.95rem; font-weight: 700; margin-bottom: 15px;">
                 🌐 Alimentado pelo maior banco de dados técnico existente do Mundo 💻.
@@ -591,7 +594,7 @@ def tela_login():
         st.markdown(celular_reels_html, unsafe_allow_html=True)
 
     with col_forms:
-        aba_acesso, aba_cadastro = st.tabs(["💻 ÁREA DE ACESSO 📱", "📝 Criar Conta / Teste por 7 Dias)"])
+        aba_acesso, aba_cadastro = st.tabs(["💻 ÁREA DE ACESSO 📱", "📝 CRIAR CONTA"])
         
         with aba_acesso:
             st.subheader("🕵️‍♂️ Acesso do Usuário 💻📱")
@@ -873,7 +876,7 @@ def gerar_pdf_relatorio(nome_oficina, cnpj, telefone, veiculo, dtc, sintomas, re
     
     story = []
     nome_clean = html.escape(nome_oficina.upper())
-    story.append(Paragraph(f"<b>{nome_clean}</b> | AUTOLAB DIAG AI", title_style))
+    story.append(Paragraph(f"<b>{nome_clean}</b> | AUTOLAB DIAG", title_style))
     header_info = f"CNPJ/CPF: {html.escape(cnpj)} | Tel: {html.escape(telefone)} | Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
     story.append(Paragraph(header_info, subtitle_style))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#047857'), spaceAfter=12))
@@ -940,7 +943,7 @@ def gerar_pdf_relatorio(nome_oficina, cnpj, telefone, veiculo, dtc, sintomas, re
             
     story.append(Spacer(1, 15))
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#cccccc'), spaceAfter=8))
-    story.append(Paragraph("<i>Laudo técnico gerado por Inteligência Artificial - AUTOLAB DIAG AI.</i>", subtitle_style))
+    story.append(Paragraph("<i>Laudo técnico gerado por Inteligência Artificial - AUTOLAB DIAG.</i>", subtitle_style))
     
     doc.build(story)
     buffer.seek(0)
