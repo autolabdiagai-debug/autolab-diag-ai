@@ -24,7 +24,7 @@ from reportlab.lib import colors
 import pandas as pd
 import streamlit as st
 import streamlit as str_lit
-
+import html as html_lib
 
 # ---------------------------------------------------------
 # 3. Chave da API Embutida e Inicialização
@@ -1074,21 +1074,19 @@ def processar_e_desenhar_mapa_numerado(imagem_pil, identificacao_uce):
         return imagem_pil, [], False
 
 # =========================================================
-# 11. Interface Principal e Abas (Atualizado com a Nova Aba DIESEL / ARLA DIAG)
+# 11. Interface Principal e Abas (Com Orientação por Voz nas Abas Técnicas)
 # =========================================================
 st.title("🔬 Sistema de Diagnóstico Avançado 🔬")
 st.write("Suporte em Diagnóstico, Reparo e Programação de Módulos Eletrônicos Veicular (Eletrônica Embarcada & Diesel Pesado)")
 
 is_adm = str(st.session_state.get('user_email', '')).strip().lower() == EMAIL_ADM.lower()
 
-usuario_tem_autolab = st.session_state.get("logado", False)
-usuario_tem_autorede = 'usuario_logado_autorede' in st.session_state
-
 if is_adm:
-    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_calculadoras, aba_programacao, aba_diesel, aba2, aba3, aba4, aba5, aba6 = st.tabs([
+    aba_nomes = [
         "🏢 Minha Empresa",
         "🌐 AutoRede",
         "🔬 Diagnóstico",
+        "🌐 Scanner Digital LOA",  # <--- 1. ADICIONE O NOME AQUI
         "📡 Suporte -CanCode-",
         "🔌 Suporte -U.C.Es-",
         "📡 Suporte -Scanners-",
@@ -1100,13 +1098,14 @@ if is_adm:
         "🎓 Cursos & Redes Sociais",
         "💬 Connect WhatsApp",
         "💳 Assinatura",
-        "💎 Gestão de Clientes 💎"
-    ])
+        "💎 Gestão de Clientes 💎",
+    ]
 else:
-    aba_empresa, aba_autorede_feed, aba1, aba_cancode, aba_uces, aba_scanners, aba_programadores, aba_calculadoras, aba_programacao, aba_diesel, aba2, aba3, aba4, aba5 = st.tabs([
+    aba_nomes = [
         "🏢 Minha Empresa",
         "🌐 AutoRede",
         "🔬 Diagnóstico",
+        "🌐 Scanner Digital LOA",  # <--- 1. ADICIONE O NOME AQUI
         "📡 Suporte -CanCode-",
         "🔌 Suporte -U.C.Es-",
         "📡 Suporte -Scanners-",
@@ -1117,8 +1116,50 @@ else:
         "📜 Histórico",
         "🎓 Cursos & Redes Sociais",
         "💬 Connect WhatsApp",
-        "💳 Assinatura"
-    ])
+        "💳 Assinatura",
+    ]
+
+abas = st.tabs(aba_nomes)
+
+# 2. AJUSTE O DESEMPACOTAMENTO PARA INCLUIR A NOVA VARIÁVEL NA POSIÇÃO CORRETA (ÍNDICE 3):
+if is_adm:
+    (
+        aba_empresa,
+        aba_autorede_feed,
+        aba1,
+        aba_scanner_loa,     # <--- AQUI ESTÁ A VARIÁVEL DEFINIDA!
+        aba_cancode,
+        aba_uces,
+        aba_scanners,
+        aba_programadores,
+        aba_calculadoras,
+        aba_programacao,
+        aba_diesel,
+        aba2,
+        aba3,
+        aba4,
+        aba5,
+        *rest
+    ) = abas
+    aba6 = rest[0] if rest else None
+else:
+    (
+        aba_empresa,
+        aba_autorede_feed,
+        aba1,
+        aba_scanner_loa,     # <--- AQUI ESTÁ A VARIÁVEL DEFINIDA!
+        aba_cancode,
+        aba_uces,
+        aba_scanners,
+        aba_programadores,
+        aba_calculadoras,
+        aba_programacao,
+        aba_diesel,
+        aba2,
+        aba3,
+        aba4,
+        aba5
+    ) = abas
     aba6 = None
 
 # =========================================================
@@ -4843,3 +4884,363 @@ if is_adm:
             )
         else:
             st.info("ℹ️ Nenhum membro cadastrado na AUTOREDE até o momento.")
+
+# =========================================================
+# ABA 🌐 SCANNER DIGITAL LOA (LOGICAL OPERATION ASSISTANT)
+# =========================================================
+with aba_scanner_loa:
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, rgba(3, 20, 12, 0.95) 0%, rgba(5, 46, 22, 0.9) 100%); border: 2px solid #00FF88; border-radius: 20px; padding: 25px; box-shadow: 0 0 30px rgba(0, 255, 136, 0.3); margin-bottom: 20px;">
+        <h3 style="color: #FFD700 !important; margin-top: 0; font-weight: 900;">🔍 Scanner Digital AutoLab LoA 🔍</h3>
+        <p style="color: #A7F3D0 !important; font-size: 0.95rem; margin-bottom: 0;">
+            Sistema especialista avançado com base nos protocolos Bosch, Magneti Marelli, Delphi e AC Delco. Selecione o sistema, insira os PIDs reais específicos do ciclo e envie mídias separadas (Áudio, Vídeo e Fotos) para análise inteligente.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 1. ETAPA DE SELEÇÃO HIERÁRQUICA (ÁRVORE)
+    col_loa_1, col_loa_2 = st.columns(2, gap="large")
+    
+    with col_loa_1:
+        tipo_combustivel = st.selectbox(
+            "🚛/🚗 Modalidade do Veículo / Propulsão:",
+            ["Flex / Gasolina / GNV", "Diesel Pesado / Leve Common Rail", "Híbrido", "Elétrico Puro"],
+            key="loa_combustivel"
+        )
+        veiculo_modelo_loa = st.text_input(
+            "🚘 Veículo / Motorização / Ano:",
+            placeholder="Ex: Fiat Palio 1.4 Flex / VW Gol G5 / Corolla 2.0",
+            key="loa_veiculo"
+        )
+
+    with col_loa_2:
+        modulo_selecionado_loa = st.selectbox(
+            "🔌 Modalidade do Módulo Eletrônico:",
+            [
+                "Módulo de Injeção (ECM / PCM)", 
+                "ABS / Controle de Estabilidade (ESP)", 
+                "Transmissão / Câmbio Automático (TCM)", 
+                "Painel de Instrumentos (IC / Kombi)", 
+                "Central Elétrica / Carroceria (BCM / BSI)", 
+                "Airbag / Sistema SRS", 
+                "Direção Elétrica / Sensor de Ângulo (EPS / SAS)", 
+                "Imobilizador / Chaves / PATS (IMMO)", 
+                "Ar Condicionado Digital / Climatização", 
+                "Pós-Tratamento Gases / ARLA 32 (SCR / DPF) [Apenas Diesel]"
+            ],
+            key="loa_modulo"
+        )
+        dtc_informado_loa = st.text_input(
+            "🔍 Códigos de Falha Registrados (DTCs):",
+            placeholder="Ex: P0300, P0100, P0171, U0100",
+            key="loa_dtcs"
+        )
+
+    st.markdown("---")
+    st.markdown(f"### 📊 Painel de PIDs Padrão Scanner — {modulo_selecionado_loa}")
+    st.caption("Preencha os Parâmetros relevantes obtidos no seu scanner físico de acordo com o ciclo do motor.")
+
+    # =========================================================
+    # DICIONÁRIO DE PIDS COM SEPARAÇÃO RIGOROSA (FLEX X DIESEL)
+    # =========================================================
+    pids_valores_coletados = {}
+
+    if "Injeção" in modulo_selecionado_loa:
+        if "Flex" in tipo_combustivel or "Híbrido" in tipo_combustivel:
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                pids_valores_coletados["RPM"] = st.text_input("RPM | Rotação Motor", placeholder="Ex: 820 rpm", key="p_otto_rpm")
+                pids_valores_coletados["TI"] = st.text_input("TI | Tempo Injeção (ms)", placeholder="Ex: 2.8 ms", key="p_otto_ti")
+                pids_valores_coletados["VBAT"] = st.text_input("VBAT | Tensão Bateria", placeholder="Ex: 13.9 V", key="p_otto_vbat")
+            with c2:
+                pids_valores_coletados["MAP"] = st.text_input("MAP | Pressão Coletor", placeholder="Ex: 350 mbar", key="p_otto_map")
+                pids_valores_coletados["MAF"] = st.text_input("MAF | Massa de Ar", placeholder="Ex: 2.4 g/s", key="p_otto_maf")
+                pids_valores_coletados["TPS"] = st.text_input("TPS | Borboleta Aceleração", placeholder="Ex: 11.5 %", key="p_otto_tps")
+            with c3:
+                pids_valores_coletados["STFT1"] = st.text_input("STFT1 | Adap. Curto Prazo", placeholder="Ex: +2.5 %", key="p_otto_stft")
+                pids_valores_coletados["LTFT1"] = st.text_input("LTFT1 | Adap. Longo Prazo", placeholder="Ex: -1.0 %", key="p_otto_ltft")
+                pids_valores_coletados["ALC"] = st.text_input("ALC | Teor de Etanol (Flex)", placeholder="Ex: 22 % ou 100%", key="p_otto_alc")
+            with c4:
+                pids_valores_coletados["ECT"] = st.text_input("ECT | Temp. Arrefecimento", placeholder="Ex: 90 °C", key="p_otto_ect")
+                pids_valores_coletados["Lambda1"] = st.text_input("O2S11 | Sonda Lambda Pré", placeholder="Ex: 1.00 / 450mV", key="p_otto_lam")
+                pids_valores_coletados["IGN"] = st.text_input("IGN | Avanço de Ignição", placeholder="Ex: 12.5 °", key="p_otto_ign")
+        else:
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                pids_valores_coletados["RPM"] = st.text_input("RPM | Rotação Motor", placeholder="Ex: 820 rpm", key="p_ds_rpm")
+                pids_valores_coletados["Rail_Press"] = st.text_input("FPR | Pressão Rail / Alta", placeholder="Ex: 1350 bar", key="p_ds_rail")
+            with c2:
+                pids_valores_coletados["Boost"] = st.text_input("BOOST | Pressão Turbo", placeholder="Ex: 1.2 bar", key="p_ds_boost")
+                pids_valores_coletados["MAP"] = st.text_input("MAP | Pressão Coletor", placeholder="Ex: 1000 mbar", key="p_ds_map")
+            with c3:
+                pids_valores_coletados["MAF"] = st.text_input("MAF | Massa de Ar", placeholder="Ex: 45 g/s", key="p_ds_maf")
+                pids_valores_coletados["ECT"] = st.text_input("ECT | Temp. Arrefecimento", placeholder="Ex: 88 °C", key="p_ds_ect")
+            with c4:
+                pids_valores_coletados["VBAT"] = st.text_input("VBAT | Tensão Módulo/Bateria", placeholder="Ex: 24.2 V", key="p_ds_vbat")
+                pids_valores_coletados["Rail_Alvo"] = st.text_input("Pressão Rail Desejada (Alvo)", placeholder="Ex: 1340 bar", key="p_ds_ralvo")
+
+    elif "ABS" in modulo_selecionado_loa:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["V_Roda_FL"] = st.text_input("Velocidade Roda Dianteira Esq.", placeholder="Ex: 0 km/h", key="p_abs_fl")
+            pids_valores_coletados["V_Roda_FR"] = st.text_input("Velocidade Roda Dianteira Dir.", placeholder="Ex: 0 km/h", key="p_abs_fr")
+        with c2:
+            pids_valores_coletados["V_Roda_RL"] = st.text_input("Velocidade Roda Traseira Esq.", placeholder="Ex: 0 km/h", key="p_abs_rl")
+            pids_valores_coletados["V_Roda_RR"] = st.text_input("Velocidade Roda Traseira Dir.", placeholder="Ex: 0 km/h", key="p_abs_rr")
+        with c3:
+            pids_valores_coletados["Sens_Angulo"] = st.text_input("SAS | Sensor Ângulo Volante", placeholder="Ex: 0.0 °", key="p_abs_ang")
+            pids_valores_coletados["Bomba_ABS"] = st.text_input("Status Bomba Hidráulica / Relé", placeholder="Ex: Em repouso / Ativa", key="p_abs_bomba")
+            pids_valores_coletados["Tensao_ABS"] = st.text_input("Tensão de Alimentação Módulo ABS", placeholder="Ex: 14.1 V", key="p_abs_v")
+
+    elif "Transmissão" in modulo_selecionado_loa:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["RPM_Entrada"] = st.text_input("Rotação Eixo Entrada Câmbio", placeholder="Ex: 2500 rpm", key="p_tcm_in")
+            pids_valores_coletados["RPM_Saida"] = st.text_input("Rotação Eixo Saída Câmbio", placeholder="Ex: 80 km/h", key="p_tcm_out")
+        with c2:
+            pids_valores_coletados["Temp_Oleo_TCM"] = st.text_input("Temperatura do Óleo do Câmbio", placeholder="Ex: 85 °C", key="p_tcm_temp")
+            pids_valores_coletados["Pressao_Clutch"] = st.text_input("Pressão das Embreagens / Solenóides", placeholder="Ex: 5.2 bar", key="p_tcm_press")
+        with c3:
+            pids_valores_coletados["Muda_Marcha"] = st.text_input("Marcha Solicitada / Engatada", placeholder="Ex: 4ª Marcha", key="p_tcm_gear")
+            pids_valores_coletados["Modo_Operacao"] = st.text_input("Modo de Emergência (Limp Mode)", placeholder="Ex: Inativo / Ativo", key="p_tcm_limp")
+
+    elif "Painel" in modulo_selecionado_loa:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["Odometro_IC"] = st.text_input("Quilometragem Registrada no Painel", placeholder="Ex: 125400 km", key="p_ic_km")
+            pids_valores_coletados["Nivel_Combustivel"] = st.text_input("Resistência / Nível Combustível", placeholder="Ex: 280 Ohms / 50%", key="p_ic_comb")
+        with c2:
+            pids_valores_coletados["Ponteiros"] = st.text_input("Status dos Ponteiros / Autoteste", placeholder="Ex: Travado / Funcionando", key="p_ic_pont")
+            pids_valores_coletados["Display_LCD"] = st.text_input("Iluminação / Display LCD", placeholder="Ex: Falha de pixels / OK", key="p_ic_lcd")
+        with c3:
+            pids_valores_coletados["Buzzer_Alerta"] = st.text_input("Alerta Sonoro / Buzzer", placeholder="Ex: Ativo", key="p_ic_buz")
+            pids_valores_coletados["Tensao_IC"] = st.text_input("Tensão da Bateria no Painel", placeholder="Ex: 13.8 V", key="p_ic_v")
+
+    elif "Central Elétrica" in modulo_selecionado_loa:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["Status_Chave"] = st.text_input("Reconhecimento de Chave / Transponder", placeholder="Ex: Válida / Reconhecida", key="p_bcm_key")
+            pids_valores_coletados["Luzes_Ex"] = st.text_input("Faróis / Lanternas / Setas", placeholder="Ex: Comando OK / Curto Detectado", key="p_bcm_luz")
+        with c2:
+            pids_valores_coletados["Trava_Portas"] = st.text_input("Atuadores de Travas Elétricas", placeholder="Ex: Portas Trancadas", key="p_bcm_trava")
+            pids_valores_coletados["Limpador_Parabrisa"] = st.text_input("Motor Limpador / Temporizador", placeholder="Ex: Velocidade 1", key="p_bcm_limp")
+        with c3:
+            pids_valores_coletados["Consumo_Standby"] = st.text_input("Corrente de Consumo em Repouso", placeholder="Ex: 35 mA", key="p_bcm_amp")
+            pids_valores_coletados["Rede_LIN_Status"] = st.text_input("Estado do Barramento LIN", placeholder="Ex: Ativo", key="p_bcm_lin")
+
+    elif "Airbag" in modulo_selecionado_loa:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["Crash_Data"] = st.text_input("Status de Crash Data (Colisão)", placeholder="Ex: Gravado / Limpo", key="p_srs_crash")
+            pids_valores_coletados["Resistencia_Bolsa_M"] = st.text_input("Resistência Espoleta Bolsa Motorista", placeholder="Ex: 2.2 Ohms", key="p_srs_mot")
+        with c2:
+            pids_valores_coletados["Resistencia_Bolsa_P"] = st.text_input("Resistência Espoleta Bolsa Passageiro", placeholder="Ex: 2.4 Ohms", key="p_srs_pass")
+        with c3:
+            pids_valores_coletados["Resistencia_Cintos"] = st.text_input("Pré-tensionadores de Cinto", placeholder="Ex: OK", key="p_srs_cinto")
+            pids_valores_coletados["Testemunha_MIL"] = st.text_input("Lâmpada / Alerta Painel Airbag", placeholder="Ex: Acesa intermitente", key="p_srs_lamp")
+
+    elif "Direção" in modulo_selecionado_loa:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["Corrente_Motor_EPS"] = st.text_input("Corrente Elétrica Motor Direção", placeholder="Ex: 12 A", key="p_eps_amp")
+            pids_valores_coletados["Sensor_Torque"] = st.text_input("Sinal Sensor de Torque (Nm)", placeholder="Ex: 0.15 Nm", key="p_eps_torq")
+        with c2:
+            pids_valores_coletados["Angulo_Volante_EPS"] = st.text_input("Posição do Volante (Graus)", placeholder="Ex: -2.5 °", key="p_eps_ang")
+        with c3:
+            pids_valores_coletados["Temperatura_EPS"] = st.text_input("Temperatura da Central EPS", placeholder="Ex: 45 °C", key="p_eps_temp")
+            pids_valores_coletados["Calibracao_SAS"] = st.text_input("Status Calibração de Fábrica", placeholder="Ex: Calibrado / Perdido", key="p_eps_cal")
+
+    elif "Imobilizador" in modulo_selecionado_loa:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["Chaves_Programadas"] = st.text_input("Quantidade de Chaves na Memória", placeholder="Ex: 2 chaves", key="p_immo_qtd")
+            pids_valores_coletados["Bobina_Antena"] = st.text_input("Campo Magnético da Antena (Transponder)", placeholder="Ex: OK / Sem Campo", key="p_immo_ant")
+        with c2:
+            pids_valores_coletados["Handshake_ECU"] = st.text_input("Handshake / Sincronismo com ECM", placeholder="Ex: Autorizado / Bloqueado", key="p_immo_sync")
+        with c3:
+            pids_valores_coletados["Tipo_Transponder"] = st.text_input("Chip / Transponder Detectado", placeholder="Ex: ID48 / ID46 / PCF7936", key="p_immo_chip")
+            pids_valores_coletados["Estado_Immo"] = st.text_input("Estado do Sistema Antifurto", placeholder="Ex: Ativado / Desativado", key="p_immo_est")
+
+    elif "Ar Condicionado" in modulo_selecionado_loa:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["Pressao_Gas_AC"] = st.text_input("Pressão do Fluido Gás Refrigerante", placeholder="Ex: 12 bar", key="p_ac_p")
+            pids_valores_coletados["Temp_Evaporador"] = st.text_input("Temperatura do Evaporador", placeholder="Ex: 4.5 °C", key="p_ac_evap")
+        with c2:
+            pids_valores_coletados["Comando_Compressor"] = st.text_input("Duty Cycle / Acionamento Válvula Comp.", placeholder="Ex: 75%", key="p_ac_comp")
+        with c3:
+            pids_valores_coletados["Atuadores_Ar"] = st.text_input("Posição Portas / Blend Door (%)", placeholder="Ex: 50% (Mistura)", key="p_ac_blend")
+            pids_valores_coletados["Velocidade_Soprador"] = st.text_input("Velocidade do Eletroventilador Interno", placeholder="Ex: Nível 3", key="p_ac_sop")
+
+    elif "Pós-Tratamento" in modulo_selecionado_loa:
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            pids_valores_coletados["NOx_In"] = st.text_input("SPN 3216: NOx Entrada (PPM)", placeholder="Ex: 950 ppm", key="p_scr_nox1")
+            pids_valores_coletados["NOx_Out"] = st.text_input("SPN 3226: NOx Saída (PPM)", placeholder="Ex: 120 ppm", key="p_scr_nox2")
+        with c2:
+            pids_valores_coletados["Pressao_Arla"] = st.text_input("SPN 4354: Pressão Linha ARLA", placeholder="Ex: 5.0 bar", key="p_scr_parla")
+            pids_valores_coletados["Qualidade_Ureia"] = st.text_input("SPN 3058: Concentração Ureia", placeholder="Ex: 32.5 %", key="p_scr_ureia")
+        with c3:
+            pids_valores_coletados["Temp_SCR_In"] = st.text_input("SPN 4360: Temp. Entrada SCR", placeholder="Ex: 280 °C", key="p_scr_tin")
+            pids_valores_coletados["Pressao_DPF"] = st.text_input("SPN 78: Pressão Diferencial DPF", placeholder="Ex: 15 mbar", key="p_scr_dpf")
+        with c4:
+            pids_valores_coletados["Eficiencia_SCR"] = st.text_input("SPN 4331: Eficiência Calculada", placeholder="Ex: 87.5 %", key="p_scr_efic")
+            pids_valores_coletados["Inducement"] = st.text_input("Nível de Limitação (Inducement)", placeholder="Ex: Nenhum", key="p_scr_ind")
+
+    else:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            pids_valores_coletados["Alimentacao"] = st.text_input("Tensão de Alimentação (V)", placeholder="Ex: 12.4 V", key="p_gen_v")
+        with c2:
+            pids_valores_coletados["Rede_CAN"] = st.text_input("Comunicação de Rede", placeholder="Ex: OK / Intermitente", key="p_gen_can")
+        with c3:
+            pids_valores_coletados["Sintoma_Modulo"] = st.text_input("Comportamento na Tomada", placeholder="Ex: Sem resposta / Erro de chave", key="p_gen_sint")
+
+    sintomas_livres_loa = st.text_area(
+        "📝 Relato Detalhado do Comportamento do Sistema:",
+        placeholder="Descreva falhas intermitentes, testes físicos realizados com multímetro ou osciloscópio...",
+        height=80,
+        key="loa_sintomas_livres"
+    )
+
+    st.markdown("---")
+    st.markdown("### 📂 Central de Upload Multimídia")
+    st.caption("Envie evidências complementares gravadas na oficina para aumentar a precisão do diagnóstico.")
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
+        st.markdown("**🎙️ Relato em Áudio**")
+        audio_sub_loa = st.audio_input("Gravar Áudio na Bancada", key="loa_audio_gravado")
+    with col_m2:
+        st.markdown("**🎥 Vídeo do Sintoma**")
+        video_sub_loa = st.file_uploader("Enviar Vídeo (.mp4, .mov)", type=["mp4", "mov", "avi", "mkv"], key="loa_video_up")
+    with col_m3:
+        st.markdown("**📸 Fotos do Scanner / Placa**")
+        fotos_sub_loa = st.file_uploader("Enviar Imagens (.jpg, .png)", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key="loa_fotos_up")
+
+    st.markdown("---")
+
+    if st.button("🚀 EXECUTAR DIAGNÓSTICO PREDITIVO LOA 🚀", width="stretch", key="btn_executar_scanner_loa"):
+        status_atual_check = verificar_status_usuario(st.session_state.get('user_email', ''))
+        if st.session_state.get('user_email') != EMAIL_ADM and (status_atual_check["tipo"] == "expirado" or (status_atual_check["tipo"] == "teste" and status_atual_check["fichas"] <= 0)):
+            st.error("⚠️ Suas fichas ou período de teste esgotaram! Assine um plano na aba 💳 Assinatura.")
+        else:
+            if not veiculo_modelo_loa:
+                st.warning("⚠️ Por favor, informe o veículo e motorização.")
+            else:
+                barra_loa = st.progress(0)
+                status_loa = st.empty()
+
+                status_loa.markdown("🔍 **[0%]** — Processando PIDs, textos e mídias separadas...")
+                barra_loa.progress(20)
+                time.sleep(0.3)
+
+                status_loa.markdown("🧠 **[55%]** — Aplicando lógica de operação assistida e visão computacional...")
+                barra_loa.progress(55)
+                time.sleep(0.3)
+
+                status_loa.markdown("⚙️ **[85%]** — Mapeando DTCs virtuais, planos de ação e margem de precisão...")
+                barra_loa.progress(85)
+                time.sleep(0.3)
+
+                pids_formatados = "\n".join([f"- {k}: {v}" for k, v in pids_valores_coletados.items() if v.strip()])
+                
+                system_prompt_loa = """
+                Você é o motor de inteligência central do 'Scanner Digital LOA' (Logical Operation Assistant) da AutoLab.
+                Você é um Engenheiro Sênior especialista em eletrônica embarcada veicular, com domínio absoluto das estratégias de injeção, redes e bancada da Bosch (KTS), Magneti Marelli, AC Delco e Delphi.
+                
+                Sua missão é atuar como um Scanner Digital Avançado, cruzando os PIDs reais fornecidos, DTCs, relatos e mídias (áudio/vídeo/fotos) para gerar um diagnóstico industrial completo.
+                
+                Retorne a resposta estruturada rigorosamente nos seguintes blocos formatados em Markdown:
+                
+                ### 🎯 1. DIAGNÓSTICO & CAUSA RAIZ
+                ### 📈 2. MARGEM DE PRECISÃO TÉCNICA
+                (Aponte uma porcentagem exata de confiabilidade do diagnóstico, ex: 97.4%, baseada na consistência dos parâmetros).
+                ### 🔍 3. POSSÍVEIS CÓDIGOS DE FALHA (DTCs Sugeridos)
+                ### 🛠️ 4. EQUIPAMENTOS OBRIGATÓRIOS (Em cascata: Scanner, Programador de Bancada, Programador OBD)
+                ### 📋 5. ROTEIRO DE TESTES E PROCEDIMENTOS (Como reparar, como ajustar, como calibrar e como casar)
+                """
+
+                user_prompt_loa = [
+                    f"""
+                    MODALIDADE: {tipo_combustivel}
+                    VEÍCULO/MOTOR: {veiculo_modelo_loa}
+                    MÓDULO ALVO: {modulo_selecionado_loa}
+                    DTCs INFORMADOS PELO MECÂNICO: {dtc_informado_loa if dtc_informado_loa else 'Nenhum'}
+                    
+                    PARÂMETROS EM TEMPO REAL INFORMADOS (PADRÃO KTS/SAE):
+                    {pids_formatados if pids_formatados else 'Nenhum parâmetro numérico inserido'}
+                    
+                    RELATO / SINTOMAS:
+                    {sintomas_livres_loa if sintomas_livres_loa else 'Não informado'}
+                    """
+                ]
+
+                # Anexa mídias separadas ao payload de envio para o Gemini
+                if audio_sub_loa:
+                    try:
+                        audio_sub_loa.seek(0)
+                        user_prompt_loa.append(types.Part.from_bytes(data=audio_sub_loa.read(), mime_type="audio/wav"))
+                        user_prompt_loa.append("\n[ÁUDIO DA BANCADA ENVIADO ACIMA]")
+                    except Exception: pass
+
+                if video_sub_loa:
+                    try:
+                        video_sub_loa.seek(0)
+                        user_prompt_loa.append(types.Part.from_bytes(data=video_sub_loa.read(), mime_type=video_sub_loa.type if video_sub_loa.type else "video/mp4"))
+                        user_prompt_loa.append("\n[VÍDEO DO SINTOMA ENVIADO ACIMA]")
+                    except Exception: pass
+
+                if fotos_sub_loa:
+                    for foto_f in fotos_sub_loa:
+                        try:
+                            foto_f.seek(0)
+                            img_f_obj = Image.open(foto_f)
+                            img_f_obj.thumbnail((1280, 1280))
+                            buf_f_io = io.BytesIO()
+                            img_f_obj.save(buf_f_io, format="JPEG", quality=85)
+                            user_prompt_loa.append(types.Part.from_bytes(data=buf_f_io.getvalue(), mime_type="image/jpeg"))
+                            user_prompt_loa.append(f"\n[FOTO ANEXADA: {foto_f.name}]")
+                        except Exception: pass
+
+                try:
+                    res_loa = client.models.generate_content(
+                        model='gemini-3-flash-preview',
+                        contents=user_prompt_loa,
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_prompt_loa,
+                            temperature=0.15
+                        )
+                    )
+
+                    barra_loa.progress(100)
+                    status_loa.markdown("✅ **[100%]** — Diagnóstico Scanner LoA Concluído com Sucesso!")
+                    time.sleep(0.4)
+                    barra_loa.empty()
+                    status_loa.empty()
+
+                    if res_loa and hasattr(res_loa, 'text') and res_loa.text:
+                        laudo_loa_final = res_loa.text
+                        st.session_state['ultimo_laudo_loa'] = laudo_loa_final
+                        st.session_state['ultimo_veiculo_loa'] = veiculo_modelo_loa
+
+                        fichas_atuais = st.session_state.get('user_fichas', 7)
+                        email_atual = st.session_state.get('user_email', '')
+                        if email_atual != EMAIL_ADM and fichas_atuais < 999:
+                            fichas_atuais -= 1
+                            st.session_state['user_fichas'] = fichas_atuais
+                            atualizar_fichas_banco(email_atual, fichas_atuais)
+
+                        salvar_diagnostico(
+                            email_atual,
+                            f"Scanner LOA - {veiculo_modelo_loa} ({modulo_selecionado_loa})",
+                            dtc_informado_loa if dtc_informado_loa else "Preditivo LOA",
+                            sintomas_livres_loa,
+                            laudo_loa_final
+                        )
+
+                        st.success("✅ Diagnóstico gerado e salvo no histórico com sucesso!")
+                except Exception as err_loa:
+                    barra_loa.empty()
+                    status_loa.empty()
+                    st.error(f"❌ Erro ao processar o Scanner LOA: {err_loa}")
