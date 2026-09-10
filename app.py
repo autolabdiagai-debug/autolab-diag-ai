@@ -330,27 +330,31 @@ def verificar_status_usuario(email):
         "nome_empresa": nome_empresa if nome_empresa else "AUTOLAB DIAGNÓSTICOS"
     }
     
-    if exp_assinatura:
+    # 1. VALIDAÇÃO RIGOROSA DA ASSINATURA ANUAL (Prioridade Absoluta)
+    if exp_assinatura and str(exp_assinatura).strip() not in ["None", "", "N/A", "Expirado"]:
         try:
-            dt_exp_ass = datetime.strptime(exp_assinatura, "%Y-%m-%d %H:%M:%S")
+            # Limpa espaços em branco que possam corromper a leitura da data do banco
+            dt_exp_ass = datetime.strptime(str(exp_assinatura).strip(), "%Y-%m-%d %H:%M:%S")
             if agora < dt_exp_ass:
                 dados_user["tipo"] = "assinante"
                 dados_user["exp"] = exp_assinatura
-                dados_user["fichas"] = 999
+                dados_user["fichas"] = 999  # Garante fichas ilimitadas
                 return dados_user
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Erro ao converter data de assinatura: {e}")
 
-    if exp_teste:
+    # 2. VALIDAÇÃO DO PERÍODO DE TESTE DE 7 DIAS
+    if exp_teste and str(exp_teste).strip() not in ["None", "", "N/A", "Expirado"]:
         try:
-            dt_exp_t = datetime.strptime(exp_teste, "%Y-%m-%d %H:%M:%S")
+            dt_exp_t = datetime.strptime(str(exp_teste).strip(), "%Y-%m-%d %H:%M:%S")
             if agora <= dt_exp_t and fichas > 0:
                 dados_user["tipo"] = "teste"
                 dados_user["exp"] = exp_teste
                 return dados_user
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Erro ao converter data de teste: {e}")
             
+    # 3. SE AMBOS ESTIVEREM EXPIRADOS
     dados_user["tipo"] = "expirado"
     dados_user["exp"] = "Expirado"
     dados_user["fichas"] = 0
